@@ -1,0 +1,37 @@
+# Configuration files
+public/api/config.local.php
+
+# Composer
+/vendor/
+composer.lock
+
+# IDE and editor files
+.vscode/
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+logs/
+*.cache
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Build and dependency directories
+/node_modules/
+/dist/
+/build/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# System Files
+Thumbs.db
+.DS_Store
+*.pid 
