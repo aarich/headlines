@@ -54,6 +54,8 @@ function updateHeadlineStats($headlineId, $updates) {
 
 function updateGuesses($headlineId, $guesses) {
 
+    // TODO filter inappropriate guesses
+
     // if the guesses are empty, don't do anything
     if (empty($guesses)) {
         return true;

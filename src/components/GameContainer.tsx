@@ -1,46 +1,80 @@
-import React, { useState } from 'react';
-import { Headline, Feedback as FeedbackType } from '../types';
+import React, { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
+import { Headline, Feedback } from '../types';
 import { useSettings } from '../contexts/SettingsContext';
 import HeadlineDisplay from './HeadlineDisplay';
 import AnswerWheel from './AnswerWheel';
 import ExpertInput from './ExpertInput';
-import Feedback from './Feedback';
 import ShareButtons from './ShareButtons';
-import { checkAnswer } from '../lib/game';
-import AnimatedBackground from './AnimatedBackground';
+import { checkAnswer, getNextHint, getNextHintPrompt } from '../lib/game';
+import { incrementStat, saveResult } from '../lib/storage';
+import { LightBulbIcon } from '@heroicons/react/24/outline';
+import { useToast } from '../contexts/ToastContext';
+import { recordGameCompleted } from '../lib/api';
 
 interface GameContainerProps {
   headline: Headline;
-  onCorrectGuess: () => void;
+  feedback: Feedback;
+  setFeedback: Dispatch<SetStateAction<Feedback>>;
 }
 
-const GameContainer: React.FC<GameContainerProps> = ({ headline, onCorrectGuess }) => {
+const GameContainer: React.FC<GameContainerProps> = ({ headline, feedback, setFeedback }) => {
   const { settings } = useSettings();
   const [currentGuess, setCurrentGuess] = useState('');
-  const [feedback, setFeedback] = useState<FeedbackType>({ correct: false, wrongGuesses: [] });
   const [isGameOver, setIsGameOver] = useState(false);
+  const toast = useToast();
 
-  const handleGuess = React.useCallback(() => {
+  useEffect(() => {
+    if (feedback.correct && !isGameOver) {
+      setIsGameOver(true);
+      const hasIdParam = window.location.search.includes('id=');
+      if (hasIdParam) {
+        toast('Great job!', 'success');
+      } else {
+        toast('Great job today!', 'success');
+      }
+    }
+  }, [feedback.correct, isGameOver, toast]);
+
+  const handleGuess = useCallback(() => {
     if (!currentGuess) return;
     const isCorrect = checkAnswer(currentGuess, headline.correctAnswer, settings.expertMode);
     setIsGameOver(isCorrect);
 
     if (isCorrect) {
+      toast('Nice!', 'success');
       setCurrentGuess(headline.correctAnswer);
-      onCorrectGuess();
-      setFeedback(({ wrongGuesses }) => ({ correct: true, wrongGuesses }));
+      setFeedback(prev => ({ ...prev, correct: true }));
+      incrementStat('totalPlays');
+      if (feedback.wrongGuesses.length === 0) {
+        incrementStat('firstGuessCorrectCount');
+      }
+      saveResult(headline.id, new Date(), feedback.wrongGuesses.length, settings.expertMode);
+      recordGameCompleted(headline.id, { guesses: feedback.wrongGuesses.map(g => g.guess) });
     } else {
-      setFeedback(({ wrongGuesses, correct }) => ({
-        correct,
+      if (feedback.wrongGuesses.find(g => g.guess === currentGuess)) {
+        toast('Already guessed!', 'warning');
+        return;
+      }
+      incrementStat('totalIncorrectGuesses');
+      setFeedback(({ wrongGuesses, ...rest }) => ({
+        ...rest,
         wrongGuesses: [...wrongGuesses, { guess: currentGuess, timestamp: Date.now() }],
       }));
       if (settings.expertMode) {
         setCurrentGuess('');
       }
     }
-  }, [currentGuess, headline.correctAnswer, settings.expertMode, onCorrectGuess]);
+  }, [
+    currentGuess,
+    feedback.wrongGuesses,
+    headline.correctAnswer,
+    headline.id,
+    setFeedback,
+    settings.expertMode,
+    toast,
+  ]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isGameOver) {
       const handleKeyPress = ({ key }: { key: string }) =>
         key === 'Enter' && !isGameOver && handleGuess();
@@ -52,42 +86,78 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, onCorrectGuess 
     }
   }, [handleGuess, isGameOver]);
 
+  const canShowHint = !feedback.hintCharCount || !feedback.hintFirstChar || !feedback.hintText;
+
+  const onHintClick = useCallback(() => {
+    if (canShowHint) {
+      // eslint-disable-next-line no-restricted-globals
+      if (confirm(getNextHintPrompt(feedback))) {
+        setFeedback(f => getNextHint(headline, f));
+        toast('Hint revealed!', 'info');
+      }
+    }
+  }, [canShowHint, feedback, headline, setFeedback, toast]);
+
   return (
     <>
-      {settings.showAnimations && <AnimatedBackground />}
-      <section className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-8 max-w-4xl mx-auto  z-10">
-        <HeadlineDisplay headline={headline} currentGuess={currentGuess} isGameOver={isGameOver} />
+      <section className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-4 sm:p-8 w-full max-w-4xl mx-auto">
+        <HeadlineDisplay
+          headline={headline}
+          currentGuess={currentGuess}
+          isGameOver={isGameOver}
+          feedback={feedback}
+        />
         <div className="flex flex-col items-center">
-          {settings.expertMode ? (
-            <ExpertInput
-              onSetGuess={setCurrentGuess}
-              disabled={isGameOver}
-              currentGuess={currentGuess}
-            />
+          {isGameOver ? null : settings.expertMode ? (
+            <ExpertInput onSetGuess={setCurrentGuess} currentGuess={currentGuess} />
           ) : (
-            <AnswerWheel
-              choices={headline.possibleAnswers}
-              onSetGuess={setCurrentGuess}
-              disabled={isGameOver}
-            />
+            <AnswerWheel choices={headline.possibleAnswers} onSetGuess={setCurrentGuess} />
           )}
 
-          {/* Flex row for enter and share buttons */}
-          <div className="flex flex-row items-center justify-center gap-4 mt-4">
+          {/* Button row: grid for game, flex for share */}
+          <div
+            className={
+              isGameOver
+                ? 'flex justify-center mt-4 w-full'
+                : 'grid grid-cols-3 items-center gap-4 mt-4 w-full'
+            }
+          >
             {isGameOver ? (
-              <ShareButtons wrongGuesses={feedback.wrongGuesses} />
+              <ShareButtons feedback={feedback} headline={headline} />
             ) : (
-              <button
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                onClick={handleGuess}
-                disabled={!currentGuess}
-              >
-                [enter]
-              </button>
+              <>
+                <div />
+                <button
+                  className="justify-self-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  onClick={handleGuess}
+                  disabled={!currentGuess}
+                >
+                  Submit
+                </button>
+                {canShowHint ? (
+                  <button
+                    className="justify-self-start py-2 text-white transition-colors"
+                    title={canShowHint ? 'Get a hint' : 'No more hints available'}
+                    onClick={onHintClick}
+                  >
+                    <LightBulbIcon className="w-5 h-5" />
+                  </button>
+                ) : (
+                  <div />
+                )}
+              </>
             )}
           </div>
 
-          {feedback && feedback.wrongGuesses.length > 0 && (
+          {feedback.hintText && (
+            <div className="mt-4 w-full max-w-md">
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                Hint: {feedback.hintText}
+              </div>
+            </div>
+          )}
+
+          {feedback.wrongGuesses.length > 0 && (
             <div className="mt-4 w-full max-w-md">
               <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                 Guesses: {feedback.wrongGuesses.length}
@@ -105,8 +175,6 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, onCorrectGuess 
             </div>
           )}
         </div>
-
-        {isGameOver && feedback && <Feedback feedback={feedback} />}
       </section>
     </>
   );

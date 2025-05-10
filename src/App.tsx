@@ -1,87 +1,92 @@
 import { useState, useEffect } from 'react';
-import { Headline } from './types';
+import { Headline, Feedback } from './types';
 import Header from './components/Header';
 import GameContainer from './components/GameContainer';
 import SettingsModal from './components/SettingsModal';
 import HelpModal from './components/HelpModal';
-import { fetchHeadline } from './lib/api';
-import { getStoredScore, getStoredStreak, saveScore, saveStreak } from './lib/storage';
-import { calculateNewScore, calculateNewStreak } from './lib/game';
+import { fetchHeadline, recordGameStarted } from './lib/api';
 import { SettingsProvider } from './contexts/SettingsContext';
+import StatsModal from './components/StatsModal';
+import AnimatedBackground from './components/AnimatedBackground';
+import { getLastStarted, getStoredScores, setLastStarted } from './lib/storage';
+import { ToastProvider } from './contexts/ToastContext';
 
 function App() {
-  const [headline, setHeadline] = useState<Headline | null>(null);
-  const [score, setScore] = useState<number>(0);
-  const [streak, setStreak] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
-  const [isHelpOpen, setIsHelpOpen] = useState<boolean>(false);
+  const [headline, setHeadline] = useState<Headline>();
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string>();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isStatsOpen, setIsStatsOpen] = useState(false);
+  const [feedback, setFeedback] = useState<Feedback>({ correct: false, wrongGuesses: [] });
 
   useEffect(() => {
-    // Load saved score and streak
-    setScore(getStoredScore());
-    setStreak(getStoredStreak());
-
-    // Fetch initial headline
-    fetchNewHeadline();
+    setIsLoading(true);
+    // use the id from the url if it's specified in the query params
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.has('id') ? urlParams.get('id')! : undefined;
+    fetchHeadline(id)
+      .then(setHeadline)
+      .catch(err => {
+        setError('Failed to load game. Please try again.');
+        console.error('Error fetching headline:', err);
+      })
+      .finally(() => setIsLoading(false));
   }, []);
 
-  const fetchNewHeadline = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const newHeadline = await fetchHeadline();
-      setHeadline(newHeadline);
-    } catch (err) {
-      setError('Failed to load game. Please try again.');
-      console.error('Error fetching headline:', err);
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (headline) {
+      const lastStarted = getLastStarted();
+      const score = getStoredScores()[`${headline.id}`];
+
+      if (score) {
+        setFeedback({ correct: true, wrongGuesses: [] });
+      } else if (lastStarted !== headline.id) {
+        // only record started if we haven't already started this
+        recordGameStarted(headline.id);
+      }
+
+      setLastStarted(headline.id);
     }
-  };
-
-  const handleCorrectGuess = () => {
-    // Update score and streak
-    const newScore = calculateNewScore(score, true);
-    const newStreak = calculateNewStreak(streak, true);
-
-    setScore(newScore);
-    setStreak(newStreak);
-
-    // Save to localStorage
-    saveScore(newScore);
-    saveStreak(newStreak);
-  };
+  }, [headline]);
 
   return (
     <SettingsProvider>
-      <div className="min-h-screen bg-white dark:bg-gray-950 flex flex-col items-center justify-start pb-12 relative">
-        <div className="relative w-full">
-          <Header
-            score={score}
-            streak={streak}
-            onSettings={() => setIsSettingsOpen(true)}
-            onHelp={() => setIsHelpOpen(true)}
+      <ToastProvider>
+        <div className="min-h-screen bg-white dark:bg-gray-950 flex flex-col items-center justify-start pb-6 sm:pb-12 px-2 sm:px-4 relative">
+          <AnimatedBackground />
+          <div className="relative w-full z-10 flex flex-col flex-1">
+            <Header
+              onSettings={() => setIsSettingsOpen(true)}
+              onHelp={() => setIsHelpOpen(true)}
+              onStats={() => setIsStatsOpen(true)}
+            />
+            <main className="w-full flex flex-col items-center flex-1">
+              {isLoading ? (
+                <div className="text-center text-gray-500 dark:text-gray-400 py-12">Loading...</div>
+              ) : error ? (
+                <div className="text-center text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900 rounded-lg px-6 py-4 my-8">
+                  {error}
+                </div>
+              ) : headline ? (
+                <GameContainer headline={headline} feedback={feedback} setFeedback={setFeedback} />
+              ) : null}
+            </main>
+            <footer className="mt-8 text-gray-500 dark:text-gray-400 text-center">
+              <p>New headline every day!</p>
+              <p>© 2025 Alex Rich</p>
+            </footer>
+          </div>
+          <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+          <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+          <StatsModal
+            isOpen={isStatsOpen}
+            onClose={() => setIsStatsOpen(false)}
+            headline={headline}
+            feedback={feedback}
           />
-          <main className="w-full flex flex-col items-center flex-1">
-            {isLoading ? (
-              <div className="text-center text-gray-500 dark:text-gray-400 py-12">Loading...</div>
-            ) : error ? (
-              <div className="text-center text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900 rounded-lg px-6 py-4 my-8">
-                {error}
-              </div>
-            ) : headline ? (
-              <GameContainer headline={headline} onCorrectGuess={handleCorrectGuess} />
-            ) : null}
-          </main>
-          <footer className="mt-8 text-gray-500 dark:text-gray-400 text-center">
-            <p>New headline every day!</p>
-          </footer>
         </div>
-        <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-        <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
-      </div>
+      </ToastProvider>
     </SettingsProvider>
   );
 }

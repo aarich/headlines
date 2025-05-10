@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import onionSvg from '../assets/onion.svg';
 import { useSettings } from '../contexts/SettingsContext';
 
@@ -52,39 +52,41 @@ const AnimatedBackground: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Initialize onions with unique movement patterns
-  const [onions] = useState(() =>
-    Array.from({ length: ANIMATION_CONFIG.maxOnions }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size:
-        Math.random() * (ANIMATION_CONFIG.maxSize - ANIMATION_CONFIG.minSize) +
-        ANIMATION_CONFIG.minSize,
-      rotation: Math.random() * 360,
-      floatDuration:
-        Math.random() *
-          (ANIMATION_CONFIG.floatDurationRange.max - ANIMATION_CONFIG.floatDurationRange.min) +
-        ANIMATION_CONFIG.floatDurationRange.min,
-      floatDistance:
-        Math.random() *
-          (ANIMATION_CONFIG.floatDistanceRange.max - ANIMATION_CONFIG.floatDistanceRange.min) +
-        ANIMATION_CONFIG.floatDistanceRange.min,
-      moveDuration:
-        Math.random() *
-          (ANIMATION_CONFIG.moveDurationRange.max - ANIMATION_CONFIG.moveDurationRange.min) +
-        ANIMATION_CONFIG.moveDurationRange.min,
-      moveDistance:
-        Math.random() *
-          (ANIMATION_CONFIG.moveDistanceRange.max - ANIMATION_CONFIG.moveDistanceRange.min) +
-        ANIMATION_CONFIG.moveDistanceRange.min,
-      moveAngle: Math.random() * 360,
-      rotationDuration:
-        Math.random() *
-          (ANIMATION_CONFIG.rotationDurationRange.max -
-            ANIMATION_CONFIG.rotationDurationRange.min) +
-        ANIMATION_CONFIG.rotationDurationRange.min,
-      rotationDirection: ANIMATION_CONFIG.rotationDirection[Math.floor(Math.random() * 2)],
-    }))
+  const onions = useMemo(
+    () =>
+      Array.from({ length: ANIMATION_CONFIG.maxOnions }, (_, i) => ({
+        id: i,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        size:
+          Math.random() * (ANIMATION_CONFIG.maxSize - ANIMATION_CONFIG.minSize) +
+          ANIMATION_CONFIG.minSize,
+        rotation: Math.random() * 360,
+        floatDuration:
+          Math.random() *
+            (ANIMATION_CONFIG.floatDurationRange.max - ANIMATION_CONFIG.floatDurationRange.min) +
+          ANIMATION_CONFIG.floatDurationRange.min,
+        floatDistance:
+          Math.random() *
+            (ANIMATION_CONFIG.floatDistanceRange.max - ANIMATION_CONFIG.floatDistanceRange.min) +
+          ANIMATION_CONFIG.floatDistanceRange.min,
+        moveDuration:
+          Math.random() *
+            (ANIMATION_CONFIG.moveDurationRange.max - ANIMATION_CONFIG.moveDurationRange.min) +
+          ANIMATION_CONFIG.moveDurationRange.min,
+        moveDistance:
+          Math.random() *
+            (ANIMATION_CONFIG.moveDistanceRange.max - ANIMATION_CONFIG.moveDistanceRange.min) +
+          ANIMATION_CONFIG.moveDistanceRange.min,
+        moveAngle: Math.random() * 360,
+        rotationDuration:
+          Math.random() *
+            (ANIMATION_CONFIG.rotationDurationRange.max -
+              ANIMATION_CONFIG.rotationDurationRange.min) +
+          ANIMATION_CONFIG.rotationDurationRange.min,
+        rotationDirection: ANIMATION_CONFIG.rotationDirection[Math.floor(Math.random() * 2)],
+      })),
+    []
   );
 
   // Check for dark mode
@@ -112,6 +114,10 @@ const AnimatedBackground: React.FC = () => {
 
     return () => clearInterval(colorInterval);
   }, []);
+
+  if (!settings.showAnimations) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{}}>

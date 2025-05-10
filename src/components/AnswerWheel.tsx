@@ -11,12 +11,11 @@ const ITEM_WIDTH = 96; // px, width of each item
 interface AnswerWheelProps {
   choices: string[];
   onSetGuess: (guess: string) => void;
-  disabled?: boolean;
 }
 
 const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(val, max));
 
-const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess, disabled }) => {
+const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const dragStartX = useRef<number | null>(null);
   const dragStartIndex = useRef<number>(0);
@@ -24,14 +23,13 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess, disabled
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!disabled && choices.length > 0) {
+    if (choices.length > 0) {
       onSetGuess(choices[selectedIndex]);
     }
-  }, [selectedIndex, choices, onSetGuess, disabled]);
+  }, [selectedIndex, choices, onSetGuess]);
 
   // Drag handlers
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (disabled) return;
     dragging.current = true;
     dragStartX.current = e.clientX;
     dragStartIndex.current = selectedIndex;
@@ -57,7 +55,6 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess, disabled
 
   // Touch support
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (disabled) return;
     dragging.current = true;
     dragStartX.current = e.touches[0].clientX;
     dragStartIndex.current = selectedIndex;
@@ -83,14 +80,12 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess, disabled
 
   // Wheel support
   const handleWheel = (e: React.WheelEvent) => {
-    if (disabled) return;
     e.preventDefault();
     setSelectedIndex(prev => clamp(prev + (e.deltaY > 0 ? 1 : -1), 0, choices.length - 1));
   };
 
   // Keyboard support
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (disabled) return;
     if (e.key === 'ArrowLeft') {
       setSelectedIndex(prev => clamp(prev - 1, 0, choices.length - 1));
     } else if (e.key === 'ArrowRight') {
@@ -101,8 +96,7 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess, disabled
   return (
     <div
       ref={containerRef}
-      className="relative inline-block w-48 mx-2 h-16 overflow-visible select-none"
-      style={{ width: ITEM_WIDTH * (FADE_DISTANCE * 2 + 1) }}
+      className="relative w-full max-w-xs sm:w-48 mx-auto h-16 overflow-x-auto overflow-y-visible select-none px-2 hide-scrollbar"
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
       onWheel={handleWheel}
@@ -123,14 +117,14 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess, disabled
             <button
               key={choice}
               type="button"
-              className={`absolute top-1/2 left-1/2 px-2 py-1 text-center text-2xl font-medium rounded-lg transition-colors
-                ${isSelected ? 'z-10 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900 shadow-lg' : 'text-gray-600 dark:text-gray-400 bg-transparent'}
-                ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:text-blue-500 dark:hover:text-blue-300'}`}
+              className={`absolute top-1/2 left-1/2 px-2 py-1 text-center text-base sm:text-lg md:text-2xl font-medium rounded-lg transition-colors
+                ${isSelected ? 'z-10 text-blue-600 dark:text-blue-400 shadow-lg' : 'text-gray-600 dark:text-gray-400 bg-transparent'}
+                ${'cursor-pointer hover:text-blue-500 dark:hover:text-blue-300'}`}
               style={{
                 transform: `translate(-50%, -50%) translateX(${x}px) scale(${scale})`,
                 opacity,
                 transition: `transform ${ANIMATION_DURATION}ms ${ANIMATION_EASING}, opacity ${ANIMATION_DURATION}ms ${ANIMATION_EASING}`,
-                pointerEvents: isSelected || !disabled ? 'auto' : 'none',
+                pointerEvents: isSelected ? 'auto' : 'none',
                 minWidth: ITEM_WIDTH - 16,
               }}
               onClick={() => setSelectedIndex(index)}

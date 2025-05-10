@@ -29,6 +29,10 @@
     "extends": [
       "react-app",
       "react-app/jest"
+    ],
+    "ignorePatterns": [
+      "public/api/**",
+      "build/**"
     ]
   },
   "browserslist": {

@@ -21,7 +21,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
 
   if (!isOpen) return null;
   return (
-    <div className="modal z-50" onClick={onClose}>
+    <div className="modal z-50 flex items-center justify-center" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h2>
@@ -33,7 +33,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
             ×
           </button>
         </div>
-        <div>{children}</div>
+        <div className="max-h-[60vh] overflow-y-auto">{children}</div>
       </div>
     </div>
   );
