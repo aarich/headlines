@@ -1,35 +1,51 @@
 # Deny access to all .php files in the api directory except those explicitly allowed
+
 <FilesMatch "^(?!index\.php$|update-stat\.php$|get-headline\.php$).*\.php$">
-    Order Allow,Deny
-    Deny from all
+Order Allow,Deny
+Deny from all
 </FilesMatch>
 
 # Prevent directory listing
+
 Options -Indexes
 
 # Prevent access to hidden files
+
 <FilesMatch "^\.">
-    Order Allow,Deny
-    Deny from all
+Order Allow,Deny
+Deny from all
 </FilesMatch>
 
 # Prevent access to config files
+
 <FilesMatch "config\.(local|example)\.php$">
-    Order Allow,Deny
-    Deny from all
-</FilesMatch> 
+Order Allow,Deny
+Deny from all
+</FilesMatch>
 
 # Prevent access to db-utils.php
+
 <FilesMatch "db-utils.php">
-    Order Allow,Deny
-    Deny from all
+Order Allow,Deny
+Deny from all
 </FilesMatch>
 
 # Enable URL rewriting
+
 RewriteEngine On
 
 # Rewrite /api/update-stat to /api/update-stat.php
+
 RewriteRule ^api/update-stat$ api/update-stat.php [L]
 
 # Rewrite /api/get-headline to /api/get-headline.php
+
 RewriteRule ^api/get-headline$ api/get-headline.php [L]
+
+# Cache PHP responses for 5 minutes
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.php$">
+        Header set Cache-Control "max-age=300, public"
+    </FilesMatch>
+</IfModule>

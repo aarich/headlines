@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 
 // Tuning constants
 const FADE_DISTANCE = 2; // How many items to show on each side
-const FADE_SPEED = 0.4; // Opacity drop per step
-const SCALE_SPEED = 0.15; // Scale drop per step
+const FADE_SPEED = 0.6; // Opacity drop per step
+const SCALE_SPEED = 0.2; // Scale drop per step
+const BLUR_SPEED = 0.8; // Blur amount per step (px)
 const ANIMATION_DURATION = 300; // ms
 const ANIMATION_EASING = 'cubic-bezier(0.4, 0, 0.2, 1)';
-const ITEM_WIDTH = 96; // px, width of each item
+const ITEM_WIDTH = window.innerWidth < 768 ? 96 : 132; // px, width of each item - responsive based on screen size
 
 interface AnswerWheelProps {
   choices: string[];
@@ -80,7 +81,6 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
 
   // Wheel support
   const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
     setSelectedIndex(prev => clamp(prev + (e.deltaY > 0 ? 1 : -1), 0, choices.length - 1));
   };
 
@@ -96,7 +96,7 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
   return (
     <div
       ref={containerRef}
-      className="relative w-full max-w-xs sm:w-48 mx-auto h-16 overflow-x-auto overflow-y-visible select-none px-2 hide-scrollbar"
+      className="relative w-full max-w-2xl mx-auto h-16 overflow-x-auto overflow-y-visible select-none px-2 hide-scrollbar"
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
       onWheel={handleWheel}
@@ -111,6 +111,7 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
           if (Math.abs(distance) > FADE_DISTANCE) return null;
           const opacity = Math.max(0, 1 - Math.abs(distance) * FADE_SPEED);
           const scale = Math.max(0.7, 1 - Math.abs(distance) * SCALE_SPEED);
+          const blur = Math.abs(distance) === 0 ? 0 : Math.min(2, Math.abs(distance) * BLUR_SPEED);
           const x = distance * ITEM_WIDTH;
           const isSelected = index === selectedIndex;
           return (
@@ -124,8 +125,8 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
                 transform: `translate(-50%, -50%) translateX(${x}px) scale(${scale})`,
                 opacity,
                 transition: `transform ${ANIMATION_DURATION}ms ${ANIMATION_EASING}, opacity ${ANIMATION_DURATION}ms ${ANIMATION_EASING}`,
-                pointerEvents: isSelected ? 'auto' : 'none',
                 minWidth: ITEM_WIDTH - 16,
+                filter: `blur(${blur}px)`,
               }}
               onClick={() => setSelectedIndex(index)}
               tabIndex={isSelected ? 0 : -1}

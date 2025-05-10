@@ -13,39 +13,39 @@ $subreddit = 'nottheonion';
 
 // Function to fetch top posts
 function getTopPosts($subreddit, $user_agent, $client_id, $client_secret) {
-  $ch = curl_init("https://www.reddit.com/api/v1/access_token");
-  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-  curl_setopt($ch, CURLOPT_POST, true);
-  curl_setopt($ch, CURLOPT_USERPWD, $client_id . ":" . $client_secret);
-  curl_setopt($ch, CURLOPT_POSTFIELDS, "grant_type=client_credentials");
-  curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'Content-Type: application/x-www-form-urlencoded'
-  ]);
+  // $ch = curl_init("https://www.reddit.com/api/v1/access_token");
+  // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  // curl_setopt($ch, CURLOPT_POST, true);
+  // curl_setopt($ch, CURLOPT_USERPWD, $client_id . ":" . $client_secret);
+  // curl_setopt($ch, CURLOPT_POSTFIELDS, "grant_type=client_credentials");
+  // curl_setopt($ch, CURLOPT_HTTPHEADER, [
+  //   'Content-Type: application/x-www-form-urlencoded'
+  // ]);
 
-  $response = curl_exec($ch);
+  // $response = curl_exec($ch);
 
-  if (curl_errno($ch)) {
-    throw new Exception('Curl error getting access token: ' . curl_error($ch));
-  }
+  // if (curl_errno($ch)) {
+  //   throw new Exception('Curl error getting access token: ' . curl_error($ch));
+  // }
 
-  $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-  if ($httpCode !== 200) {
-    throw new Exception('HTTP error getting access token: ' . $httpCode);
-  }
+  // $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+  // if ($httpCode !== 200) {
+  //   throw new Exception('HTTP error getting access token: ' . $httpCode);
+  // }
 
-  curl_close($ch);
+  // curl_close($ch);
 
-  $tokenData = json_decode($response, true);
-  if (json_last_error() !== JSON_ERROR_NONE) {
-    throw new Exception('JSON decode error getting access token: ' . json_last_error_msg());
-  }
+  // $tokenData = json_decode($response, true);
+  // if (json_last_error() !== JSON_ERROR_NONE) {
+  //   throw new Exception('JSON decode error getting access token: ' . json_last_error_msg());
+  // }
 
-  $access_token = $tokenData['access_token'];
+  // $access_token = $tokenData['access_token'];
   $ch = curl_init("https://www.reddit.com/r/{$subreddit}/top.json?limit=25&t=day");
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'User-Agent: ' . $user_agent,
-    'Authorization: Bearer ' . $access_token
+    'User-Agent: ' . $user_agent
+    // 'Authorization: Bearer ' . $access_token
   ]);
 
   $response = curl_exec($ch);

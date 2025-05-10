@@ -99,12 +99,14 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, feedback, setFe
           isGameOver={isGameOver}
           feedback={feedback}
         />
-        <div className="flex flex-col items-center">
-          {isGameOver ? null : settings.expertMode ? (
-            <ExpertInput onSetGuess={setCurrentGuess} currentGuess={currentGuess} />
-          ) : (
-            <AnswerWheel choices={headline.possibleAnswers} onSetGuess={setCurrentGuess} />
-          )}
+        <div className="flex flex-col items-center w-full">
+          <div className="w-full flex justify-center">
+            {isGameOver ? null : settings.expertMode ? (
+              <ExpertInput onSetGuess={setCurrentGuess} currentGuess={currentGuess} />
+            ) : (
+              <AnswerWheel choices={headline.possibleAnswers} onSetGuess={setCurrentGuess} />
+            )}
+          </div>
 
           {/* Button row: grid for game, flex for share */}
           <div

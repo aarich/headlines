@@ -77,11 +77,21 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => (
       <h3 className="text-xl font-semibold mt-6">About</h3>
       <p>
         This game was made by{' '}
-        <a href="https://mrarich.com/about" className="text-blue-500 hover:text-blue-600">
+        <a
+          href="https://mrarich.com/about"
+          className="text-blue-500 hover:text-blue-600"
+          target="_blank"
+          rel="noreferrer"
+        >
           Alex Rich
         </a>
         . It's open source, meaning you can look at the{' '}
-        <a href="https://github.com/aarich/headlines" className="text-blue-500 hover:text-blue-600">
+        <a
+          href="https://github.com/aarich/headlines"
+          className="text-blue-500 hover:text-blue-600"
+          target="_blank"
+          rel="noreferrer"
+        >
           code
         </a>
         . Feel free to contribute or raise bugs.
