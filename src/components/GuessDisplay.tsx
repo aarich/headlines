@@ -21,7 +21,7 @@ const GuessDisplay: React.FC<GuessDisplayProps> = ({ currentGuess, feedback }) =
   if (feedback.hintFirstChar) {
     if (currentGuess) {
       totalCharsShowing = currentGuess.length;
-      if (!currentGuess.startsWith(feedback.hintFirstChar)) {
+      if (!currentGuess.toLowerCase().startsWith(feedback.hintFirstChar.toLowerCase())) {
         redChars = currentGuess[0];
         regularChars = currentGuess.slice(1);
       } else {

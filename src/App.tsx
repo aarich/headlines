@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Headline, Feedback } from './types';
 import Header from './components/Header';
 import GameContainer from './components/GameContainer';
@@ -8,7 +8,13 @@ import { fetchHeadline, recordGameStarted } from './lib/api';
 import { SettingsProvider } from './contexts/SettingsContext';
 import StatsModal from './components/StatsModal';
 import AnimatedBackground from './components/AnimatedBackground';
-import { getLastStarted, getStoredScores, setLastStarted } from './lib/storage';
+import {
+  getLastStarted,
+  getStoredFeedback,
+  getStoredScores,
+  setLastStarted,
+  storeFeedback,
+} from './lib/storage';
 import { ToastProvider } from './contexts/ToastContext';
 
 function App() {
@@ -38,17 +44,40 @@ function App() {
     if (headline) {
       const lastStarted = getLastStarted();
       const score = getStoredScores()[`${headline.id}`];
+      const feedback = getStoredFeedback(headline.id);
 
       if (score) {
-        setFeedback({ correct: true, wrongGuesses: [] });
-      } else if (lastStarted !== headline.id) {
-        // only record started if we haven't already started this
-        recordGameStarted(headline.id);
+        setFeedback(feedback ?? { correct: true, wrongGuesses: [] });
+      } else {
+        if (lastStarted !== headline.id) {
+          // only record started if we haven't already started this
+          recordGameStarted(headline.id);
+        }
+
+        if (feedback) {
+          setFeedback(feedback);
+        }
       }
 
       setLastStarted(headline.id);
     }
   }, [headline]);
+
+  const setFeedbackWrapper = useCallback(
+    (arg: Feedback | ((prevState: Feedback) => Feedback)) => {
+      if (typeof arg === 'function') {
+        setFeedback(prev => {
+          const newFeedback = arg(prev);
+          headline && storeFeedback(headline.id, newFeedback);
+          return newFeedback;
+        });
+      } else {
+        setFeedback(arg);
+        headline && storeFeedback(headline.id, arg);
+      }
+    },
+    [headline]
+  );
 
   return (
     <SettingsProvider>
@@ -69,7 +98,11 @@ function App() {
                   {error}
                 </div>
               ) : headline ? (
-                <GameContainer headline={headline} feedback={feedback} setFeedback={setFeedback} />
+                <GameContainer
+                  headline={headline}
+                  feedback={feedback}
+                  setFeedback={setFeedbackWrapper}
+                />
               ) : null}
             </main>
             <footer className="mt-8 text-gray-500 dark:text-gray-400 text-center">

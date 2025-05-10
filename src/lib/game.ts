@@ -57,7 +57,7 @@ export const shareScore = (id: number, feedback: Feedback, forceCopy: boolean = 
 
   hintsText = hintsText.length > 0 ? hintsText : 'No hints! 😎';
 
-  const shareText = `I Spotted the Leek\n\n${countText}\n${hintsText}\n\n${window.location.href}`;
+  const shareText = `I found the leek: ${countText}\n${hintsText}\n\n${window.location.href}`;
 
   if (navigator.share && !forceCopy) {
     navigator

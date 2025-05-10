@@ -64,15 +64,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, feedback, setFe
         setCurrentGuess('');
       }
     }
-  }, [
-    currentGuess,
-    feedback.wrongGuesses,
-    headline.correctAnswer,
-    headline.id,
-    setFeedback,
-    settings.expertMode,
-    toast,
-  ]);
+  }, [currentGuess, feedback, headline, setFeedback, settings.expertMode, toast]);
 
   useEffect(() => {
     if (!isGameOver) {
