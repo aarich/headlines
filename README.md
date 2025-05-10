@@ -40,7 +40,7 @@ A web application where users guess the missing words in newspaper headlines. Th
 3. Copy the build files to your server using scp:
 
    ```bash
-   scp -r build/* user@your-server:/doc/root/path
+   scp -r build/. user@your-server:/doc/root/path
    ```
 
    Replace `user@your-server` with your actual server credentials and `/doc/root/path/` with your web server's document root path.

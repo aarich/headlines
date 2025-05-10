@@ -1,5 +1,5 @@
 const config = {
-  apiUrl: process.env.REACT_APP_API_URL || 'http://localhost:8000'
+  apiUrl: process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : '',
 };
 
-export default config; 
+export default config;
