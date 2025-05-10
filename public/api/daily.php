@@ -3,18 +3,49 @@
 require_once 'db-utils.php';
 
 $config = require __DIR__ . '/config.php';
-$user_agent = $config['reddit']['user_agent'];
+$reddit_user_agent = $config['reddit']['user_agent'];
+$reddit_client_id = $config['reddit']['client_id'];
+$reddit_client_secret = $config['reddit']['client_secret'];
 $gemini_api_key = $config['google']['api_key'];
 
 // Subreddit to fetch posts from
 $subreddit = 'nottheonion';
 
 // Function to fetch top posts
-function getTopPosts($subreddit, $user_agent) {
+function getTopPosts($subreddit, $user_agent, $client_id, $client_secret) {
+  $ch = curl_init("https://www.reddit.com/api/v1/access_token");
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_POST, true);
+  curl_setopt($ch, CURLOPT_USERPWD, $client_id . ":" . $client_secret);
+  curl_setopt($ch, CURLOPT_POSTFIELDS, "grant_type=client_credentials");
+  curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Content-Type: application/x-www-form-urlencoded'
+  ]);
+
+  $response = curl_exec($ch);
+
+  if (curl_errno($ch)) {
+    throw new Exception('Curl error getting access token: ' . curl_error($ch));
+  }
+
+  $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+  if ($httpCode !== 200) {
+    throw new Exception('HTTP error getting access token: ' . $httpCode);
+  }
+
+  curl_close($ch);
+
+  $tokenData = json_decode($response, true);
+  if (json_last_error() !== JSON_ERROR_NONE) {
+    throw new Exception('JSON decode error getting access token: ' . json_last_error_msg());
+  }
+
+  $access_token = $tokenData['access_token'];
   $ch = curl_init("https://www.reddit.com/r/{$subreddit}/top.json?limit=25&t=day");
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'User-Agent: ' . $user_agent
+    'User-Agent: ' . $user_agent,
+    'Authorization: Bearer ' . $access_token
   ]);
 
   $response = curl_exec($ch);
@@ -97,7 +128,7 @@ try {
 
 
   // Fetch top posts
-  $posts = getTopPosts($subreddit, $user_agent);
+  $posts = getTopPosts($subreddit, $reddit_user_agent, $reddit_client_id, $reddit_client_secret);
 
   echo "posts: " . print_r($posts, true) . "\n";
 
