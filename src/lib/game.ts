@@ -1,4 +1,4 @@
-import { Feedback, Headline, WrongGuess } from '../types';
+import { Feedback, Headline } from '../types';
 import { recordShare } from './api';
 
 const normalizeString = (str: string): string => {

@@ -1,12 +1,21 @@
-import { Headline } from '../types';
+import { Headline, HeadlineHistory } from '../types';
 import config from '../config';
 
 export const fetchHeadline = async (id?: string): Promise<Headline> => {
-  const response = await fetch(`${config.apiUrl}/api/get-headline${id ? `?id=${id}` : ''}`);
+  const response = await fetch(`${config.apiUrl}/api/headline${id ? `?id=${id}` : ''}`);
   if (!response.ok) {
     throw new Error('Failed to fetch headline');
   }
   return response.json();
+};
+
+export const fetchHistory = async (): Promise<HeadlineHistory[]> => {
+  const response = await fetch(`${config.apiUrl}/api/history`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch history');
+  }
+
+  return response.json().then(data => data.headlines);
 };
 
 interface GameCompletedData {

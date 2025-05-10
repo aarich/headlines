@@ -157,3 +157,39 @@ function insertHeadline(string $headline, string $before_blank, string $after_bl
     $stmt = $db->prepare('INSERT INTO headline_stats (headline_id) VALUES (?)');
     $stmt->execute([$headlineId]);
 }
+
+function getStatus() {
+    $db = getDbConnection();
+    // Get the latest headline id
+    $query = '
+        SELECT 
+            h.id,
+            h.headline,
+            h.created_at
+        FROM headline h
+        ORDER BY h.id DESC LIMIT 1
+    ';
+  
+    $stmt = getDbConnection()->query($query);
+    $headline = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$headline) {
+        http_response_code(404);
+        $set_response_code = true;
+        throw new Exception('No headlines found');
+    }
+
+    // check if the headline is older than 24 hours
+    $current_time = new DateTime();
+    $created_time = new DateTime($headline['created_at']);
+    $interval = $current_time->diff($created_time);
+
+    $missing_headline = $interval->i > 24; // TODO switch back to h
+    
+    $result = [
+        'last_headline' => $headline,
+        'missing' => $missing_headline,
+    ];
+
+    return $result;
+}

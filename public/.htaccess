@@ -1,6 +1,6 @@
 # Deny access to all .php files in the api directory except those explicitly allowed
 
-<FilesMatch "^(?!index\.php$|update-stat\.php$|get-headline\.php$).*\.php$">
+<FilesMatch "^(?!history\.php$|status\.php$|update-stat\.php$|headline\.php$).*\.php$">
 Order Allow,Deny
 Deny from all
 </FilesMatch>
@@ -34,13 +34,9 @@ Deny from all
 
 RewriteEngine On
 
-# Rewrite /api/update-stat to /api/update-stat.php
+# Rewrite /api/X to /api/X.php
 
-RewriteRule ^api/update-stat$ api/update-stat.php [L]
-
-# Rewrite /api/get-headline to /api/get-headline.php
-
-RewriteRule ^api/get-headline$ api/get-headline.php [L]
+RewriteRule ^api/([^/]+)$ api/$1.php [L]
 
 # Cache PHP responses for 5 minutes
 

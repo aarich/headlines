@@ -66,3 +66,19 @@ export type Stat =
   | 'longestStreak';
 
 export type Stats = Record<Stat, number>;
+
+export interface HeadlineHistory {
+  id: number;
+  headline: string;
+  beforeBlank: string;
+  afterBlank: string;
+  articleUrl: string;
+  redditUrl: string;
+  correctAnswer: string;
+  publishTime: string;
+  totalPlays: number;
+  totalCorrectGuesses: number;
+  totalIncorrectGuesses: number;
+  firstGuessCorrectCount: number;
+  wrongGuesses: { word: string; count: number }[];
+}
