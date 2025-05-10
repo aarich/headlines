@@ -8,6 +8,14 @@ $config = [
         'user' => 'your_username',
         'pass' => 'your_password',
         'charset' => 'utf8mb4'
+    ],
+    'reddit' => [
+        'client_id' => 'client_id',
+        'client_secret' => 'client_secret',
+        'user_agent' => 'user_agent'
+    ],
+    'google' => [
+        'api_key' => 'api_key'
     ]
 ];
 
@@ -18,4 +26,4 @@ if (file_exists($localConfigFile)) {
     $config = array_replace_recursive($config, $localConfig);
 }
 
-return $config; 
+return $config;

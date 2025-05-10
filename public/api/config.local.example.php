@@ -7,5 +7,13 @@ return [
         'name' => 'dbname',
         'user' => 'your_username',
         'pass' => 'your_password'
+    ],
+    'reddit' => [
+        'client_id' => 'client_id',
+        'client_secret' => 'client_secret',
+        'user_agent' => 'user_agent'
+    ],
+    'google' => [
+        'api_key' => 'AIzaSyB0000000000000000000000000000000'
     ]
-]; 
+];
