@@ -1,3 +1,5 @@
+![Find the Leek Banner](https://github.com/aarich/headlines/blob/master/public/banner.png?raw=true)
+
 # Find the Leek
 
 A web application where users guess the missing words in newspaper headlines. The game updates daily with new headlines and keeps track of player scores.

@@ -12,6 +12,32 @@ $gemini_api_key = $config['google']['api_key'];
 // Subreddit to fetch posts from
 $subreddit = 'nottheonion';
 
+/**
+ * Recursively cleans string values within an array or object.
+ * Replaces multiple whitespace characters (spaces, tabs, newlines) with a single space,
+ * and trims leading/trailing whitespace from strings.
+ *
+ * @param mixed $item The item to clean (array, object, or scalar).
+ */
+function clean_string_values_recursive(&$item) {
+    if (is_string($item)) {
+        // Replace sequences of whitespace characters (including \n, \t, etc.) with a single space
+        $item = preg_replace('/\s+/', ' ', $item);
+        // Trim leading/trailing spaces that might have been created or were already there
+        $item = trim($item);
+    } elseif (is_array($item)) {
+        foreach ($item as &$value) {
+            clean_string_values_recursive($value);
+        }
+        unset($value); // Important to unset the reference
+    } elseif (is_object($item)) {
+        foreach ($item as &$value) {
+            clean_string_values_recursive($value);
+        }
+        unset($value); // Important to unset the reference
+    }
+}
+
 function convert_smart_quotes($string) {
   
   $search = array(
@@ -187,13 +213,8 @@ try {
   echo "response: " . print_r($response, true) . "\n";
 
   $options_by_google = $response['candidates'][0]['content']['parts'][0]['text'];
-
-  // remove newlines and then reformat the json
-  $options_by_google = str_replace("\n", "", $options_by_google);
-  $options_by_google = str_replace("\t", "", $options_by_google);
-  echo "options_by_google: " . $options_by_google . "\n";
   $options_by_google = json_decode($options_by_google, true);
-  echo "options_by_google: " . print_r($options_by_google, true) . "\n";
+  clean_string_values_recursive($options_by_google);
 
   $prompt = getFinalPrompt($options_by_google, $headlines_full);
   $generationConfig = getFinalGenerationConfig();
@@ -215,9 +236,7 @@ try {
   $explanation = $final_choice_data['explanation'];
 
   // convert publish_time to a date
-  $publish_time = date('Y-m-d H:i:s', $publish_time);
-  // add utc to the publish_time
-  $publish_time = $publish_time . ' UTC';
+  $publish_time = gmdate('Y-m-d H:i:s', $publish_time);
 
   // Ensure the case of correct_answer is consistent with the headline
   $correct_answer_lower = strtolower($correct_answer);

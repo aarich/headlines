@@ -36,9 +36,12 @@ RewriteCond %{REQUEST_URI} !\.php[\?#]?.*$
 # Rewrite /api/X to /api/X.php
 RewriteRule ^api/([^/]+)$ api/$1.php [L]
 
-# Cache PHP responses for 5 minutes
-
+# Set headers responses
 <IfModule mod_headers.c>
+    SetEnvIf Request_URI "^/api/" CORS_REQUEST
+    Header set Access-Control-Allow-Origin "*" env=CORS_REQUEST
+    Header set Access-Control-Allow-Methods "GET, POST, PATCH, OPTIONS" env=CORS_REQUEST
+    Header set Access-Control-Allow-Headers "Content-Type" env=CORS_REQUEST
     <FilesMatch "\.php$">
         Header set Cache-Control "max-age=30, public"
     </FilesMatch>

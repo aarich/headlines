@@ -100,7 +100,7 @@ const Header: React.FC<HeaderProps> = ({ onSettings, onHelp, onStats }) => {
         )}
       </div>
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-        Find the Leek
+        <a href="/">Find the Leek</a>
       </h1>
     </header>
   );

@@ -52,12 +52,38 @@ function updateHeadlineStats($headlineId, $updates) {
     return $stmt->rowCount() > 0;
 }
 
+function getBlockedWords() {
+    static $blockedWordsList = null; // Cache within the request
+
+    if ($blockedWordsList === null) {
+        $db = getDbConnection();
+        $stmt = $db->query('SELECT word FROM blocked_words');
+        $words = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        // Store/compare words in lowercase for case-insensitive matching
+        $blockedWordsList = array_map('strtolower', $words);
+    }
+    return $blockedWordsList;
+}
+
 function updateGuesses($headlineId, $guesses) {
+    // Fetch blocked words
+    $blockedWords = getBlockedWords();
 
-    // TODO filter inappropriate guesses
+    // Filter inappropriate guesses
+    $filteredGuesses = [];
+    foreach ($guesses as $guess) {
+        if (!in_array(strtolower(trim($guess)), $blockedWords, true)) {
+            $filteredGuesses[] = trim($guess); // Store the trimmed original guess
+        }
+    }
 
-    // if the guesses are empty, don't do anything
-    if (empty($guesses)) {
+    // Filter guesses to allow alphanumeric, spaces, apostrophes, dashes, slashes, and periods.
+    $filteredGuesses = array_filter($filteredGuesses, function ($word) {
+        return preg_match('/^[a-zA-Z0-9\' \-\/\.]+$/', $word);
+    });
+
+    // if the filtered guesses are empty, don't do anything
+    if (empty($filteredGuesses)) {
         return true;
     }
 
@@ -68,14 +94,14 @@ function updateGuesses($headlineId, $guesses) {
 
     try {
         // Build a single INSERT statement with multiple VALUES
-        $values = array_fill(0, count($guesses), "(?, ?, 1)");
+        $values = array_fill(0, count($filteredGuesses), "(?, ?, 1)");
         $sql = "INSERT INTO wrong_guess (headline_id, guess_word, guess_count) 
                 VALUES " . implode(', ', $values) . "
                 ON DUPLICATE KEY UPDATE guess_count = guess_count + 1";
 
         // Flatten the parameters array
         $params = [];
-        foreach ($guesses as $word) {
+        foreach ($filteredGuesses as $word) {
             $params[] = $headlineId;
             $params[] = $word;
         }
@@ -169,7 +195,7 @@ function getStatus() {
         FROM headline h
         ORDER BY h.id DESC LIMIT 1
     ';
-  
+
     $stmt = getDbConnection()->query($query);
     $headline = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -182,10 +208,10 @@ function getStatus() {
     // check if the headline is older than 24 hours
     $current_time = new DateTime();
     $created_time = new DateTime($headline['created_at']);
-    $interval = $current_time->diff($created_time);
 
-    $missing_headline = $interval->h > 24;
-    
+    // A headline is missing if the last one was created more than 24 hours ago.
+    $missing_headline = ($current_time->getTimestamp() - $created_time->getTimestamp()) >  60 * 60;
+
     $result = [
         'last_headline' => $headline,
         'missing' => $missing_headline,

@@ -50,9 +50,10 @@ const Toast: React.FC<ToastProps> = ({
 
   return (
     <div
-      className={`fixed z-50 bottom-4 left-1/2 transform -translate-x-1/2 text-center rounded-lg px-6 py-3 text-lg font-semibold shadow-lg transition-all duration-300 ease-in-out
+      className={`fixed z-50 left-1/2 transform -translate-x-1/2 text-center rounded-lg px-6 py-3 text-lg font-semibold shadow-lg transition-all duration-300 ease-in-out
       ${getToastStyles(type)}
-      ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
+      ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}
+      bottom-4 sm:top-20 sm:bottom-auto`}
     >
       {message}
     </div>
