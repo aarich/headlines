@@ -20,7 +20,7 @@ const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, feed
   const scores = useMemo(() => getStoredScores(), [feedback.correct]);
   const stats = useMemo(() => getStoredStats(), [feedback.correct]);
   const [history, setHistory] = useState<HeadlineHistory[]>();
-  const [reveal, setReveal] = useState(false);
+  const [revealWords, setRevealWords] = useState(false);
 
   const totalCompleted = Object.keys(scores).length;
 
@@ -43,6 +43,11 @@ const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, feed
     }
   }, [currentStreak, stats.longestStreak]);
 
+  const percentCompleted = (100 * totalCompleted) / (stats.totalPlays || totalCompleted);
+
+  // Hide the first item if the user hasn't completed it yet
+  const hideFirstItem = useMemo(() => !scores[`${history?.[0]?.id}`], [history, scores]);
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Stats">
       <div className="space-y-4 text-gray-700 dark:text-gray-200">
@@ -59,9 +64,8 @@ const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, feed
           <div>
             <p>
               You completed <span className="font-bold">{totalCompleted}</span>{' '}
-              {plural(totalCompleted, 'headline')} (
-              {((100 * totalCompleted) / (stats.totalPlays || totalCompleted)).toFixed()}% success),
-              made <span className="font-bold">{stats.totalIncorrectGuesses ?? 0}</span> incorrect{' '}
+              {plural(totalCompleted, 'headline')} ({percentCompleted.toFixed()}% success), made{' '}
+              <span className="font-bold">{stats.totalIncorrectGuesses ?? 0}</span> incorrect{' '}
               {plural(stats.totalIncorrectGuesses ?? 0, 'guess', 'es')}, and solved{' '}
               <span className="font-bold">{stats.firstGuessCorrectCount}</span>{' '}
               {plural(stats.firstGuessCorrectCount ?? 0, 'game')} on the first try.
@@ -70,13 +74,24 @@ const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, feed
             <p>Current streak: {currentStreak !== undefined ? currentStreak : '...'}</p>
             <h3 className="text-lg font-bold mt-4 flex items-center">
               News Ticker{' '}
-              <button className="mx-4" onClick={() => setReveal(!reveal)}>
-                {reveal ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
+              <button className="mx-4" onClick={() => setRevealWords(!revealWords)}>
+                {revealWords ? (
+                  <EyeIcon className="w-5 h-5" />
+                ) : (
+                  <EyeSlashIcon className="w-5 h-5" />
+                )}
               </button>
             </h3>
             <p className="text-sm text-gray-500 mb-2">Global playing statistics</p>
 
-            {history?.map(h => <TickerItem key={h.id} headline={h} reveal={reveal} />)}
+            {history?.map((h, i) => (
+              <TickerItem
+                key={h.id}
+                headline={h}
+                revealWord={revealWords && !(i === 0 && hideFirstItem)}
+                isLatest={i === 0}
+              />
+            ))}
           </div>
         )}
       </div>

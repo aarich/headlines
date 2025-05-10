@@ -58,7 +58,7 @@ const HeadlineDisplay: React.FC<HeadlineDisplayProps> = ({
       ) : (
         <div className="mb-6">
           <div>{headline.beforeBlank}</div>
-          <div className={`inline-block align-middle mt-5 mb-5 `}>
+          <div className={`inline-block align-middle mt-2 mb-2 `}>
             <GuessDisplay currentGuess={currentGuess} feedback={feedback} />
           </div>
           <div>{headline.afterBlank}</div>

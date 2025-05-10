@@ -90,6 +90,12 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, feedback, setFe
     }
   }, [canShowHint, feedback, headline, setFeedback, toast]);
 
+  useEffect(() => {
+    if (settings.expertMode) {
+      setCurrentGuess('');
+    }
+  }, [settings.expertMode]);
+
   return (
     <>
       <section className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-4 sm:p-8 w-full max-w-4xl mx-auto">

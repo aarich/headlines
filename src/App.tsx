@@ -34,7 +34,7 @@ function App() {
     fetchHeadline(id)
       .then(setHeadline)
       .catch(err => {
-        setError('Failed to load game. Please try again.');
+        setError(err.message);
         console.error('Error fetching headline:', err);
       })
       .finally(() => setIsLoading(false));

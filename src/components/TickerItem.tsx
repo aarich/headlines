@@ -5,7 +5,8 @@ import { PlayIcon } from '@heroicons/react/24/outline';
 
 interface TickerItemProps {
   headline: HeadlineHistory;
-  reveal: boolean;
+  revealWord: boolean;
+  isLatest: boolean;
 }
 
 const TickerItem: React.FC<TickerItemProps> = ({
@@ -22,9 +23,13 @@ const TickerItem: React.FC<TickerItemProps> = ({
     headline,
     id,
   },
-  reveal,
+  revealWord,
+  isLatest,
 }) => {
   const articleSite = articleUrl.split('/')[2];
+
+  const percentSolved = (100 * totalCorrectGuesses) / (totalPlays || 1);
+  const percentFirstTry = (100 * firstGuessCorrectCount) / (totalPlays || 1);
   return (
     <div className="mb-2 p-2 rounded bg-gray-100 dark:bg-gray-700">
       {/* HEADLINE */}
@@ -34,7 +39,7 @@ const TickerItem: React.FC<TickerItemProps> = ({
         target="_blank"
         rel="noopener noreferrer"
       >
-        {reveal ? headline : `${beforeBlank} [???] ${afterBlank}`}
+        {revealWord ? headline : `${beforeBlank} [???] ${afterBlank}`}
       </a>
       <div className="text-xs text-gray-500 mb-1">
         <span className="font-light text-xs text-gray-500">{articleSite}</span>
@@ -60,14 +65,14 @@ const TickerItem: React.FC<TickerItemProps> = ({
       <div className="flex flex-wrap text-sm flex-row justify-between">
         <span className="flex flex-row gap-4">
           <span>
-            Solved: <b>{((100 * totalCorrectGuesses) / totalPlays).toFixed(0)}%</b>
+            Solved: <b>{percentSolved.toFixed(0)}%</b>
           </span>
           <span>
-            First try: <b>{((100 * firstGuessCorrectCount) / totalPlays).toFixed(0)}%</b>
+            First try: <b>{percentFirstTry.toFixed(0)}%</b>
           </span>
         </span>
         <span className="px-2">
-          <a href={`/?id=${id}`} className="pr-4" title="Play this headline">
+          <a href={isLatest ? '/' : `/?id=${id}`} className="pr-4" title="Play this headline">
             <PlayIcon className="w-5 h-5 inline-block" />
           </a>
           <a href={redditUrl} target="_blank" rel="noopener noreferrer" title="View on Reddit">

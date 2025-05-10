@@ -4,6 +4,9 @@ import config from '../config';
 export const fetchHeadline = async (id?: string): Promise<Headline> => {
   const response = await fetch(`${config.apiUrl}/api/headline${id ? `?id=${id}` : ''}`);
   if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error("This game doesn't exist. Try a different one.");
+    }
     throw new Error('Failed to fetch headline');
   }
   return response.json();
