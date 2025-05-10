@@ -22,12 +22,25 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
   const dragStartIndex = useRef<number>(0);
   const dragging = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   useEffect(() => {
     if (choices.length > 0) {
       onSetGuess(choices[selectedIndex]);
     }
   }, [selectedIndex, choices, onSetGuess]);
+
+  // Center selected item in the wheel
+  useEffect(() => {
+    if (containerRef.current && itemRefs.current[selectedIndex]) {
+      const container = containerRef.current;
+      const item = itemRefs.current[selectedIndex];
+      if (item) {
+        const scrollLeft = item.offsetLeft - container.offsetWidth / 2 + item.offsetWidth / 2;
+        container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+      }
+    }
+  }, [selectedIndex, choices.length]);
 
   // Drag handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -96,7 +109,7 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
   return (
     <div
       ref={containerRef}
-      className="relative w-full max-w-2xl mx-auto h-16 overflow-x-auto overflow-y-visible select-none px-2 hide-scrollbar"
+      className="relative w-full max-w-2xl mx-auto h-16 overflow-x-auto overflow-y-visible select-none px-2 hide-scrollbar flex items-center"
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
       onWheel={handleWheel}
@@ -104,29 +117,34 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
       onKeyDown={handleKeyDown}
       role="listbox"
       aria-activedescendant={choices[selectedIndex]}
+      style={{ scrollSnapType: 'x mandatory' }}
     >
-      <div className="absolute left-0 top-1/2 w-full" style={{ transform: 'translateY(-50%)' }}>
+      <div
+        className="flex flex-row items-center w-full justify-center relative"
+        style={{ minHeight: '100%' }}
+      >
         {choices.map((choice, index) => {
           const distance = index - selectedIndex;
           if (Math.abs(distance) > FADE_DISTANCE) return null;
           const opacity = Math.max(0, 1 - Math.abs(distance) * FADE_SPEED);
           const scale = Math.max(0.7, 1 - Math.abs(distance) * SCALE_SPEED);
           const blur = Math.abs(distance) === 0 ? 0 : Math.min(2, Math.abs(distance) * BLUR_SPEED);
-          const x = distance * ITEM_WIDTH;
           const isSelected = index === selectedIndex;
           return (
             <button
               key={choice}
+              ref={el => (itemRefs.current[index] = el)}
               type="button"
-              className={`absolute top-1/2 left-1/2 px-2 py-1 text-center text-base sm:text-lg md:text-2xl font-medium rounded-lg transition-colors
+              className={`mx-2 px-2 py-1 text-center text-base sm:text-lg md:text-2xl font-medium rounded-lg transition-colors
                 ${isSelected ? 'z-10 text-blue-600 dark:text-blue-400 shadow-lg' : 'text-gray-600 dark:text-gray-400 bg-transparent'}
-                ${'cursor-pointer hover:text-blue-500 dark:hover:text-blue-300'}`}
+                cursor-pointer hover:text-blue-500 dark:hover:text-blue-300`}
               style={{
-                transform: `translate(-50%, -50%) translateX(${x}px) scale(${scale})`,
                 opacity,
-                transition: `transform ${ANIMATION_DURATION}ms ${ANIMATION_EASING}, opacity ${ANIMATION_DURATION}ms ${ANIMATION_EASING}`,
+                transform: `scale(${scale})`,
                 minWidth: ITEM_WIDTH - 16,
                 filter: `blur(${blur}px)`,
+                transition: `transform ${ANIMATION_DURATION}ms ${ANIMATION_EASING}, opacity ${ANIMATION_DURATION}ms ${ANIMATION_EASING}`,
+                scrollSnapAlign: 'center',
               }}
               onClick={() => setSelectedIndex(index)}
               tabIndex={isSelected ? 0 : -1}

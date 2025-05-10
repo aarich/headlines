@@ -2,15 +2,16 @@
 <?php
 
 $guidelines = "
-1. The headline subject should be SFW
-2. The headline subject should be friendly and positive and not alienate people
-3. The headline should be popular (indicated by a high score value)
-4. The headline should have a word in it that might be difficult to guess what it would be. For example, in the headline \"Newly selected pope revealed to own restaurant\". In that sentence, removing the word \"restaurant\" means the fill-in-the-blank would be \"newly selected pope revealed to own [blank]\". It might be difficult to guess the missing word. But it shouldn't be impossible.
-4. The headline and removed word should have funny alternatives for the blank. For example, in the headline \"Newly selected pope revealed to own restaurant\". In that sentence, removing the word \"restaurant\" means the fill-in-the-blank would be \"newly selected pope revealed to own [blank]\" and funny options could be things like \"baseball team\", \"high heels\", \"slaves\", \"thongs\".
-5. The removed word should be a single relatively known word and it should be important to the headline. It should not be a phrase.
-6. The possible alternatives can be related to the word or they could be different so as to alter the meaning entirely. For example in the headline \"newly selected pope owns restaurant\", a replacement such as \"brothel\" is ok since it's a similar grammatical structure as \"restaurant\" since they're both establishments that could be owned. But it could also be something like \"toddler\" since that changes the entire structure of the headline. Now instead of being responsible for an establishment, the pope is insulting a child.
-7. The possible alternatives should also be single words and very different from the original word.
-8. The headline should be relatively short
+- The headline subject should be SFW
+- The headline subject should be friendly and positive and not alienate people
+- The headline should be popular (indicated by a high score value)
+- The headline should have a word in it that might be difficult to guess what it would be. For example, in the headline \"Newly selected pope revealed to own restaurant\". In that sentence, removing the word \"restaurant\" means the fill-in-the-blank would be \"newly selected pope revealed to own [blank]\". It might be difficult to guess the missing word. But it shouldn't be impossible.
+- The headline and removed word should have funny alternatives for the blank. For example, in the headline \"Newly selected pope revealed to own restaurant\". In that sentence, removing the word \"restaurant\" means the fill-in-the-blank would be \"newly selected pope revealed to own [blank]\" and funny options could be things like \"baseball team\", \"high heels\", \"slaves\", \"thongs\".
+- The removed word should be a single relatively known word and it should be important to the headline. It should not be a phrase.
+- The possible alternatives can be related to the word or they could be different so as to alter the meaning entirely. For example in the headline \"newly selected pope owns restaurant\", a replacement such as \"brothel\" is ok since it's a similar grammatical structure as \"restaurant\" since they're both establishments that could be owned. But it could also be something like \"toddler\" since that changes the entire structure of the headline. Now instead of being responsible for an establishment, the pope is insulting a child.
+- The possible alternatives should also be single words and very different from the original word. 
+- The possible alternatives shouldn't be absurdly impossible. With the example above, \"unicorn\" is not a good replacement for \"restaurant\" since it's clearly not possible to own a unicorn. But \"heels\" is a good replacement since it's unbelievable but in the realm of possibilities.
+- The headline should be relatively short
 ";
 
 function getInitialPrompt($headlines_brief) {
@@ -88,9 +89,9 @@ $guidelines
 You are to select the best option and provide the following information:
 
 Format your response by including
-- the original headline (with any formatting issues cleaned up). Do not alter it at all from the original headline.
+- the original headline as it was published. Do not alter the formatting except to clean up encoding issues if they exist.
 - the url of the associated article
-- the reddit url of the associated article
+- the reddit url of the headline
 - the specific word to remove from the headline that meets the above criteria
 - an explanation for why this choice was made. What makes the headline and word to remove meet these preferences?
 - a list of possible word choices that would be funny to suggest as alternatives. Feel free to edit or add to the list as needed.

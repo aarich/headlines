@@ -168,6 +168,11 @@ try {
 
   $options_by_google = $response['candidates'][0]['content']['parts'][0]['text'];
 
+  // remove newlines and then reformat the json
+  $options_by_google = str_replace("\n", "", $options_by_google);
+  $options_by_google = json_decode($options_by_google, true);
+  $options_by_google = json_encode($options_by_google);
+
   $prompt = getFinalPrompt($options_by_google, $headlines_full);
   $generationConfig = getFinalGenerationConfig();
   $final_choice = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key);

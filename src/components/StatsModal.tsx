@@ -6,6 +6,8 @@ import { getCurrentStreak } from '../lib/scoring';
 import { Feedback, Headline, HeadlineHistory } from '../types';
 import { fetchHistory } from '../lib/api';
 import { plural } from '../lib/ui';
+import TickerItem from './TickerItem';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 interface StatsModalProps {
   isOpen: boolean;
@@ -18,6 +20,7 @@ const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, feed
   const scores = useMemo(() => getStoredScores(), [feedback.correct]);
   const stats = useMemo(() => getStoredStats(), [feedback.correct]);
   const [history, setHistory] = useState<HeadlineHistory[]>();
+  const [reveal, setReveal] = useState(false);
 
   const totalCompleted = Object.keys(scores).length;
 
@@ -55,16 +58,25 @@ const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, feed
         ) : (
           <div>
             <p>
-              You've completed <span className="font-bold">{totalCompleted}</span>{' '}
+              You completed <span className="font-bold">{totalCompleted}</span>{' '}
               {plural(totalCompleted, 'headline')} (
               {((100 * totalCompleted) / (stats.totalPlays || totalCompleted)).toFixed()}% success),
               made <span className="font-bold">{stats.totalIncorrectGuesses ?? 0}</span> incorrect{' '}
-              {plural(stats.totalIncorrectGuesses ?? 0, 'guess', 'es')} and solved{' '}
+              {plural(stats.totalIncorrectGuesses ?? 0, 'guess', 'es')}, and solved{' '}
               <span className="font-bold">{stats.firstGuessCorrectCount}</span>{' '}
               {plural(stats.firstGuessCorrectCount ?? 0, 'game')} on the first try.
             </p>
             <p>Longest streak: {stats.longestStreak ?? 0}</p>
             <p>Current streak: {currentStreak !== undefined ? currentStreak : '...'}</p>
+            <h3 className="text-lg font-bold mt-4 flex items-center">
+              News Ticker{' '}
+              <button className="mx-4" onClick={() => setReveal(!reveal)}>
+                {reveal ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
+              </button>
+            </h3>
+            <p className="text-sm text-gray-500 mb-2">Global playing statistics</p>
+
+            {history?.map(h => <TickerItem key={h.id} headline={h} reveal={reveal} />)}
           </div>
         )}
       </div>

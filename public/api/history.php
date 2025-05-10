@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 require_once 'db-utils.php';
 
@@ -44,7 +44,8 @@ try {
     }
 
     $headlines = [];
-    for ($i = 0; $i < count($result); $i++) {
+    // Skip the first headline, which is the current one
+    for ($i = 1; $i < count($result); $i++) {
         // Convert all snake case to camel case
         $headline = $result[$i];
         $headline = array_combine(
