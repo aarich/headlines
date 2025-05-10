@@ -67,13 +67,7 @@ const TickerItem: React.FC<TickerItemProps> = ({
           </span>
         </span>
         <span className="px-2">
-          <a
-            href={`/?id=${id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="pr-4"
-            title="Play this headline"
-          >
+          <a href={`/?id=${id}`} className="pr-4" title="Play this headline">
             <PlayIcon className="w-5 h-5 inline-block" />
           </a>
           <a href={redditUrl} target="_blank" rel="noopener noreferrer" title="View on Reddit">

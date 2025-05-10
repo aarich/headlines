@@ -17,21 +17,22 @@ $guidelines = "
 function getInitialPrompt($headlines_brief) {
     global $guidelines;
 
+    $json_str = json_encode($headlines_brief, JSON_PRETTY_PRINT|JSON_INVALID_UTF8_SUBSTITUTE);
+
     return "
 Below are some headlines in the recent news. Each headline below was chosen since they seem like they could be written by The Onion, but they are truly real headlines. You are to select a few headlines for a game. The game involves guessing a missing word from an absurd-but-real headline. So choose a few headlines that would be fun for that game. Here are the guidelines to help you choose. None are strict rules since it might be impossible to find a headline to meet all the criteria. Rather, they are to goals that you should weigh when providing your answer.
 
 $guidelines
 
 Format your response by including
-- the original headline title
-- the url of the associated article
+- the original headline title as it was published.
 - a specific word to remove from the headline that meets the above criteria
 - an explanation for why this choice was made. What makes the headline and word to remove meet these preferences?
 - a list of possible word choices that would be funny to suggest as alternatives. Provide at least 5 replacements
 
 Choose at least 5 headlines. Here is the list of candidates:
 
-" . json_encode($headlines_brief);
+ $json_str";
 }
 
 function getInitialGenerationConfig() {
@@ -79,6 +80,8 @@ function getInitialGenerationConfig() {
 function getFinalPrompt($options_by_google, $headlines_full) {
     global $guidelines;
 
+    $json_str = json_encode($options_by_google, JSON_PRETTY_PRINT|JSON_INVALID_UTF8_SUBSTITUTE);
+
     return  "
 Below are some options for a fun guessing game. Each headline below was chosen since they seem like they could be written by The Onion, but they are truly real headlines. 
 The game involves guessing a missing word from an absurd-but-real headline. So choose a headline that would be fun for that game. 
@@ -99,11 +102,11 @@ Format your response by including
 
 Here is the list of potential choices:
 
-" . json_encode($options_by_google) . "
+$json_str
 
 Here is data about the original headlines to form your response:
 
-" . json_encode($headlines_full);
+" . json_encode($headlines_full, JSON_PRETTY_PRINT);
 }
 
 function getFinalGenerationConfig() {

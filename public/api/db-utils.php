@@ -184,7 +184,7 @@ function getStatus() {
     $created_time = new DateTime($headline['created_at']);
     $interval = $current_time->diff($created_time);
 
-    $missing_headline = $interval->i > 24; // TODO switch back to h
+    $missing_headline = $interval->h > 24;
     
     $result = [
         'last_headline' => $headline,

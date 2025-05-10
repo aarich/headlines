@@ -12,6 +12,24 @@ $gemini_api_key = $config['google']['api_key'];
 // Subreddit to fetch posts from
 $subreddit = 'nottheonion';
 
+function convert_smart_quotes($string) {
+  
+  $search = array(
+    '’',
+    '‘',
+    '“',
+    '”',
+  );
+
+  $replace = array(
+    "'",
+    "'",
+    '"',
+    '"',
+  );
+  return str_replace($search, $replace, $string);
+}
+
 // Function to fetch top posts
 function getTopPosts($subreddit, $user_agent, $client_id, $client_secret) {
   // $ch = curl_init("https://www.reddit.com/api/v1/access_token");
@@ -77,8 +95,8 @@ function getTopPosts($subreddit, $user_agent, $client_id, $client_secret) {
 function invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key) {
   echo "invoking google prompt\n";
   echo "prompt: " . $prompt . "\n";
-  echo "generationConfig: " . json_encode($generationConfig) . "\n";
-  $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key={$gemini_api_key}";
+  $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-exp-03-25:generateContent?key={$gemini_api_key}";
+  // $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key={$gemini_api_key}";
   // $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$gemini_api_key}";
   $payload = json_encode([
     'contents' => [
@@ -137,7 +155,7 @@ try {
   $headlines_brief = [];
   $headlines_full = [];
   foreach ($posts['data']['children'] as $post) {
-    $title = $post['data']['title'];
+    $title = convert_smart_quotes($post['data']['title']);
     $url = $post['data']['url'];
     $score = $post['data']['score'];
     $reddit_url = "https://www.reddit.com" . $post['data']['permalink'];
@@ -158,7 +176,9 @@ try {
   echo "headlines_brief: " . print_r($headlines_brief, true) . "\n";
   echo "headlines_full: " . print_r($headlines_full, true) . "\n";
 
+  echo "getting initial prompt\n";
   $prompt = getInitialPrompt($headlines_brief);
+  echo "prompt: " . $prompt . "\n";
 
   $generationConfig = getInitialGenerationConfig();
 
@@ -170,8 +190,10 @@ try {
 
   // remove newlines and then reformat the json
   $options_by_google = str_replace("\n", "", $options_by_google);
+  $options_by_google = str_replace("\t", "", $options_by_google);
+  echo "options_by_google: " . $options_by_google . "\n";
   $options_by_google = json_decode($options_by_google, true);
-  $options_by_google = json_encode($options_by_google);
+  echo "options_by_google: " . print_r($options_by_google, true) . "\n";
 
   $prompt = getFinalPrompt($options_by_google, $headlines_full);
   $generationConfig = getFinalGenerationConfig();
@@ -197,8 +219,14 @@ try {
   // add utc to the publish_time
   $publish_time = $publish_time . ' UTC';
 
+  // Ensure the case of correct_answer is consistent with the headline
+  $correct_answer_lower = strtolower($correct_answer);
+  $headline_lower = strtolower($headline);
+  $index_of_answer = strpos($headline_lower, $correct_answer_lower);
+  $correct_answer = substr($headline, $index_of_answer, strlen($correct_answer));
+
   // split the headline into before_blank and after_blank
-  $parts = explode($correct_answer, $headline);
+  $parts = explode($correct_answer, $headline, 2);
   $before_blank = $parts[0];
   $after_blank = $parts[1];
   $possible_answers = ['answers' => $possible_answers];
