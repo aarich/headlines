@@ -2,160 +2,31 @@
 
 require_once 'db-utils.php';
 require_once 'prompts.php';
+require_once 'daily-helpers.php';
 
 $config = require __DIR__ . '/config.php';
 $reddit_user_agent = $config['reddit']['user_agent'];
 $gemini_api_key = $config['google']['api_key'];
-$subreddit = 'nottheonion';
 
-/**
- * Recursively cleans string values within an array or object.
- * Replaces multiple whitespace characters (spaces, tabs, newlines) with a single space,
- * and trims leading/trailing whitespace from strings.
- *
- * @param mixed $item The item to clean (array, object, or scalar).
- */
-function clean_string_values_recursive(&$item) {
-    if (is_string($item)) {
-        // Replace sequences of whitespace characters (including \n, \t, etc.) with a single space
-        $item = preg_replace('/\s+/', ' ', $item);
-        // Trim leading/trailing spaces that might have been created or were already there
-        $item = trim($item);
-    } elseif (is_array($item)) {
-        foreach ($item as &$value) {
-            clean_string_values_recursive($value);
-        }
-        unset($value); // Important to unset the reference
-    } elseif (is_object($item)) {
-        foreach ($item as &$value) {
-            clean_string_values_recursive($value);
-        }
-        unset($value); // Important to unset the reference
-    }
-}
-
-function convert_smart_quotes($string) {
-  
-  $search = array(
-    '’',
-    '‘',
-    '“',
-    '”',
-  );
-
-  $replace = array(
-    "'",
-    "'",
-    '"',
-    '"',
-  );
-  return str_replace($search, $replace, $string);
-}
-
-// Function to fetch top posts
-function getTopPosts($subreddit, $user_agent) {
-  $ch = curl_init("https://www.reddit.com/r/{$subreddit}/top.json?limit=25&t=day");
-  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-  curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'User-Agent: ' . $user_agent
-    // 'Authorization: Bearer ' . $access_token
-  ]);
-
-  $response = curl_exec($ch);
-
-  // Check for cURL errors
-  if (curl_errno($ch)) {
-    throw new Exception('Curl error: ' . curl_error($ch));
-  }
-
-  // Get HTTP status code
-  $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-  if ($httpCode !== 200) {
-    throw new Exception('HTTP error: ' . $httpCode);
-  }
-
-  curl_close($ch);
-
-  $data = json_decode($response, true);
-
-  // Check for JSON decode errors
-  if (json_last_error() !== JSON_ERROR_NONE) {
-    throw new Exception('JSON decode error: ' . json_last_error_msg());
-  }
-
-  return $data;
-}
-
-function invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key) {
-  echo "invoking google prompt\n";
-  echo "prompt: " . $prompt . "\n";
-  $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-exp-03-25:generateContent?key={$gemini_api_key}";
-  // $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key={$gemini_api_key}";
-  // $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$gemini_api_key}";
-  $payload = json_encode([
-    'contents' => [
-      [
-        'parts' => [['text' => $prompt]],
-      ],
-    ],
-    'generationConfig' => $generationConfig
-  ]);
-
-  $ch = curl_init($url);
-  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-  curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-  curl_setopt($ch, CURLOPT_POST, true);
-  curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-
-  $response = curl_exec($ch);
-
-  // Check for cURL errors
-  if (curl_errno($ch)) {
-    throw new Exception('Curl error: ' . curl_error($ch));
-  }
-
-  // Get HTTP status code
-  $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-  if ($httpCode !== 200) {
-    $data = json_decode($response, true);
-    echo print_r($data, true);
-    throw new Exception('HTTP error: ' . $httpCode);
-  }
-
-  curl_close($ch);
-
-  $data = json_decode($response, true);
-
-  // Check for JSON decode errors
-  if (json_last_error() !== JSON_ERROR_NONE) {
-    throw new Exception('JSON decode error: ' . json_last_error_msg());
-  }
-
-  return $data;
-}
-
-// Main execution
 try {
-  // first check if we are actually missing a headline
+  // Check if we are actually missing a headline
   $status = getStatus();
   if (!$status['missing']) {
     echo "No missing headlines\n";
     exit(0);
   }
 
-  // Fetch top posts
-  $posts = getTopPosts($subreddit, $reddit_user_agent);
+  // Fetch top posts from Reddit
+  $posts = getTopPosts('nottheonion', $reddit_user_agent);
 
-  $headlines_brief = [];
+  $headline_titles = [];
   $headlines_full = [];
   foreach ($posts['data']['children'] as $post) {
     $title = convert_smart_quotes($post['data']['title']);
     $url = $post['data']['url'];
     $reddit_url = "https://www.reddit.com" . $post['data']['permalink'];
     $created_utc = $post['data']['created_utc'];
-    $headlines_brief[] = [
-      'title' => $title
-    ];
+    $headline_titles[] = $title;
 
     $headlines_full[] = [
       'headline' => $title,
@@ -165,44 +36,38 @@ try {
     ];
   }
 
-  echo "headlines_brief: " . print_r($headlines_brief, true) . "\n";
-  echo "headlines_full: " . print_r($headlines_full, true) . "\n";
+  echo "headlines: \n" . print_r($headline_titles, true) . "\n";
 
-  echo "getting initial prompt\n";
-  $prompt = getInitialPrompt($headlines_brief);
-  echo "prompt: " . $prompt . "\n";
-
+  // Get initial candidates
+  $prompt = getInitialPrompt($headline_titles);
   $generationConfig = getInitialGenerationConfig();
-
   $response = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key);
 
-  echo "response: " . print_r($response, true) . "\n";
+  $generated_text = $response['candidates'][0]['content']['parts'][0]['text'];
+  echo "Initial candidate response:\n" . $generated_text . "\n";
 
-  $options_by_google = $response['candidates'][0]['content']['parts'][0]['text'];
-  $options_by_google = json_decode($options_by_google, true);
-  clean_string_values_recursive($options_by_google);
-
-  $prompt = getFinalPrompt($options_by_google, $headlines_full);
+  // Choose the best candidate
+  $prompt = getFinalPrompt($generated_text);
   $generationConfig = getFinalGenerationConfig();
-  $final_choice = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key);
+  $response = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key);
 
-  echo "final choice\n: " . print_r($final_choice, true) . "\n";
+  $generated_text = $response['candidates'][0]['content']['parts'][0]['text'];
+  echo "Final choice response:\n" . $generated_text . "\n";
+  $final_choice_data = json_decode($generated_text, true);
 
-  $final_choice_data = json_decode($final_choice['candidates'][0]['content']['parts'][0]['text'], true);
-
-  echo "final choice data\n: " . print_r($final_choice_data, true) . "\n";
-
+  // Extract data from the LLM response
   $headline = $final_choice_data['headline'];
-  $article_url = $final_choice_data['article_url'];
-  $reddit_url = $final_choice_data['reddit_url'];
   $correct_answer = $final_choice_data['word_to_remove'];
   $possible_answers = $final_choice_data['replacements'];
-  $publish_time = $final_choice_data['created_utc'];
   $hint = $final_choice_data['hint'];
   $explanation = $final_choice_data['explanation'];
 
-  // convert publish_time to a date
-  $publish_time = gmdate('Y-m-d H:i:s', $publish_time);
+  // Match with original data from Reddit and extract additional info
+  $matched_headline = findMostSimilarHeadline($headline, $headlines_full);
+  $headline = $matched_headline['headline'];
+  $article_url = $matched_headline['url'];
+  $reddit_url = $matched_headline['reddit_url'];
+  $publish_time = gmdate('Y-m-d H:i:s', $matched_headline['created_utc']);
 
   // Ensure the case of correct_answer is consistent with the headline
   $correct_answer_lower = strtolower($correct_answer);

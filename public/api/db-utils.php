@@ -35,8 +35,13 @@ function updateHeadlineStats($headlineId, $updates) {
 
     // Whitelist of allowed fields to update for security
     $allowedFields = [
-        'total_plays', 'total_correct_guesses', 'total_incorrect_guesses',
-        'first_guess_correct_count', 'article_click_count', 'reddit_click_count', 'share_count'
+        'total_plays',
+        'total_correct_guesses',
+        'total_incorrect_guesses',
+        'first_guess_correct_count',
+        'article_click_count',
+        'reddit_click_count',
+        'share_count'
     ];
 
     // Build the SET clause dynamically based on provided updates
@@ -129,9 +134,7 @@ function handleGameAction($headlineId, $action, $data = []) {
 
     switch ($action) {
         case 'game_started':
-            $updates = [
-                'total_plays' => 1  // This will increment total_plays by 1
-            ];
+            $updates = ['total_plays' => 1];
             break;
 
         case 'game_completed':
@@ -153,21 +156,15 @@ function handleGameAction($headlineId, $action, $data = []) {
             break;
 
         case 'article_clicked':
-            $updates = [
-                'article_click_count' => 1  // Increment article clicks by 1
-            ];
+            $updates = ['article_click_count' => 1];
             break;
 
         case 'reddit_clicked':
-            $updates = [
-                'reddit_click_count' => 1  // Increment reddit clicks by 1
-            ];
+            $updates = ['reddit_click_count' => 1];
             break;
 
         case 'shared':
-            $updates = [
-                'share_count' => 1  // Increment share count by 1
-            ];
+            $updates = ['share_count' => 1];
             break;
 
         default:
@@ -193,22 +190,12 @@ function insertHeadline(string $headline, string $before_blank, string $after_bl
 
 function getStatus() {
     $db = getDbConnection();
-    // Get the latest headline id
-    $query = '
-        SELECT 
-            h.id,
-            h.headline,
-            h.created_at
-        FROM headline h
-        ORDER BY h.id DESC LIMIT 1
-    ';
-
-    $stmt = getDbConnection()->query($query);
+    $query = 'SELECT id, headline, created_at FROM headline ORDER BY id DESC LIMIT 1';
+    $stmt = $db->query($query);
     $headline = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$headline) {
         http_response_code(404);
-        $set_response_code = true;
         throw new Exception('No headlines found');
     }
 
@@ -216,8 +203,10 @@ function getStatus() {
     $current_time = new DateTime();
     $created_time = new DateTime($headline['created_at']);
 
-    // A headline is missing if the last one was created more than 24 hours ago.
-    $missing_headline = ($current_time->getTimestamp() - $created_time->getTimestamp()) > (24 * 60 * 60); // 24 hours
+    // A headline is missing if the last one was created more than 23 hours ago.
+    // This is to account for the time it takes to generate the next headline.
+    // The script is run as a cron job like , so we will avoid a shift.
+    $missing_headline = ($current_time->getTimestamp() - $created_time->getTimestamp()) > (23 * 60 * 60);
 
     $result = [
         'last_headline' => $headline,

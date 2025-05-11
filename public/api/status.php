@@ -24,15 +24,12 @@ require_once 'db-utils.php';
 
 header('Content-Type: application/json');
 
-$set_response_code = false;
-
 try {
-
     $result = getStatus();
-    
+
     echo json_encode($result);
 } catch (Exception $e) {
-    if (!$set_response_code) {
+    if (http_response_code() === 200) {
         http_response_code(500);
     }
     echo json_encode(['error' => 'Failed to fetch headline: ' . $e->getMessage()]);

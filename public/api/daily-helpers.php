@@ -1,0 +1,181 @@
+<?php
+
+require_once 'db-utils.php';
+require_once 'prompts.php';
+
+/**
+ * Recursively cleans string values within an array or object.
+ * Replaces multiple whitespace characters (spaces, tabs, newlines) with a single space,
+ * and trims leading/trailing whitespace from strings.
+ *
+ * @param mixed $item The item to clean (array, object, or scalar).
+ */
+function clean_string_values_recursive(&$item) {
+  if (is_string($item)) {
+    // Replace sequences of whitespace characters (including \n, \t, etc.) with a single space
+    $item = preg_replace('/\s+/', ' ', $item);
+    // Trim leading/trailing spaces that might have been created or were already there
+    $item = trim($item);
+  } elseif (is_array($item)) {
+    foreach ($item as &$value) {
+      clean_string_values_recursive($value);
+    }
+    unset($value); // Important to unset the reference
+  } elseif (is_object($item)) {
+    foreach ($item as &$value) {
+      clean_string_values_recursive($value);
+    }
+    unset($value); // Important to unset the reference
+  }
+}
+
+function convert_smart_quotes($string) {
+
+  $search = array('’', '‘', '“', '”',);
+
+  $replace = array("'", "'", '"', '"',);
+  return str_replace($search, $replace, $string);
+}
+
+function getTopPosts($subreddit, $user_agent) {
+  $ch = curl_init("https://www.reddit.com/r/{$subreddit}/top.json?limit=25&t=day");
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'User-Agent: ' . $user_agent
+  ]);
+
+  $response = curl_exec($ch);
+
+  if (curl_errno($ch)) {
+    throw new Exception('Curl error: ' . curl_error($ch));
+  }
+
+  $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+  if ($httpCode !== 200) {
+    throw new Exception('HTTP error: ' . $httpCode);
+  }
+
+  curl_close($ch);
+
+  $data = json_decode($response, true);
+
+  // Check for JSON decode errors
+  if (json_last_error() !== JSON_ERROR_NONE) {
+    throw new Exception('JSON decode error: ' . json_last_error_msg());
+  }
+
+  return $data;
+}
+
+function invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key) {
+  echo "invoking google prompt\n";
+  echo $prompt . "\n";
+
+  $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-exp-03-25:generateContent?key={$gemini_api_key}";
+  // $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key={$gemini_api_key}";
+  // $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$gemini_api_key}";
+  $payload = json_encode([
+    'contents' => [
+      [
+        'parts' => [['text' => $prompt]],
+      ],
+    ],
+    'generationConfig' => $generationConfig
+  ]);
+
+  $ch = curl_init($url);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+  curl_setopt($ch, CURLOPT_POST, true);
+  curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+
+  $response = curl_exec($ch);
+
+  // Check for cURL errors
+  if (curl_errno($ch)) {
+    throw new Exception('Curl error: ' . curl_error($ch));
+  }
+
+  // Get HTTP status code
+  $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+  if ($httpCode !== 200) {
+    $data = json_decode($response, true);
+    echo print_r($data, true);
+    throw new Exception('HTTP error: ' . $httpCode);
+  }
+
+  curl_close($ch);
+
+  $data = json_decode($response, true);
+
+  // Check for JSON decode errors
+  if (json_last_error() !== JSON_ERROR_NONE) {
+    throw new Exception('JSON decode error: ' . json_last_error_msg());
+  }
+
+  return $data;
+}
+
+/**
+ * Calculates the Levenshtein distance between two strings.
+ * This is the minimum number of single-character edits (insertions, deletions, or substitutions)
+ * required to change one string into the other.
+ * This implementation uses the space-optimized dynamic programming approach.
+ *
+ * @return int The Levenshtein distance between $s1 and $s2.
+ */
+function getDifference(string $s1, string $s2): int {
+  $m = strlen($s1);
+  $n = strlen($s2);
+
+  // $curr_row_dp will store the current row of the DP table.
+  // $curr_row_dp[j] will be the edit distance between the first $i characters of $s1
+  // and the first $j characters of $s2.
+  $curr_row_dp = array_fill(0, $n + 1, 0);
+
+  // Initialize the first row of the DP table.
+  // The distance from an empty string s1 to a prefix of s2 is just the length of the prefix.
+  for ($j = 0; $j <= $n; $j++) {
+    $curr_row_dp[$j] = $j;
+  }
+
+  // Iterate through each character of s1 (rows of the DP table).
+  for ($i = 1; $i <= $m; $i++) {
+    // $prev_val_dp_diag stores dp[i-1][j-1] (cost from diagonal).
+    // Before starting row i, $curr_row_dp[0] is dp[i-1][0].
+    $prev_val_dp_diag = $curr_row_dp[0];
+
+    // Cost of transforming s1[0...i-1] to an empty string s2 is $i (i deletions).
+    // This is dp[i][0].
+    $curr_row_dp[0] = $i;
+
+    // Iterate through each character of s2 (columns of the DP table).
+    for ($j = 1; $j <= $n; $j++) {
+      // $temp_dp_up stores dp[i-1][j] (cost from cell directly above).
+      $temp_dp_up = $curr_row_dp[$j];
+
+      if ($s1[$i - 1] == $s2[$j - 1]) {
+        $curr_row_dp[$j] = $prev_val_dp_diag;
+      } else {
+        $curr_row_dp[$j] = 1 + min($curr_row_dp[$j - 1], $prev_val_dp_diag, $temp_dp_up);
+      }
+      $prev_val_dp_diag = $temp_dp_up;
+    }
+  }
+  return $curr_row_dp[$n];
+}
+
+function findMostSimilarHeadline($title, $headlines_full) {
+  $minDifference = 0;
+  $mostSimilarHeadline = null;
+
+  foreach ($headlines_full as $headline) {
+    $difference = getDifference($title, $headline['headline']);
+    if ($mostSimilarHeadline === null || $difference < $minDifference) {
+      $minDifference = $difference;
+      $mostSimilarHeadline = $headline;
+    }
+  }
+
+  return $mostSimilarHeadline;
+}

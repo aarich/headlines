@@ -47,8 +47,6 @@ require_once 'db-utils.php';
 
 header('Content-Type: application/json');
 
-$set_response_code = false;
-
 try {
     // Get the headline ID from query parameter if provided
     $headlineId = isset($_GET['id']) ? (int)$_GET['id'] : null;
@@ -90,7 +88,6 @@ try {
 
     if (!$headline) {
         http_response_code(404);
-        $set_response_code = true;
         throw new Exception('No headlines found');
     }
 
@@ -125,7 +122,7 @@ try {
 
     echo json_encode($headline);
 } catch (Exception $e) {
-    if (!$set_response_code) {
+    if (http_response_code() === 200) {
         http_response_code(500);
     }
     echo json_encode(['error' => 'Failed to fetch headline: ' . $e->getMessage()]);
