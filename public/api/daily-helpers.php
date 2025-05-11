@@ -67,13 +67,10 @@ function getTopPosts($subreddit, $user_agent) {
   return $data;
 }
 
-function invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key) {
-  echo "invoking google prompt\n";
+function invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key, $model_name) {
+  echo "invoking google prompt using $model_name\n";
   echo $prompt . "\n";
-
-  $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-exp-03-25:generateContent?key={$gemini_api_key}";
-  // $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key={$gemini_api_key}";
-  // $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$gemini_api_key}";
+  $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model_name}:generateContent?key={$gemini_api_key}";
   $payload = json_encode([
     'contents' => [
       [

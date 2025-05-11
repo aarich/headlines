@@ -8,12 +8,42 @@ $config = require __DIR__ . '/config.php';
 $reddit_user_agent = $config['reddit']['user_agent'];
 $gemini_api_key = $config['google']['api_key'];
 
+// Define default values for options
+$options = [
+  'model' => 'gemini-2.5-pro-exp-03-25', // gemini-2.5-flash-preview-04-17
+  'dry-run' => false,
+  'skip-status' => false,
+];
+
+// Parse command-line arguments
+$short_opts = ""; // No short options
+$long_opts = [
+  "model:",      // Requires a value
+  "dry-run",     // No value
+  "skip-status", // No value
+];
+$cli_options = getopt($short_opts, $long_opts);
+
+if (isset($cli_options['model'])) {
+  $options['model'] = $cli_options['model'];
+}
+if (isset($cli_options['dry-run'])) {
+  $options['dry-run'] = true;
+}
+if (isset($cli_options['skip-status'])) {
+  $options['skip-status'] = true;
+}
+
 try {
-  // Check if we are actually missing a headline
-  $status = getStatus();
-  if (!$status['missing']) {
-    echo "No missing headlines\n";
-    exit(0);
+  if (!$options['skip-status']) {
+    // Check if we are actually missing a headline
+    $status = getStatus();
+    if (!$status['missing']) {
+      echo "No missing headlines\n";
+      exit(0);
+    }
+  } else {
+    echo "Skipping status check due to --skip-status flag.\n";
   }
 
   // Fetch top posts from Reddit
@@ -41,7 +71,7 @@ try {
   // Get initial candidates
   $prompt = getInitialPrompt($headline_titles);
   $generationConfig = getInitialGenerationConfig();
-  $response = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key);
+  $response = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key, $options['model']);
 
   $generated_text = $response['candidates'][0]['content']['parts'][0]['text'];
   echo "Initial candidate response:\n" . $generated_text . "\n";
@@ -49,7 +79,7 @@ try {
   // Choose the best candidate
   $prompt = getFinalPrompt($generated_text);
   $generationConfig = getFinalGenerationConfig();
-  $response = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key);
+  $response = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key, $options['model']);
 
   $generated_text = $response['candidates'][0]['content']['parts'][0]['text'];
   echo "Final choice response:\n" . $generated_text . "\n";
@@ -81,7 +111,12 @@ try {
   $after_blank = $parts[1];
   $possible_answers = ['answers' => $possible_answers];
 
-  insertHeadline($headline, $before_blank, $after_blank, $hint, $article_url, $reddit_url, $correct_answer, $possible_answers, $publish_time, $explanation);
+  if (!$options['dry-run']) {
+    insertHeadline($headline, $before_blank, $after_blank, $hint, $article_url, $reddit_url, $correct_answer, $possible_answers, $publish_time, $explanation);
+    echo "Headline inserted into the database.\n";
+  } else {
+    echo "Dry run: Headline not inserted into the database.\n";
+  }
 } catch (Exception $e) {
   echo "Error: " . $e->getMessage() . "\n";
 }

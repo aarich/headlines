@@ -44,7 +44,8 @@ const GuessDisplay: React.FC<GuessDisplayProps> = ({
       }
     } else if (i > correctAnswer.length - 1) {
       // Extra guess
-      chars.push({ char: currentGuess[i], className: wrongCharClass });
+      const className = expertMode ? wrongCharClass : undefined;
+      chars.push({ char: currentGuess[i], className });
     } else if (i >= (hints?.chars ?? 0)) {
       // No information about this character
       chars.push({ char: currentGuess[i] });
@@ -66,7 +67,7 @@ const GuessDisplay: React.FC<GuessDisplayProps> = ({
             key={`${index}-${char}`}
             className={`${className} ${isSpace ? SPACE_CHAR_CLASS : ''}`}
           >
-            {isSpace ? 'ˍ' : char}
+            {isSpace && expertMode ? 'ˍ' : char}
           </span>
         );
       })}
