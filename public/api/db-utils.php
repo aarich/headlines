@@ -103,7 +103,7 @@ function updateGuesses($headlineId, $guesses) {
         $params = [];
         foreach ($filteredGuesses as $word) {
             $params[] = $headlineId;
-            $params[] = $word;
+            $params[] = strtolower($word);
         }
 
         $stmt = $db->prepare($sql);

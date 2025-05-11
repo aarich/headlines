@@ -53,7 +53,7 @@ const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, feed
       <div className="space-y-4 text-gray-700 dark:text-gray-200">
         {Object.keys(scores).length === 0 ? (
           <>
-            <p>Finish a game to see your stats here.</p>
+            <p>Play a game and your stats will show up here!</p>
             <div className="flex justify-center">
               <button className="text-blue-500 px-4 py-2 rounded-md" onClick={onClose}>
                 Get on it
@@ -63,15 +63,25 @@ const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, feed
         ) : (
           <div>
             <p>
-              You completed <span className="font-bold">{totalCompleted}</span>{' '}
-              {plural(totalCompleted, 'headline')} ({percentCompleted.toFixed()}% success), made{' '}
-              <span className="font-bold">{stats.totalIncorrectGuesses ?? 0}</span> incorrect{' '}
-              {plural(stats.totalIncorrectGuesses ?? 0, 'guess', 'es')}, and solved{' '}
-              <span className="font-bold">{stats.firstGuessCorrectCount}</span>{' '}
-              {plural(stats.firstGuessCorrectCount ?? 0, 'game')} on the first try.
+              You've tackled <span className="font-bold">{totalCompleted}</span>{' '}
+              {plural(totalCompleted, 'headline')} with a{' '}
+              <span className="font-bold">{percentCompleted.toFixed()}%</span> success rate!
             </p>
-            <p>Longest streak: {stats.longestStreak ?? 0}</p>
-            <p>Current streak: {currentStreak !== undefined ? currentStreak : '...'}</p>
+            <p>
+              You've made <span className="font-bold">{stats.totalIncorrectGuesses ?? 0}</span>{' '}
+              incorrect {plural(stats.totalIncorrectGuesses ?? 0, 'guess', 'es')}, and aced{' '}
+              <span className="font-bold">{stats.firstGuessCorrectCount || 0}</span>{' '}
+              {plural(stats.firstGuessCorrectCount || 0, 'game')} on the first try.
+            </p>
+            <p>
+              Longest streak: <span className="font-bold">{stats.longestStreak ?? 0}</span>
+            </p>
+            <p>
+              Current streak:{' '}
+              <span className="font-bold">
+                {currentStreak !== undefined ? currentStreak : '...'}
+              </span>
+            </p>
             <h3 className="text-lg font-bold mt-4 flex items-center">
               News Ticker{' '}
               <button className="mx-4" onClick={() => setRevealWords(!revealWords)}>
@@ -82,7 +92,9 @@ const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, feed
                 )}
               </button>
             </h3>
-            <p className="text-sm text-gray-500 mb-2">Global playing statistics</p>
+            <p className="text-sm text-gray-500 mb-2">
+              See how everyone's doing on recent headlines:
+            </p>
 
             {history?.map((h, i) => (
               <TickerItem

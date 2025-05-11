@@ -1,6 +1,6 @@
 import React from 'react';
 import Modal from './common/Modal';
-import { LightBulbIcon } from '@heroicons/react/24/outline';
+import { ChartPieIcon, LightBulbIcon } from '@heroicons/react/24/outline';
 import GuessDisplay from './GuessDisplay';
 
 interface HelpModalProps {
@@ -11,10 +11,14 @@ interface HelpModalProps {
 const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => (
   <Modal isOpen={isOpen} onClose={onClose} title="How to Play">
     <div className="space-y-4 text-gray-700 dark:text-gray-200">
-      <p>Guess the missing word in one of yesterday's real news headlines.</p>
       <ul className="list-disc pl-6">
-        <li>One new headline every day.</li>
-        <li>Turn off expert mode to enable multiple choice.</li>
+        <li>We show you a real headline with one word missing. Your job? Guess that word!</li>
+        <li>Play in Normal mode (pick from choices) or go Expert (type your guess).</li>
+        <li>Headlines are real stories from the last day or so.</li>
+        <li>
+          See your progress, past headlines, and more with the{' '}
+          <ChartPieIcon className="w-5 h-5 inline" /> button.
+        </li>
         <li>
           Headlines are sourced from{' '}
           <a
@@ -25,18 +29,19 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => (
           >
             r/nottheonion
           </a>
-          .
+          , a community dedicated to weird (but true!) news.
         </li>
+        <li>A new headline drops daily!</li>
       </ul>
 
       <h3 className="text-xl font-semibold mt-6">Hints</h3>
       <p>
-        Clicking <LightBulbIcon className="w-5 h-5 inline" /> reveals a hint:
+        Stuck? Use the <LightBulbIcon className="w-5 h-5 inline" /> button for a hint:
       </p>
       <ul className="list-decimal pl-6">
-        <li>Reveal the length of the missing word</li>
-        <li>Reveal the first letter of the missing word</li>
-        <li>Reveal a description</li>
+        <li>See how long the missing word is.</li>
+        <li>Get the first letter of the word.</li>
+        <li>Unlock a short description.</li>
       </ul>
       <p>Your guess is short by four characters:</p>
       <div className="flex justify-center font-bold">
@@ -85,7 +90,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => (
         >
           Alex Rich
         </a>
-        . It's open source, meaning you can look at the{' '}
+        . It's open source, so you can peek at the{' '}
         <a
           href="https://github.com/aarich/headlines"
           className="text-blue-500 hover:text-blue-600"
@@ -94,7 +99,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => (
         >
           code
         </a>
-        . Feel free to contribute or raise bugs.
+        . Feel free to contribute or report any bugs!
       </p>
       <p>If you like this game, consider sharing it with your friends!</p>
     </div>

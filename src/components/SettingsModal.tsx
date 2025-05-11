@@ -39,7 +39,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         />
         <Toggle
           title="Expert Mode"
-          description="Remove mulitple choice from the game."
+          description="No multiple choice options – just your best guess!"
           checked={expertMode}
           onChange={handleExpertModeToggle}
         />

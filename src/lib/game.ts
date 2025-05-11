@@ -97,7 +97,7 @@ export const getNextHintPrompt = (currentFeedback: Feedback): string => {
     return 'Reveal the first letter of the missing word?';
   }
   if (!currentFeedback.hintText) {
-    return 'Reveal a description of the missing word?';
+    return 'Reveal a clue about the missing word?';
   }
   return '';
 };
