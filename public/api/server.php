@@ -16,8 +16,8 @@ $request_uri = $_SERVER['REQUEST_URI'];
 // Route the request to the appropriate PHP file
 if (strpos($request_uri, '/api/headline') !== false) {
     require_once 'headline.php';
-} else if (strpos($request_uri, '/api/update-stat') !== false) {
-    require_once 'update-stat.php';
+} else if (strpos($request_uri, '/api/statistics') !== false) {
+    require_once 'statistics.php';
 } else if (strpos($request_uri, '/api/history') !== false) {
     require_once 'history.php';
 } else if (strpos($request_uri, '/api/status') !== false) {

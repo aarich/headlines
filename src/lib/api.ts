@@ -30,7 +30,7 @@ export const updateGameStats = async (
   action: 'game_started' | 'game_completed' | 'article_clicked' | 'shared' | 'reddit_clicked',
   data?: GameCompletedData
 ) => {
-  const response = await fetch(`${config.apiUrl}/api/update-stat`, {
+  const response = await fetch(`${config.apiUrl}/api/statistics`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id, action, data }),
