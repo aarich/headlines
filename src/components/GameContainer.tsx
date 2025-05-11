@@ -123,7 +123,11 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, feedback, setFe
             }
           >
             {isGameOver ? (
-              <ShareButtons feedback={feedback} headline={headline} />
+              <ShareButtons
+                feedback={feedback}
+                headline={headline}
+                isExpert={settings.expertMode}
+              />
             ) : (
               <>
                 <div />

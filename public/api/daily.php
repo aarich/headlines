@@ -20,26 +20,26 @@ $subreddit = 'nottheonion';
  * @param mixed $item The item to clean (array, object, or scalar).
  */
 function clean_string_values_recursive(&$item) {
-    if (is_string($item)) {
-        // Replace sequences of whitespace characters (including \n, \t, etc.) with a single space
-        $item = preg_replace('/\s+/', ' ', $item);
-        // Trim leading/trailing spaces that might have been created or were already there
-        $item = trim($item);
-    } elseif (is_array($item)) {
-        foreach ($item as &$value) {
-            clean_string_values_recursive($value);
-        }
-        unset($value); // Important to unset the reference
-    } elseif (is_object($item)) {
-        foreach ($item as &$value) {
-            clean_string_values_recursive($value);
-        }
-        unset($value); // Important to unset the reference
+  if (is_string($item)) {
+    // Replace sequences of whitespace characters (including \n, \t, etc.) with a single space
+    $item = preg_replace('/\s+/', ' ', $item);
+    // Trim leading/trailing spaces that might have been created or were already there
+    $item = trim($item);
+  } elseif (is_array($item)) {
+    foreach ($item as &$value) {
+      clean_string_values_recursive($value);
     }
+    unset($value); // Important to unset the reference
+  } elseif (is_object($item)) {
+    foreach ($item as &$value) {
+      clean_string_values_recursive($value);
+    }
+    unset($value); // Important to unset the reference
+  }
 }
 
 function convert_smart_quotes($string) {
-  
+
   $search = array(
     '’',
     '‘',
@@ -183,12 +183,12 @@ try {
   foreach ($posts['data']['children'] as $post) {
     $title = convert_smart_quotes($post['data']['title']);
     $url = $post['data']['url'];
-    $score = $post['data']['score'];
+    // $score = $post['data']['score'];
     $reddit_url = "https://www.reddit.com" . $post['data']['permalink'];
     $created_utc = $post['data']['created_utc'];
     $headlines_brief[] = [
-      'title' => $title,
-      'score' => $score,
+      'title' => $title
+      // 'score' => $score,
     ];
 
     $headlines_full[] = [

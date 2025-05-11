@@ -1,5 +1,6 @@
 import { Feedback, Headline } from '../types';
 import { recordShare } from './api';
+import { getStoredScores } from './storage';
 
 const normalizeString = (str: string): string => {
   return str.toLowerCase().trim();
@@ -45,8 +46,19 @@ export const calculateNewStreak = (currentStreak: number, isCorrect: boolean): n
   return isCorrect ? currentStreak + 1 : 0;
 };
 
-export const shareScore = (id: number, feedback: Feedback, forceCopy: boolean = false): void => {
+export const shareScore = (
+  id: number,
+  feedback: Feedback,
+  isExpert: boolean,
+  forceCopy: boolean = false
+): void => {
   recordShare(id);
+
+  let expert = isExpert;
+  const score = getStoredScores()[`${id}`];
+  if (score) {
+    expert = score.e;
+  }
 
   const countText = feedback.wrongGuesses.map(() => `❌`).join('') + '✅';
 
@@ -57,7 +69,9 @@ export const shareScore = (id: number, feedback: Feedback, forceCopy: boolean = 
 
   hintsText = hintsText.length > 0 ? hintsText : 'No hints! 😎';
 
-  const shareText = `I found the leek: ${countText}\n${hintsText}\n\n${window.location.href}`;
+  const expertText = expert ? '\nExpert Mode 🤓' : '';
+
+  const shareText = `I found the leek: ${countText}\n${hintsText}${expertText}\n\n${window.location.href}`;
 
   if (navigator.share && !forceCopy) {
     navigator

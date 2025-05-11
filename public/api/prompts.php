@@ -4,7 +4,6 @@
 $guidelines = "
 - The headline subject should be SFW
 - The headline subject should be friendly and positive and not alienate people
-- The headline should be popular (indicated by a high score value)
 - The headline should have a word in it that might be difficult to guess what it would be. For example, in the headline \"Newly selected pope revealed to own restaurant\". In that sentence, removing the word \"restaurant\" means the fill-in-the-blank would be \"newly selected pope revealed to own [blank]\". It might be difficult to guess the missing word. But it shouldn't be impossible.
 - The headline and removed word should have funny alternatives for the blank. For example, in the headline \"Newly selected pope revealed to own restaurant\". In that sentence, removing the word \"restaurant\" means the fill-in-the-blank would be \"newly selected pope revealed to own [blank]\" and funny options could be things like \"baseball team\", \"high heels\", \"slaves\", \"thongs\".
 - The removed word should be a single relatively known word and it should be important to the headline. It should not be a phrase.
@@ -13,6 +12,8 @@ $guidelines = "
 - The possible alternatives shouldn't be absurdly impossible. With the example above, \"unicorn\" is not a good replacement for \"restaurant\" since it's clearly not possible to own a unicorn. But \"heels\" is a good replacement since it's unbelievable but in the realm of possibilities.
 - The headline should be relatively short
 ";
+
+// - The headline should be popular (indicated by a high score value)
 
 function getInitialPrompt($headlines_brief) {
     global $guidelines;

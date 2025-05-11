@@ -5,9 +5,10 @@ import { shareScore } from '../lib/game';
 interface ShareButtonsProps {
   feedback: Feedback;
   headline: Headline;
+  isExpert: boolean;
 }
 
-const ShareButtons: React.FC<ShareButtonsProps> = ({ feedback, headline }) => {
+const ShareButtons: React.FC<ShareButtonsProps> = ({ feedback, headline, isExpert }) => {
   const hasShareAPI = 'share' in (navigator || {});
 
   return (
@@ -15,7 +16,7 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({ feedback, headline }) => {
       {hasShareAPI && (
         <button
           className="mt-4 px-4 py-2 border-2 border-green-500 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-          onClick={() => shareScore(headline.id, feedback)}
+          onClick={() => shareScore(headline.id, feedback, isExpert)}
         >
           Share Score
         </button>
@@ -26,7 +27,7 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({ feedback, headline }) => {
             ? 'border-2 border-green-500 text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20'
             : 'bg-green-500 text-white hover:bg-green-600'
         }`}
-        onClick={() => shareScore(headline.id, feedback, true)}
+        onClick={() => shareScore(headline.id, feedback, isExpert, true)}
       >
         Copy Score
       </button>
