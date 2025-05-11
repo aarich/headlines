@@ -25,22 +25,24 @@ interface GameCompletedData {
   guesses: string[];
 }
 
-export const updateGameStats = async (
+export const updateGameStats = (
   id: number,
   action: 'game_started' | 'game_completed' | 'article_clicked' | 'shared' | 'reddit_clicked',
   data?: GameCompletedData
 ) => {
-  const response = await fetch(`${config.apiUrl}/api/statistics`, {
+  fetch(`${config.apiUrl}/api/statistics`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id, action, data }),
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to update game stats');
-  }
-
-  return response.json();
+  })
+    .then(response => {
+      if (!response.ok) {
+        console.error('Failed to update game stats:', response.statusText);
+      }
+    })
+    .catch(error => {
+      console.error('Error updating game stats:', error);
+    });
 };
 
 // Convenience functions for specific actions

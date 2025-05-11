@@ -38,13 +38,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         />
         <Toggle
           title="Expert Mode"
-          description="No multiple choice options – just your best guess!"
+          description="No multiple choice options – just your best guess"
           checked={expertMode}
           onChange={handleExpertModeToggle}
         />
         <Toggle
-          title="Veggie Trance"
-          description="Time to peel back the layers"
+          title="Veg Out"
+          description='"Show me the floating vegetables!"'
+          descriptionClassName="italic"
           checked={showAnimations}
           onChange={handleShowAnimationsToggle}
         />

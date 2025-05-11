@@ -1,3 +1,6 @@
+import { ToastType } from '../components/Toast';
+import { DEFAULT_TOAST_DURATION, ToastFn } from '../contexts/ToastContext';
+
 export const plural = (count: number, singular: string, suffix = 's'): string =>
   `${singular}${count === 1 ? '' : suffix}`;
 
@@ -30,4 +33,63 @@ export const timeSince = (
     return Math.floor(interval) + ' m';
   }
   return Math.floor(seconds) + ' s';
+};
+
+const toastRandomMessage = (
+  toast: ToastFn,
+  toastType: ToastType,
+  possibleMessages: (string | [string, string])[]
+) => {
+  const randomIndex = Math.floor(Math.random() * possibleMessages.length);
+  const randomMessage = possibleMessages[randomIndex];
+  let text = randomMessage;
+  let messageClass = undefined;
+  if (Array.isArray(randomMessage)) {
+    [text, messageClass] = randomMessage;
+  } else {
+    text = randomMessage;
+  }
+
+  toast(text, toastType, DEFAULT_TOAST_DURATION, messageClass);
+};
+
+export const toastWrongAnswer = (toast: ToastFn) => {
+  toastRandomMessage(toast, 'warning', [
+    'Not quite',
+    'Nope',
+    'Try again',
+    'Incorrect',
+    'Wrong',
+    'Not it',
+    'Close, but no cigar',
+    "That's not it",
+    ['buzzer sounds', 'italic'],
+    "Sorry, that's not correct",
+    'Not even close',
+    'Wrong answer',
+    'Not the right answer',
+  ]);
+};
+
+export const toastRightAnswer = (toast: ToastFn) => {
+  toastRandomMessage(toast, 'success', [
+    'Correct!',
+    'You got it!',
+    'Well done!',
+    'Great job!',
+    'Awesome!',
+    'Fantastic!',
+    'Excellent!',
+    'Bravo!',
+    'Superb!',
+    'Amazing!',
+    'Nice job!',
+    'Nice!',
+    'Spot on!',
+    'Right answer!',
+    'You nailed it!',
+    ['ding ding ding', 'italic'],
+    "That's the one!",
+    'Bingo!',
+  ]);
 };

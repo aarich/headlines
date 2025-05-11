@@ -84,7 +84,10 @@ function App() {
   return (
     <SettingsProvider>
       <ToastProvider>
-        <div className="min-h-screen bg-white dark:bg-gray-950 flex flex-col items-center justify-start pb-6 sm:pb-12 px-2 sm:px-4 relative">
+        <div
+          className="min-h-screen bg-white dark:bg-gray-950 flex flex-col items-center justify-start pb-6 sm:pb-12 px-2 sm:px-4 relative"
+          id="has-bg"
+        >
           <AnimatedBackground />
           <div className="relative w-full z-10 flex flex-col flex-1">
             <Header

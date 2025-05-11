@@ -176,3 +176,18 @@ function findMostSimilarHeadline($title, $headlines_full) {
 
   return $mostSimilarHeadline;
 }
+
+function getInput($prompt) {
+  echo "$prompt: ";
+  $handle = fopen("php://stdin", "r");
+  $line = fgets($handle);
+  return trim($line);
+}
+
+function confirmProceed($message) {
+  $line = getInput("$message. Type 'y' to continue");
+  if (trim($line) != 'y') {
+    echo "Exiting.\n";
+    exit;
+  }
+}

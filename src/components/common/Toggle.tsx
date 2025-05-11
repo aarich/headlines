@@ -4,10 +4,17 @@ interface ToggleProps {
   title: string;
   description: string;
   checked: boolean;
+  descriptionClassName?: string;
   onChange: () => void;
 }
 
-const Toggle: React.FC<ToggleProps> = ({ title, description, checked, onChange }) => {
+const Toggle: React.FC<ToggleProps> = ({
+  title,
+  description,
+  descriptionClassName = '',
+  checked,
+  onChange,
+}) => {
   return (
     <div>
       <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">{title}</h3>
@@ -18,7 +25,9 @@ const Toggle: React.FC<ToggleProps> = ({ title, description, checked, onChange }
             <span className="toggle-slider"></span>
           </label>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400 flex-1">{description}</p>
+        <p className={`text-sm text-gray-600 dark:text-gray-400 flex-1 ${descriptionClassName}`}>
+          {description}
+        </p>
       </div>
     </div>
   );

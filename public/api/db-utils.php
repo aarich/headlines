@@ -17,7 +17,10 @@ function getDbConnection() {
             $dsn,
             $dbConfig['user'],
             $dbConfig['pass'],
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+            [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '+00:00'" // Ensure connection timezone is UTC
+            ]
         );
     }
     return $db;
@@ -175,6 +178,10 @@ function handleGameAction($headlineId, $action, $data = []) {
 }
 
 function insertHeadline(string $headline, string $before_blank, string $after_blank, string $hint, string $article_url, string $reddit_url, string $correct_answer, array $possible_answers, string $publish_time, string $explanation) {
+    $possible_answers = array_map('trim', $possible_answers);
+    $possible_answers = array_filter($possible_answers); // Remove empty values
+    $possible_answers = ['answers' => $possible_answers];
+
     $db = getDbConnection();
     $stmt = $db->prepare('INSERT INTO headline (headline, before_blank, after_blank, hint, article_url, reddit_url, correct_answer, possible_answers, publish_time, explanation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     $stmt->execute([$headline, $before_blank, $after_blank, $hint, $article_url, $reddit_url, $correct_answer, json_encode($possible_answers), $publish_time, $explanation]);
@@ -199,18 +206,17 @@ function getStatus() {
         throw new Exception('No headlines found');
     }
 
-    // check if the headline is older than 24 hours
-    $current_time = new DateTime();
-    $created_time = new DateTime($headline['created_at']);
 
-    // A headline is missing if the last one was created more than 23 hours ago.
-    // This is to account for the time it takes to generate the next headline.
-    // The script is run as a cron job with expression like "*/5 20 * * *", so we will avoid a shift.
-    $missing_headline = ($current_time->getTimestamp() - $created_time->getTimestamp()) > (23 * 60 * 60);
+    // Since the DB connection timezone is set to UTC, created_at represents a UTC timestamp.
+    // Create DateTime objects in UTC for accurate comparison
+    $current_time_utc = new DateTime("now", new DateTimeZone("UTC"));
+    $created_time_utc = new DateTime($headline['created_at'], new DateTimeZone("UTC"));
+
+    $seconds_since_last_headline = $current_time_utc->getTimestamp() - $created_time_utc->getTimestamp();
 
     $result = [
-        'last_headline' => $headline,
-        'missing' => $missing_headline,
+        'latest' => $headline,
+        'secondsSinceLastHeadline' => $seconds_since_last_headline
     ];
 
     return $result;

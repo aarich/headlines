@@ -7,6 +7,7 @@ interface ToastProps {
   type?: ToastType;
   isShown: boolean;
   duration?: number;
+  messageClass?: string;
   onDismiss?: () => void;
 }
 
@@ -29,6 +30,7 @@ const Toast: React.FC<ToastProps> = ({
   type = 'info',
   isShown,
   duration = 3000,
+  messageClass,
   onDismiss,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -44,7 +46,7 @@ const Toast: React.FC<ToastProps> = ({
       }, duration);
       return () => clearTimeout(timer);
     }
-  }, [isShown, duration, onDismiss]);
+  }, [isShown, duration, onDismiss, message]);
 
   if (!isShown && !isVisible) return null;
 
@@ -55,7 +57,7 @@ const Toast: React.FC<ToastProps> = ({
       ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}
       bottom-4 sm:top-20 sm:bottom-auto`}
     >
-      {message}
+      {messageClass ? <span className={messageClass}>{message}</span> : message}
     </div>
   );
 };

@@ -24,7 +24,9 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "deploy": "sh ./deploy.sh"
+    "deploy": "sh ./deploy.sh",
+    "generate": "php public/api/daily.php",
+    "generate-dry": "php public/api/daily.php --dry-run"
   },
   "eslintConfig": {
     "extends": [

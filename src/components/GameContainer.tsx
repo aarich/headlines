@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
+import React, { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 import { Headline, GameState } from '../types';
 import { useSettings } from '../contexts/SettingsContext';
 import HeadlineDisplay from './HeadlineDisplay';
@@ -10,6 +10,8 @@ import { incrementStat, saveResult } from '../lib/storage';
 import { LightBulbIcon } from '@heroicons/react/24/outline';
 import { useToast } from '../contexts/ToastContext';
 import { recordGameCompleted } from '../lib/api';
+import { toastWrongAnswer } from '../lib/ui';
+import WrongGuessList from './WrongGuessList';
 
 interface GameContainerProps {
   headline: Headline;
@@ -21,6 +23,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
   const { expertMode } = useSettings().settings;
   const [currentGuess, setCurrentGuess] = useState('');
   const [isGameOver, setIsGameOver] = useState(false);
+  const expertInputRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
 
   useEffect(() => {
@@ -51,9 +54,13 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
       saveResult(headline.id, new Date(), gameState.wrongGuesses.length, expertMode);
       recordGameCompleted(headline.id, { guesses: gameState.wrongGuesses.map(g => g.guess) });
     } else {
+      expertInputRef.current?.focus();
+
       if (gameState.wrongGuesses.find(g => g.guess === currentGuess)) {
         toast('Already guessed!', 'warning');
         return;
+      } else {
+        toastWrongAnswer(toast);
       }
       incrementStat('totalIncorrectGuesses');
       setGameState(({ wrongGuesses, ...rest }) => ({
@@ -82,8 +89,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
 
   const onHintClick = useCallback(() => {
     if (nextHintType) {
-      // eslint-disable-next-line no-restricted-globals
-      if (confirm(getNextHintPrompt(gameState, headline.correctAnswer, expertMode))) {
+      if (window.confirm(getNextHintPrompt(gameState, headline.correctAnswer, expertMode))) {
         setGameState(g => ({ ...g, hints: getNextHint(headline, g) }));
         toast('Hint revealed!', 'info');
       }
@@ -108,7 +114,11 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
         <div className="flex flex-col items-center w-full">
           <div className="w-full flex justify-center">
             {isGameOver ? null : expertMode ? (
-              <ExpertInput onSetGuess={setCurrentGuess} currentGuess={currentGuess} />
+              <ExpertInput
+                ref={expertInputRef}
+                onSetGuess={setCurrentGuess}
+                currentGuess={currentGuess}
+              />
             ) : (
               <AnswerWheel choices={headline.possibleAnswers} onSetGuess={setCurrentGuess} />
             )}
@@ -157,23 +167,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
             </div>
           )}
 
-          {gameState.wrongGuesses.length > 0 && (
-            <div className="mt-4 w-full max-w-md">
-              <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                Guesses: {gameState.wrongGuesses.length}
-              </div>
-              <div className="space-y-2">
-                {gameState.wrongGuesses.map(wrongGuess => (
-                  <div
-                    key={wrongGuess.timestamp}
-                    className="text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 p-2 rounded"
-                  >
-                    {wrongGuess.guess}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <WrongGuessList guesses={gameState.wrongGuesses} />
         </div>
       </section>
     </>

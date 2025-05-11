@@ -8,42 +8,38 @@ $config = require __DIR__ . '/config.php';
 $reddit_user_agent = $config['reddit']['user_agent'];
 $gemini_api_key = $config['google']['api_key'];
 
-// Define default values for options
-$options = [
-  'model' => 'gemini-2.5-pro-exp-03-25', // gemini-2.5-flash-preview-04-17
-  'dry-run' => false,
-  'skip-status' => false,
-];
-
 // Parse command-line arguments
-$short_opts = ""; // No short options
+$short_opts = "y";
 $long_opts = [
   "model:",      // Requires a value
-  "dry-run",     // No value
-  "skip-status", // No value
+  "dry-run",
+  "skip-status",
 ];
 $cli_options = getopt($short_opts, $long_opts);
 
-if (isset($cli_options['model'])) {
-  $options['model'] = $cli_options['model'];
-}
-if (isset($cli_options['dry-run'])) {
-  $options['dry-run'] = true;
-}
-if (isset($cli_options['skip-status'])) {
-  $options['skip-status'] = true;
-}
+$gpt_model_name = $cli_options['model'] ?? 'gemini-2.5-pro-exp-03-25'; // gemini-2.5-flash-preview-04-17
+$dry_run = isset($cli_options['dry-run']);
+$skip_age_verification = isset($cli_options['skip-status']);
+$auto_confirm = isset($cli_options['y']);
 
 try {
-  if (!$options['skip-status']) {
-    // Check if we are actually missing a headline
-    $status = getStatus();
-    if (!$status['missing']) {
-      echo "No missing headlines\n";
+  // Check if we actally need to generate a new headline
+  $status = getStatus();
+
+  $seconds_since_last_headline = $status['secondsSinceLastHeadline'];
+  $hours_since_last_headline = $seconds_since_last_headline / 3600;
+  echo "hours since last headline: $hours_since_last_headline\n";
+
+  // The next headline should be genearted if the last one was created more than 23 hours ago.
+  // This is to account for the time it takes to generate the next headline.
+  // The script is run as a cron job with expression like "*/5 20 * * *" to avoid a shift.
+  if ($hours_since_last_headline < 23) {
+    if ($skip_age_verification) {
+      echo "Headline is recent but skip-status was specified. Proceeding.\n";
+    } else {
+      echo "No new headline needed. Exiting.\n";
       exit(0);
     }
-  } else {
-    echo "Skipping status check due to --skip-status flag.\n";
   }
 
   // Fetch top posts from Reddit
@@ -71,7 +67,7 @@ try {
   // Get initial candidates
   $prompt = getInitialPrompt($headline_titles);
   $generationConfig = getInitialGenerationConfig();
-  $response = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key, $options['model']);
+  $response = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key, $gpt_model_name);
 
   $generated_text = $response['candidates'][0]['content']['parts'][0]['text'];
   echo "Initial candidate response:\n" . $generated_text . "\n";
@@ -79,7 +75,7 @@ try {
   // Choose the best candidate
   $prompt = getFinalPrompt($generated_text);
   $generationConfig = getFinalGenerationConfig();
-  $response = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key, $options['model']);
+  $response = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key, $gpt_model_name);
 
   $generated_text = $response['candidates'][0]['content']['parts'][0]['text'];
   echo "Final choice response:\n" . $generated_text . "\n";
@@ -109,13 +105,18 @@ try {
   $parts = explode($correct_answer, $headline, 2);
   $before_blank = $parts[0];
   $after_blank = $parts[1];
-  $possible_answers = ['answers' => $possible_answers];
 
-  if (!$options['dry-run']) {
+  if ($auto_confirm) {
+    echo "-y was specified, so not asking for confirmation.\n";
+  } else {
+    confirmProceed("Would you like to submit this headline?");
+  }
+
+  if ($dry_run) {
+    echo "Dry run: Headline not inserted into the database.\n";
+  } else {
     insertHeadline($headline, $before_blank, $after_blank, $hint, $article_url, $reddit_url, $correct_answer, $possible_answers, $publish_time, $explanation);
     echo "Headline inserted into the database.\n";
-  } else {
-    echo "Dry run: Headline not inserted into the database.\n";
   }
 } catch (Exception $e) {
   echo "Error: " . $e->getMessage() . "\n";
