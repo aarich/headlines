@@ -1,6 +1,6 @@
 <?php
 /*
-MySQL tables
+MySQL tables. Here for reference only.
 
 CREATE TABLE headline (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

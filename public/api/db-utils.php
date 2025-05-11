@@ -205,7 +205,7 @@ function getStatus() {
 
     // A headline is missing if the last one was created more than 23 hours ago.
     // This is to account for the time it takes to generate the next headline.
-    // The script is run as a cron job like , so we will avoid a shift.
+    // The script is run as a cron job with expression like "*/5 20 * * *", so we will avoid a shift.
     $missing_headline = ($current_time->getTimestamp() - $created_time->getTimestamp()) > (23 * 60 * 60);
 
     $result = [

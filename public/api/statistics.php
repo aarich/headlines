@@ -2,8 +2,6 @@
 require_once 'db-utils.php';
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Methods: PATCH');
-header('Access-Control-Allow-Headers: Content-Type');
 
 // Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {

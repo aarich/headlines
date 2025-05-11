@@ -52,6 +52,6 @@ php -S localhost:8000 public/api/server.php
 
 ## TODO
 
-- More resilient cron job
-- More resilient LLM interactions
-- More resilient localStorage integration
+- More resilient localStorage integration. It seems a bit shaky.
+- Queue game feature to (1) override the next game that will go out and (2) provide a conisten release time.
+- Tests
