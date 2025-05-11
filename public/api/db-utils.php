@@ -33,11 +33,18 @@ function validateHeadlineId($headlineId) {
 function updateHeadlineStats($headlineId, $updates) {
     $db = getDbConnection();
 
+    // Whitelist of allowed fields to update for security
+    $allowedFields = [
+        'total_plays', 'total_correct_guesses', 'total_incorrect_guesses',
+        'first_guess_correct_count', 'article_click_count', 'reddit_click_count', 'share_count'
+    ];
+
     // Build the SET clause dynamically based on provided updates
     $setClauses = [];
     $params = [];
 
     foreach ($updates as $field => $value) {
+        if (!in_array($field, $allowedFields)) continue; // Skip non-whitelisted fields
         // Increment by the value
         $setClauses[] = "$field = $field + ?";
         $params[] = $value;
@@ -210,7 +217,7 @@ function getStatus() {
     $created_time = new DateTime($headline['created_at']);
 
     // A headline is missing if the last one was created more than 24 hours ago.
-    $missing_headline = ($current_time->getTimestamp() - $created_time->getTimestamp()) >  60 * 60;
+    $missing_headline = ($current_time->getTimestamp() - $created_time->getTimestamp()) > (24 * 60 * 60); // 24 hours
 
     $result = [
         'last_headline' => $headline,
