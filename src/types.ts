@@ -20,7 +20,7 @@ export interface Headline {
 }
 
 export interface GameHints {
-  firstChar: boolean;
+  chars: number;
   clue: boolean;
 }
 

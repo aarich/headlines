@@ -5,7 +5,7 @@ import HeadlineDisplay from './HeadlineDisplay';
 import AnswerWheel from './AnswerWheel';
 import ExpertInput from './ExpertInput';
 import ShareButtons from './ShareButtons';
-import { checkAnswer, getNextHint, getNextHintPrompt } from '../lib/game';
+import { checkAnswer, getNextHint, getNextHintPrompt, getNextRevealType } from '../lib/game';
 import { incrementStat, saveResult } from '../lib/storage';
 import { LightBulbIcon } from '@heroicons/react/24/outline';
 import { useToast } from '../contexts/ToastContext';
@@ -78,17 +78,17 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
     }
   }, [handleGuess, isGameOver]);
 
-  const canShowHint = !gameState.hints?.firstChar || !gameState.hints?.clue;
+  const nextHintType = getNextRevealType(gameState.hints, headline.correctAnswer);
 
   const onHintClick = useCallback(() => {
-    if (canShowHint) {
+    if (nextHintType) {
       // eslint-disable-next-line no-restricted-globals
-      if (confirm(getNextHintPrompt(gameState))) {
-        setGameState(f => getNextHint(headline, f));
+      if (confirm(getNextHintPrompt(gameState, headline.correctAnswer, settings.expertMode))) {
+        setGameState(g => ({ ...g, hints: getNextHint(headline, g) }));
         toast('Hint revealed!', 'info');
       }
     }
-  }, [canShowHint, gameState, headline, setGameState, toast]);
+  }, [nextHintType, gameState, headline, setGameState, settings.expertMode, toast]);
 
   useEffect(() => {
     if (settings.expertMode) {
@@ -138,10 +138,10 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
                 >
                   Submit
                 </button>
-                {canShowHint ? (
+                {nextHintType ? (
                   <button
                     className="justify-self-start py-2 text-white transition-colors"
-                    title={canShowHint ? 'Get a hint' : 'No more hints available'}
+                    title={nextHintType ? 'Get a hint' : 'No more hints available'}
                     onClick={onHintClick}
                   >
                     <LightBulbIcon className="w-5 h-5" />

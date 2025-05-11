@@ -7,7 +7,7 @@ interface SettingsContextType {
 }
 
 const defaultSettings: Settings = {
-  expertMode: false,
+  expertMode: true,
   displayMode: 'system',
   showAnimations: true,
 };

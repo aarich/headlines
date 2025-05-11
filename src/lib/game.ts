@@ -1,4 +1,4 @@
-import { GameState, Headline } from '../types';
+import { GameHints, GameState, Headline } from '../types';
 import { recordShare } from './api';
 import { getStoredScores } from './storage';
 
@@ -63,8 +63,11 @@ export const shareScore = (
   const countText = gameState.wrongGuesses.map(() => `❌`).join('') + '✅';
 
   let hintsText = '';
-  gameState.hints?.firstChar && (hintsText += '💡');
-  gameState.hints?.clue && (hintsText += '💡');
+  if (gameState.hints?.chars) {
+    gameState.hints.chars && (hintsText += '💡');
+    gameState.hints.clue && (hintsText += '🕵️‍♂️');
+    gameState.hints.chars > 1 && (hintsText += '💡'.repeat(gameState.hints.chars - 1));
+  }
 
   hintsText = hintsText.length > 0 ? hintsText : 'No hints! 😎';
 
@@ -85,26 +88,71 @@ export const shareScore = (
   }
 };
 
-export const getNextHint = (headline: Headline, currentGameState: GameState): GameState => {
-  if (!currentGameState.hints) {
-    return { ...currentGameState, hints: { firstChar: true, clue: false } };
+export const getNextHint = (headline: Headline, { hints }: GameState): GameHints => {
+  if (!hints) {
+    return { chars: 1, clue: false };
   }
-  if (!currentGameState.hints.clue) {
-    return { ...currentGameState, hints: { ...currentGameState.hints, clue: true } };
+
+  const nextRevealType = getNextRevealType(hints, headline.correctAnswer);
+
+  if (nextRevealType === 'clue') {
+    return { ...hints, clue: true };
   }
-  return currentGameState;
+
+  if (nextRevealType === 'char') {
+    return { ...hints, chars: hints.chars + 1 };
+  }
+
+  return hints;
 };
 
 export const hasAnyHints = (gameState: GameState): boolean => {
-  return !!(gameState.hints?.firstChar || gameState.hints?.clue);
+  return !!(gameState.hints?.chars || gameState.hints?.clue);
 };
 
-export const getNextHintPrompt = (gameState: GameState): string => {
-  if (!gameState.hints || !gameState.hints.firstChar) {
-    return 'Reveal the first letter of the missing word?';
+export const getNextHintPrompt = (
+  { hints }: GameState,
+  correctAnswer: string,
+  isExpert: boolean
+): string => {
+  const nextRevealType = getNextRevealType(hints, correctAnswer);
+
+  if (nextRevealType === 'char') {
+    // Suggest using non-expert mode if the user has already revealed a character and is in expert mode
+    const tip =
+      isExpert && hints?.chars
+        ? '\n\nTip: You can also toggle off "Expert Mode" for a different fun experience!'
+        : '';
+    let next = 'next';
+
+    if (!hints?.chars) {
+      next = 'first';
+    } else if (hints.chars === correctAnswer.length - 1) {
+      next = 'last';
+    }
+
+    return `Reveal the ${next} letter of the missing word?${tip}`;
   }
-  if (!gameState.hints.clue) {
+
+  if (nextRevealType === 'clue') {
     return 'Reveal a clue about the missing word?';
   }
+
   return '';
+};
+
+export const getNextRevealType = (
+  hints: GameHints | undefined,
+  correctAnswer: string
+): 'char' | 'clue' | undefined => {
+  // Reveal the next character until half of the word is revealed. Then reveal the clue. Then continue revealing characters.
+  if (!hints || hints.chars < correctAnswer.length / 2) {
+    return 'char';
+  }
+
+  if (!hints.clue) {
+    return 'clue';
+  }
+
+  return hints.chars < correctAnswer.length ? 'char' : undefined;
 };

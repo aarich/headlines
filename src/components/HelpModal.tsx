@@ -41,8 +41,8 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => (
         Stuck? Use the <LightBulbIcon className="w-5 h-5 inline" /> button for a hint:
       </p>
       <ul className="list-decimal pl-6">
-        <li>Get the first letter of the word.</li>
-        <li>Unlock a short description.</li>
+        <li>Get the next letter of the word.</li>
+        <li>Unlock a clue about the word.</li>
       </ul>
       <p>Your guess is short by four characters:</p>
       <div className="flex justify-center font-bold">
@@ -50,6 +50,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => (
           currentGuess={GUESS}
           gameState={{ correct: false, wrongGuesses: [] }}
           correctAnswer={GUESS + 'x'.repeat(4)}
+          isExpertMode
         />
       </div>
       <p>Your guess is long by four characters:</p>
@@ -58,14 +59,20 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => (
           currentGuess={GUESS}
           gameState={{ correct: false, wrongGuesses: [] }}
           correctAnswer={GUESS.slice(0, -4)}
+          isExpertMode
         />
       </div>
       <p>The first character is wrong:</p>
       <div className="flex justify-center font-bold">
         <GuessDisplay
           currentGuess={GUESS}
-          gameState={{ correct: false, wrongGuesses: [], hints: { firstChar: true, clue: false } }}
+          gameState={{
+            correct: false,
+            wrongGuesses: [],
+            hints: { chars: 1, clue: false },
+          }}
           correctAnswer={'x' + GUESS.slice(1)}
+          isExpertMode
         />
       </div>
       <p>
@@ -78,9 +85,10 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => (
           gameState={{
             correct: false,
             wrongGuesses: [],
-            hints: { firstChar: true, clue: false },
+            hints: { chars: 1, clue: false },
           }}
           correctAnswer={'x' + GUESS.slice(1, -4)}
+          isExpertMode
         />
       </div>
       <h3 className="text-xl font-semibold mt-6">About</h3>
