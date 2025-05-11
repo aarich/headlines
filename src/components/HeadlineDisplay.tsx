@@ -3,7 +3,6 @@ import { GameState, Headline } from '../types';
 import { GlobeAltIcon } from '@heroicons/react/24/outline';
 import GuessDisplay from './GuessDisplay';
 import { recordArticleClick, recordRedditClick } from '../lib/api';
-import { useSettings } from '../contexts/SettingsContext';
 
 interface HeadlineDisplayProps {
   headline: Headline;
@@ -20,9 +19,6 @@ const HeadlineDisplay: React.FC<HeadlineDisplayProps> = ({
 }) => {
   const onArticleClick = () => recordArticleClick(headline.id);
   const onRedditClick = () => recordRedditClick(headline.id);
-  const {
-    settings: { expertMode },
-  } = useSettings();
   return (
     <div className="mb-6 text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-center text-gray-800 dark:text-gray-100 leading-relaxed px-2">
       {isGameOver ? (
@@ -67,7 +63,6 @@ const HeadlineDisplay: React.FC<HeadlineDisplayProps> = ({
               currentGuess={currentGuess}
               gameState={gameState}
               correctAnswer={headline.correctAnswer}
-              isExpertMode={expertMode}
             />
           </div>
           <div>{headline.afterBlank}</div>

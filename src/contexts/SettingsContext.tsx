@@ -10,6 +10,7 @@ const defaultSettings: Settings = {
   expertMode: true,
   displayMode: 'system',
   showAnimations: true,
+  colorBlindMode: false,
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);

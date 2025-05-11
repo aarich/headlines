@@ -46,6 +46,7 @@ export interface Settings {
   expertMode: boolean;
   displayMode: DisplayMode;
   showAnimations: boolean;
+  colorBlindMode: boolean;
 }
 
 /**

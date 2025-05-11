@@ -12,15 +12,14 @@ interface SettingsModalProps {
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const {
-    settings: { displayMode, expertMode, showAnimations },
+    settings: { displayMode, expertMode, showAnimations, colorBlindMode },
     updateSettings,
   } = useSettings();
 
   const handleDisplayModeChange = (displayMode: DisplayMode) => updateSettings({ displayMode });
-
   const handleExpertModeToggle = () => updateSettings({ expertMode: !expertMode });
-
   const handleShowAnimationsToggle = () => updateSettings({ showAnimations: !showAnimations });
+  const handleColorBlindModeToggle = () => updateSettings({ colorBlindMode: !colorBlindMode });
 
   const displayModeOptions = [
     { value: 'light' as DisplayMode, label: 'Light' },
@@ -48,6 +47,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           description="Time to peel back the layers"
           checked={showAnimations}
           onChange={handleShowAnimationsToggle}
+        />
+        <Toggle
+          title="Colorblind Mode"
+          description="Makes the guess interpretation easier for our colorblind friends"
+          checked={colorBlindMode}
+          onChange={handleColorBlindModeToggle}
         />
       </div>
     </Modal>

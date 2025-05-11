@@ -1,16 +1,16 @@
 import React from 'react';
 import { GameState } from '../types';
+import { useSettings } from '../contexts/SettingsContext';
 
 interface GuessDisplayProps {
   currentGuess: string;
   gameState: GameState;
   correctAnswer: string;
-  isExpertMode: boolean;
+  forceExpertMode?: boolean;
 }
 
 type CharDisplay = { char: string; className?: string };
 
-const NORMAL_CHAR_CLASS = '';
 const WRONG_CHAR_CLASS = 'text-red-500';
 const CORRECT_CHAR_CLASS = 'text-green-500';
 const GHOST_CHAR_CLASS = 'text-gray-500';
@@ -20,8 +20,15 @@ const GuessDisplay: React.FC<GuessDisplayProps> = ({
   currentGuess,
   gameState: { hints },
   correctAnswer,
-  isExpertMode,
+  forceExpertMode,
 }) => {
+  const { expertMode, colorBlindMode } = useSettings().settings;
+
+  const isExpertMode = forceExpertMode || expertMode;
+
+  const wrongCharClass = WRONG_CHAR_CLASS + (colorBlindMode ? ' line-through' : '');
+  const correctCharClass = CORRECT_CHAR_CLASS + (colorBlindMode ? ' underline' : '');
+
   const chars: CharDisplay[] = [];
   const numCharsToDisplay = isExpertMode
     ? Math.max(currentGuess.length, correctAnswer.length)
@@ -37,16 +44,16 @@ const GuessDisplay: React.FC<GuessDisplayProps> = ({
       }
     } else if (i > correctAnswer.length - 1) {
       // Extra guess
-      chars.push({ char: currentGuess[i], className: WRONG_CHAR_CLASS });
+      chars.push({ char: currentGuess[i], className: wrongCharClass });
     } else if (i >= (hints?.chars ?? 0)) {
       // No information about this character
-      chars.push({ char: currentGuess[i], className: NORMAL_CHAR_CLASS });
+      chars.push({ char: currentGuess[i] });
     } else if (currentGuess[i].toLowerCase() === correctAnswer[i].toLowerCase()) {
       // Correct character
-      chars.push({ char: currentGuess[i], className: CORRECT_CHAR_CLASS });
+      chars.push({ char: currentGuess[i], className: correctCharClass });
     } else {
       // Wrong character
-      chars.push({ char: currentGuess[i], className: WRONG_CHAR_CLASS });
+      chars.push({ char: currentGuess[i], className: wrongCharClass });
     }
   }
 

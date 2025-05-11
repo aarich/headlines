@@ -18,7 +18,7 @@ interface GameContainerProps {
 }
 
 const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setGameState }) => {
-  const { settings } = useSettings();
+  const { expertMode } = useSettings().settings;
   const [currentGuess, setCurrentGuess] = useState('');
   const [isGameOver, setIsGameOver] = useState(false);
   const toast = useToast();
@@ -37,7 +37,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
 
   const handleGuess = useCallback(() => {
     if (!currentGuess) return;
-    const isCorrect = checkAnswer(currentGuess, headline.correctAnswer, settings.expertMode);
+    const isCorrect = checkAnswer(currentGuess, headline.correctAnswer, expertMode);
     setIsGameOver(isCorrect);
 
     if (isCorrect) {
@@ -48,7 +48,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
       if (gameState.wrongGuesses.length === 0) {
         incrementStat('firstGuessCorrectCount');
       }
-      saveResult(headline.id, new Date(), gameState.wrongGuesses.length, settings.expertMode);
+      saveResult(headline.id, new Date(), gameState.wrongGuesses.length, expertMode);
       recordGameCompleted(headline.id, { guesses: gameState.wrongGuesses.map(g => g.guess) });
     } else {
       if (gameState.wrongGuesses.find(g => g.guess === currentGuess)) {
@@ -60,11 +60,11 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
         ...rest,
         wrongGuesses: [...wrongGuesses, { guess: currentGuess, timestamp: Date.now() }],
       }));
-      if (settings.expertMode) {
+      if (expertMode) {
         setCurrentGuess('');
       }
     }
-  }, [currentGuess, gameState, headline, setGameState, settings.expertMode, toast]);
+  }, [currentGuess, gameState, headline, setGameState, expertMode, toast]);
 
   useEffect(() => {
     if (!isGameOver) {
@@ -83,18 +83,18 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
   const onHintClick = useCallback(() => {
     if (nextHintType) {
       // eslint-disable-next-line no-restricted-globals
-      if (confirm(getNextHintPrompt(gameState, headline.correctAnswer, settings.expertMode))) {
+      if (confirm(getNextHintPrompt(gameState, headline.correctAnswer, expertMode))) {
         setGameState(g => ({ ...g, hints: getNextHint(headline, g) }));
         toast('Hint revealed!', 'info');
       }
     }
-  }, [nextHintType, gameState, headline, setGameState, settings.expertMode, toast]);
+  }, [nextHintType, gameState, headline, setGameState, expertMode, toast]);
 
   useEffect(() => {
-    if (settings.expertMode) {
+    if (expertMode) {
       setCurrentGuess('');
     }
-  }, [settings.expertMode]);
+  }, [expertMode]);
 
   return (
     <>
@@ -107,7 +107,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
         />
         <div className="flex flex-col items-center w-full">
           <div className="w-full flex justify-center">
-            {isGameOver ? null : settings.expertMode ? (
+            {isGameOver ? null : expertMode ? (
               <ExpertInput onSetGuess={setCurrentGuess} currentGuess={currentGuess} />
             ) : (
               <AnswerWheel choices={headline.possibleAnswers} onSetGuess={setCurrentGuess} />
@@ -123,11 +123,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
             }
           >
             {isGameOver ? (
-              <ShareButtons
-                gameState={gameState}
-                headline={headline}
-                isExpert={settings.expertMode}
-              />
+              <ShareButtons gameState={gameState} headline={headline} isExpert={expertMode} />
             ) : (
               <>
                 <div />
