@@ -16,20 +16,6 @@ npm start
 php -S localhost:8000 public/api/server.php
 ```
 
-## Deployment
-
-1. Build the React app:
-
-   ```bash
-   npm run build
-   ```
-
-2. Copy the build files:
-
-   ```bash
-   scp -r build/. user@your-server:/doc/root/path
-   ```
-
 ## Features
 
 - Daily updated headlines with missing words

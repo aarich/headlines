@@ -50,7 +50,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         />
         <Toggle
           title="Colorblind Mode"
-          description="Makes the guess interpretation easier for our colorblind friends"
+          description="Makes guess interpretation easier for our colorblind friends"
           checked={colorBlindMode}
           onChange={handleColorBlindModeToggle}
         />
