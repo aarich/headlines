@@ -1,5 +1,5 @@
 import React, { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
-import { Headline, Feedback } from '../types';
+import { Headline, GameState } from '../types';
 import { useSettings } from '../contexts/SettingsContext';
 import HeadlineDisplay from './HeadlineDisplay';
 import AnswerWheel from './AnswerWheel';
@@ -13,18 +13,18 @@ import { recordGameCompleted } from '../lib/api';
 
 interface GameContainerProps {
   headline: Headline;
-  feedback: Feedback;
-  setFeedback: Dispatch<SetStateAction<Feedback>>;
+  gameState: GameState;
+  setGameState: Dispatch<SetStateAction<GameState>>;
 }
 
-const GameContainer: React.FC<GameContainerProps> = ({ headline, feedback, setFeedback }) => {
+const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setGameState }) => {
   const { settings } = useSettings();
   const [currentGuess, setCurrentGuess] = useState('');
   const [isGameOver, setIsGameOver] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
-    if (feedback.correct && !isGameOver) {
+    if (gameState.correct && !isGameOver) {
       setIsGameOver(true);
       const hasIdParam = window.location.search.includes('id=');
       if (hasIdParam) {
@@ -33,7 +33,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, feedback, setFe
         toast('Great job today!', 'success');
       }
     }
-  }, [feedback.correct, isGameOver, toast]);
+  }, [gameState.correct, isGameOver, toast]);
 
   const handleGuess = useCallback(() => {
     if (!currentGuess) return;
@@ -43,20 +43,20 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, feedback, setFe
     if (isCorrect) {
       toast('Nice!', 'success');
       setCurrentGuess(headline.correctAnswer);
-      setFeedback(prev => ({ ...prev, correct: true }));
+      setGameState(prev => ({ ...prev, correct: true }));
       incrementStat('totalPlays');
-      if (feedback.wrongGuesses.length === 0) {
+      if (gameState.wrongGuesses.length === 0) {
         incrementStat('firstGuessCorrectCount');
       }
-      saveResult(headline.id, new Date(), feedback.wrongGuesses.length, settings.expertMode);
-      recordGameCompleted(headline.id, { guesses: feedback.wrongGuesses.map(g => g.guess) });
+      saveResult(headline.id, new Date(), gameState.wrongGuesses.length, settings.expertMode);
+      recordGameCompleted(headline.id, { guesses: gameState.wrongGuesses.map(g => g.guess) });
     } else {
-      if (feedback.wrongGuesses.find(g => g.guess === currentGuess)) {
+      if (gameState.wrongGuesses.find(g => g.guess === currentGuess)) {
         toast('Already guessed!', 'warning');
         return;
       }
       incrementStat('totalIncorrectGuesses');
-      setFeedback(({ wrongGuesses, ...rest }) => ({
+      setGameState(({ wrongGuesses, ...rest }) => ({
         ...rest,
         wrongGuesses: [...wrongGuesses, { guess: currentGuess, timestamp: Date.now() }],
       }));
@@ -64,7 +64,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, feedback, setFe
         setCurrentGuess('');
       }
     }
-  }, [currentGuess, feedback, headline, setFeedback, settings.expertMode, toast]);
+  }, [currentGuess, gameState, headline, setGameState, settings.expertMode, toast]);
 
   useEffect(() => {
     if (!isGameOver) {
@@ -78,17 +78,17 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, feedback, setFe
     }
   }, [handleGuess, isGameOver]);
 
-  const canShowHint = !feedback.hintCharCount || !feedback.hintFirstChar || !feedback.hintText;
+  const canShowHint = !gameState.hints?.firstChar || !gameState.hints?.clue;
 
   const onHintClick = useCallback(() => {
     if (canShowHint) {
       // eslint-disable-next-line no-restricted-globals
-      if (confirm(getNextHintPrompt(feedback))) {
-        setFeedback(f => getNextHint(headline, f));
+      if (confirm(getNextHintPrompt(gameState))) {
+        setGameState(f => getNextHint(headline, f));
         toast('Hint revealed!', 'info');
       }
     }
-  }, [canShowHint, feedback, headline, setFeedback, toast]);
+  }, [canShowHint, gameState, headline, setGameState, toast]);
 
   useEffect(() => {
     if (settings.expertMode) {
@@ -103,7 +103,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, feedback, setFe
           headline={headline}
           currentGuess={currentGuess}
           isGameOver={isGameOver}
-          feedback={feedback}
+          gameState={gameState}
         />
         <div className="flex flex-col items-center w-full">
           <div className="w-full flex justify-center">
@@ -124,7 +124,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, feedback, setFe
           >
             {isGameOver ? (
               <ShareButtons
-                feedback={feedback}
+                gameState={gameState}
                 headline={headline}
                 isExpert={settings.expertMode}
               />
@@ -153,21 +153,21 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, feedback, setFe
             )}
           </div>
 
-          {feedback.hintText && (
+          {gameState.hints?.clue && (
             <div className="mt-4 w-full max-w-md">
               <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                Hint: {feedback.hintText}
+                Hint: {headline.hint}
               </div>
             </div>
           )}
 
-          {feedback.wrongGuesses.length > 0 && (
+          {gameState.wrongGuesses.length > 0 && (
             <div className="mt-4 w-full max-w-md">
               <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                Guesses: {feedback.wrongGuesses.length}
+                Guesses: {gameState.wrongGuesses.length}
               </div>
               <div className="space-y-2">
-                {feedback.wrongGuesses.map(wrongGuess => (
+                {gameState.wrongGuesses.map(wrongGuess => (
                   <div
                     key={wrongGuess.timestamp}
                     className="text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 p-2 rounded"

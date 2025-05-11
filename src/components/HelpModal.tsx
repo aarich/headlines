@@ -8,6 +8,8 @@ interface HelpModalProps {
   onClose: () => void;
 }
 
+const GUESS = 'onion';
+
 const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => (
   <Modal isOpen={isOpen} onClose={onClose} title="How to Play">
     <div className="space-y-4 text-gray-700 dark:text-gray-200">
@@ -39,29 +41,31 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => (
         Stuck? Use the <LightBulbIcon className="w-5 h-5 inline" /> button for a hint:
       </p>
       <ul className="list-decimal pl-6">
-        <li>See how long the missing word is.</li>
         <li>Get the first letter of the word.</li>
         <li>Unlock a short description.</li>
       </ul>
       <p>Your guess is short by four characters:</p>
       <div className="flex justify-center font-bold">
         <GuessDisplay
-          currentGuess="pancakes"
-          feedback={{ correct: false, wrongGuesses: [], hintCharCount: 'pancakes'.length + 4 }}
+          currentGuess={GUESS}
+          gameState={{ correct: false, wrongGuesses: [] }}
+          correctAnswer={GUESS + 'x'.repeat(4)}
         />
       </div>
       <p>Your guess is long by four characters:</p>
       <div className="flex justify-center font-bold">
         <GuessDisplay
-          currentGuess="pancakes"
-          feedback={{ correct: false, wrongGuesses: [], hintCharCount: 'pancakes'.length - 4 }}
+          currentGuess={GUESS}
+          gameState={{ correct: false, wrongGuesses: [] }}
+          correctAnswer={GUESS.slice(0, -4)}
         />
       </div>
       <p>The first character is wrong:</p>
       <div className="flex justify-center font-bold">
         <GuessDisplay
-          currentGuess="pancakes"
-          feedback={{ correct: false, wrongGuesses: [], hintFirstChar: 'x' }}
+          currentGuess={GUESS}
+          gameState={{ correct: false, wrongGuesses: [], hints: { firstChar: true, clue: false } }}
+          correctAnswer={'x' + GUESS.slice(1)}
         />
       </div>
       <p>
@@ -70,13 +74,13 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => (
       </p>
       <div className="flex justify-center font-bold">
         <GuessDisplay
-          currentGuess="pancakes"
-          feedback={{
+          currentGuess={GUESS}
+          gameState={{
             correct: false,
             wrongGuesses: [],
-            hintFirstChar: 'x',
-            hintCharCount: 'pancakes'.length - 4,
+            hints: { firstChar: true, clue: false },
           }}
+          correctAnswer={'x' + GUESS.slice(1, -4)}
         />
       </div>
       <h3 className="text-xl font-semibold mt-6">About</h3>

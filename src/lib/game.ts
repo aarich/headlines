@@ -1,4 +1,4 @@
-import { Feedback, Headline } from '../types';
+import { GameState, Headline } from '../types';
 import { recordShare } from './api';
 import { getStoredScores } from './storage';
 
@@ -48,7 +48,7 @@ export const calculateNewStreak = (currentStreak: number, isCorrect: boolean): n
 
 export const shareScore = (
   id: number,
-  feedback: Feedback,
+  gameState: GameState,
   isExpert: boolean,
   forceCopy: boolean = false
 ): void => {
@@ -60,12 +60,11 @@ export const shareScore = (
     expert = score.e;
   }
 
-  const countText = feedback.wrongGuesses.map(() => `❌`).join('') + '✅';
+  const countText = gameState.wrongGuesses.map(() => `❌`).join('') + '✅';
 
   let hintsText = '';
-  feedback.hintCharCount && (hintsText += '💡');
-  feedback.hintFirstChar && (hintsText += '💡');
-  feedback.hintText && (hintsText += '💡');
+  gameState.hints?.firstChar && (hintsText += '💡');
+  gameState.hints?.clue && (hintsText += '💡');
 
   hintsText = hintsText.length > 0 ? hintsText : 'No hints! 😎';
 
@@ -86,31 +85,25 @@ export const shareScore = (
   }
 };
 
-export const getNextHint = (headline: Headline, currentFeedback: Feedback): Feedback => {
-  if (!currentFeedback.hintCharCount) {
-    return { ...currentFeedback, hintCharCount: headline.correctAnswer.length };
+export const getNextHint = (headline: Headline, currentGameState: GameState): GameState => {
+  if (!currentGameState.hints) {
+    return { ...currentGameState, hints: { firstChar: true, clue: false } };
   }
-  if (!currentFeedback.hintFirstChar) {
-    return { ...currentFeedback, hintFirstChar: headline.correctAnswer[0] };
+  if (!currentGameState.hints.clue) {
+    return { ...currentGameState, hints: { ...currentGameState.hints, clue: true } };
   }
-  if (!currentFeedback.hintText) {
-    return { ...currentFeedback, hintText: headline.hint };
-  }
-  return currentFeedback;
+  return currentGameState;
 };
 
-export const hasAnyHints = (feedback: Feedback): boolean => {
-  return !!(feedback.hintCharCount || feedback.hintFirstChar || feedback.hintText);
+export const hasAnyHints = (gameState: GameState): boolean => {
+  return !!(gameState.hints?.firstChar || gameState.hints?.clue);
 };
 
-export const getNextHintPrompt = (currentFeedback: Feedback): string => {
-  if (!currentFeedback.hintCharCount) {
-    return 'Reveal the length of the missing word?';
-  }
-  if (!currentFeedback.hintFirstChar) {
+export const getNextHintPrompt = (gameState: GameState): string => {
+  if (!gameState.hints || !gameState.hints.firstChar) {
     return 'Reveal the first letter of the missing word?';
   }
-  if (!currentFeedback.hintText) {
+  if (!gameState.hints.clue) {
     return 'Reveal a clue about the missing word?';
   }
   return '';

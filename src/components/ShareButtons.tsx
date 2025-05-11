@@ -1,14 +1,14 @@
 import React from 'react';
-import { Feedback, Headline } from '../types';
+import { GameState, Headline } from '../types';
 import { shareScore } from '../lib/game';
 
 interface ShareButtonsProps {
-  feedback: Feedback;
+  gameState: GameState;
   headline: Headline;
   isExpert: boolean;
 }
 
-const ShareButtons: React.FC<ShareButtonsProps> = ({ feedback, headline, isExpert }) => {
+const ShareButtons: React.FC<ShareButtonsProps> = ({ gameState, headline, isExpert }) => {
   const hasShareAPI = 'share' in (navigator || {});
 
   return (
@@ -16,7 +16,7 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({ feedback, headline, isExper
       {hasShareAPI && (
         <button
           className="mt-4 px-4 py-2 border-2 border-green-500 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-          onClick={() => shareScore(headline.id, feedback, isExpert)}
+          onClick={() => shareScore(headline.id, gameState, isExpert)}
         >
           Share Score
         </button>
@@ -27,7 +27,7 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({ feedback, headline, isExper
             ? 'border-2 border-green-500 text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20'
             : 'bg-green-500 text-white hover:bg-green-600'
         }`}
-        onClick={() => shareScore(headline.id, feedback, isExpert, true)}
+        onClick={() => shareScore(headline.id, gameState, isExpert, true)}
       >
         Copy Score
       </button>

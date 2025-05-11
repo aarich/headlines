@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Headline, Feedback } from './types';
+import { Headline, GameState } from './types';
 import Header from './components/Header';
 import GameContainer from './components/GameContainer';
 import SettingsModal from './components/SettingsModal';
@@ -9,11 +9,11 @@ import { SettingsProvider } from './contexts/SettingsContext';
 import StatsModal from './components/StatsModal';
 import AnimatedBackground from './components/AnimatedBackground';
 import {
-  getLastStarted,
-  getStoredFeedback,
+  getStarted,
+  getStoredGameState,
   getStoredScores,
-  setLastStarted,
-  storeFeedback,
+  setStarted,
+  storeGameState,
 } from './lib/storage';
 import { ToastProvider } from './contexts/ToastContext';
 import Loading from './components/common/Loading';
@@ -25,7 +25,7 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
-  const [feedback, setFeedback] = useState<Feedback>({ correct: false, wrongGuesses: [] });
+  const [gameState, setGameState] = useState<GameState>({ correct: false, wrongGuesses: [] });
 
   useEffect(() => {
     setIsLoading(true);
@@ -43,38 +43,39 @@ function App() {
 
   useEffect(() => {
     if (headline) {
-      const lastStarted = getLastStarted();
+      const startedGames = getStarted();
       const score = getStoredScores()[`${headline.id}`];
-      const feedback = getStoredFeedback(headline.id);
+      const gameState = getStoredGameState(headline.id);
 
       if (score) {
-        setFeedback(feedback ?? { correct: true, wrongGuesses: [] });
+        // We already finished this game
+        setGameState(gameState ?? { correct: true, wrongGuesses: [] });
       } else {
-        if (lastStarted !== headline.id) {
+        if (startedGames.has(headline.id)) {
           // only record started if we haven't already started this
           recordGameStarted(headline.id);
         }
 
-        if (feedback) {
-          setFeedback(feedback);
+        if (gameState) {
+          setGameState(gameState);
         }
       }
 
-      setLastStarted(headline.id);
+      setStarted(headline.id);
     }
   }, [headline]);
 
-  const setFeedbackWrapper = useCallback(
-    (arg: Feedback | ((prevState: Feedback) => Feedback)) => {
+  const setGameStateWrapper = useCallback(
+    (arg: GameState | ((prevState: GameState) => GameState)) => {
       if (typeof arg === 'function') {
-        setFeedback(prev => {
-          const newFeedback = arg(prev);
-          headline && storeFeedback(headline.id, newFeedback);
-          return newFeedback;
+        setGameState(prev => {
+          const newGameState = arg(prev);
+          headline && storeGameState(headline.id, newGameState);
+          return newGameState;
         });
       } else {
-        setFeedback(arg);
-        headline && storeFeedback(headline.id, arg);
+        setGameState(arg);
+        headline && storeGameState(headline.id, arg);
       }
     },
     [headline]
@@ -101,8 +102,8 @@ function App() {
               ) : headline ? (
                 <GameContainer
                   headline={headline}
-                  feedback={feedback}
-                  setFeedback={setFeedbackWrapper}
+                  gameState={gameState}
+                  setGameState={setGameStateWrapper}
                 />
               ) : null}
             </main>
@@ -117,7 +118,7 @@ function App() {
             isOpen={isStatsOpen}
             onClose={() => setIsStatsOpen(false)}
             headline={headline}
-            feedback={feedback}
+            gameState={gameState}
           />
         </div>
       </ToastProvider>

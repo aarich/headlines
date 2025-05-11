@@ -19,12 +19,15 @@ export interface Headline {
   mostCommonIncorrectGuesses: string[];
 }
 
-export interface Feedback {
+export interface GameHints {
+  firstChar: boolean;
+  clue: boolean;
+}
+
+export interface GameState {
   correct: boolean;
   wrongGuesses: WrongGuess[];
-  hintCharCount?: number;
-  hintFirstChar?: string;
-  hintText?: string;
+  hints?: GameHints;
 }
 
 export interface WrongGuess {

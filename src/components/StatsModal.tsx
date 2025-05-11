@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Modal from './common/Modal';
 import { getStoredScores, getStoredStats, saveStats } from '../lib/storage';
 import { getCurrentStreak } from '../lib/scoring';
-import { Feedback, Headline, HeadlineHistory } from '../types';
+import { GameState, Headline, HeadlineHistory } from '../types';
 import { fetchHistory } from '../lib/api';
 import { plural } from '../lib/ui';
 import TickerItem from './TickerItem';
@@ -13,12 +13,12 @@ interface StatsModalProps {
   isOpen: boolean;
   onClose: () => void;
   headline?: Headline;
-  feedback: Feedback;
+  gameState: GameState;
 }
 
-const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, feedback }) => {
-  const scores = useMemo(() => getStoredScores(), [feedback.correct]);
-  const stats = useMemo(() => getStoredStats(), [feedback.correct]);
+const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, gameState }) => {
+  const scores = useMemo(() => getStoredScores(), [gameState.correct]);
+  const stats = useMemo(() => getStoredStats(), [gameState.correct]);
   const [history, setHistory] = useState<HeadlineHistory[]>();
   const [revealWords, setRevealWords] = useState(false);
 
@@ -34,7 +34,7 @@ const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, feed
 
   const currentStreak = useMemo(
     () => (headline ? getCurrentStreak(Object.values(scores), headline.id - 1) : undefined),
-    [headline, scores, feedback.correct]
+    [headline, scores, gameState.correct]
   );
 
   useEffect(() => {

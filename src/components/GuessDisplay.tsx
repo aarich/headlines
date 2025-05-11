@@ -1,27 +1,23 @@
 import React from 'react';
-import { Feedback } from '../types';
-import { hasAnyHints } from '../lib/game';
+import { GameState } from '../types';
 
 interface GuessDisplayProps {
   currentGuess: string;
-  feedback: Feedback;
+  gameState: GameState;
+  correctAnswer: string;
 }
 
-const GuessDisplay: React.FC<GuessDisplayProps> = ({ currentGuess, feedback }) => {
-  if (!hasAnyHints(feedback)) {
-    return <>{currentGuess || '[???]'}</>;
-  }
-
+const GuessDisplay: React.FC<GuessDisplayProps> = ({ currentGuess, gameState, correctAnswer }) => {
   let redChars = '';
   let totalCharsShowing = 0;
   let regularChars = '';
   let greyChars = '';
   let numUnderscores = 0;
 
-  if (feedback.hintFirstChar) {
+  if (gameState.hints?.firstChar) {
     if (currentGuess) {
       totalCharsShowing = currentGuess.length;
-      if (!currentGuess.toLowerCase().startsWith(feedback.hintFirstChar.toLowerCase())) {
+      if (!currentGuess.toLowerCase().startsWith(correctAnswer[0].toLowerCase())) {
         redChars = currentGuess[0];
         regularChars = currentGuess.slice(1);
       } else {
@@ -29,22 +25,21 @@ const GuessDisplay: React.FC<GuessDisplayProps> = ({ currentGuess, feedback }) =
       }
     } else {
       totalCharsShowing = 1;
-      regularChars = feedback.hintFirstChar;
+      regularChars = correctAnswer[0];
     }
   } else {
     regularChars = currentGuess;
     totalCharsShowing = currentGuess.length;
   }
 
-  if (feedback.hintCharCount) {
-    const lengthDifference = totalCharsShowing - feedback.hintCharCount;
-    if (lengthDifference > 0) {
-      // too long. show grey chars
-      greyChars = currentGuess.slice(feedback.hintCharCount);
-      regularChars = regularChars.slice(0, feedback.hintCharCount - (redChars ? 1 : 0));
-    } else {
-      numUnderscores = Math.abs(lengthDifference);
-    }
+  const charCount = correctAnswer.length;
+  const lengthDifference = totalCharsShowing - charCount;
+  if (lengthDifference > 0) {
+    // too long. show grey chars
+    greyChars = currentGuess.slice(charCount);
+    regularChars = regularChars.slice(0, charCount - (redChars ? 1 : 0));
+  } else {
+    numUnderscores = Math.abs(lengthDifference);
   }
 
   return (

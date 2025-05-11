@@ -1,10 +1,10 @@
-import { Feedback, Score, Stat, Stats } from '../types';
+import { GameState, Score, Stat, Stats } from '../types';
 
 const STORAGE_KEYS = {
   SCORES: 'scores',
   STATS: 'stats',
-  LAST_STARTED: 'last_started',
-  FEEDBACK: 'feedback',
+  STARTED: 'started',
+  GAME_STATE: 'games',
 } as const;
 
 export const getStoredScores = (): Record<string, Score> => {
@@ -39,36 +39,44 @@ export const incrementStat = (key: Stat): void => {
   localStorage.setItem(STORAGE_KEYS.STATS, JSON.stringify(currentStats));
 };
 
-export const setLastStarted = (id: number): void => {
-  localStorage.setItem(STORAGE_KEYS.LAST_STARTED, id.toString());
+export const setStarted = (id: number): void => {
+  let games = new Set<number>();
+  const currentStarted = localStorage.getItem(STORAGE_KEYS.STARTED);
+  if (currentStarted) {
+    games = new Set<number>(JSON.parse(currentStarted).games);
+  }
+
+  games.add(id);
+
+  localStorage.setItem(STORAGE_KEYS.STARTED, JSON.stringify({ games: Array.from(games) }));
 };
 
-export const getLastStarted = (): number | undefined => {
-  const lastStarted = localStorage.getItem(STORAGE_KEYS.LAST_STARTED);
-  return lastStarted ? parseInt(lastStarted) : undefined;
+export const getStarted = (): Set<number> => {
+  const started = localStorage.getItem(STORAGE_KEYS.STARTED);
+  return new Set<number>(started ? JSON.parse(started).games : []);
 };
 
-export const getStoredFeedback = (id: number): Feedback | undefined => {
-  const feedback = localStorage.getItem(STORAGE_KEYS.FEEDBACK);
-  if (!feedback) return undefined;
-  const parsed = JSON.parse(feedback);
+export const getStoredGameState = (id: number): GameState | undefined => {
+  const gameStates = localStorage.getItem(STORAGE_KEYS.GAME_STATE);
+  if (!gameStates) return undefined;
+  const parsed = JSON.parse(gameStates);
   return parsed[`${id}`];
 };
 
-export const storeFeedback = (id: number, feedback: Feedback): void => {
-  const currentFeedback = localStorage.getItem(STORAGE_KEYS.FEEDBACK);
-  if (!currentFeedback) {
-    localStorage.setItem(STORAGE_KEYS.FEEDBACK, JSON.stringify({ [`${id}`]: feedback }));
+export const storeGameState = (id: number, gameState: GameState): void => {
+  const currentGameState = localStorage.getItem(STORAGE_KEYS.GAME_STATE);
+  if (!currentGameState) {
+    localStorage.setItem(STORAGE_KEYS.GAME_STATE, JSON.stringify({ [`${id}`]: gameState }));
   } else {
-    const parsed = JSON.parse(currentFeedback);
-    parsed[`${id}`] = feedback;
+    const parsed = JSON.parse(currentGameState);
+    parsed[`${id}`] = gameState;
 
     if (Math.random() < 0.05) {
       // remove anything 7 days older than the one we're working on now.
-      const oldFeedback = Object.keys(parsed).filter(key => parseInt(key) < id - 7);
-      oldFeedback.forEach(key => delete parsed[key]);
+      const oldGameState = Object.keys(parsed).filter(key => parseInt(key) < id - 7);
+      oldGameState.forEach(key => delete parsed[key]);
     }
 
-    localStorage.setItem(STORAGE_KEYS.FEEDBACK, JSON.stringify(parsed));
+    localStorage.setItem(STORAGE_KEYS.GAME_STATE, JSON.stringify(parsed));
   }
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Feedback, Headline } from '../types';
+import { GameState, Headline } from '../types';
 import { GlobeAltIcon } from '@heroicons/react/24/outline';
 import GuessDisplay from './GuessDisplay';
 import { recordArticleClick, recordRedditClick } from '../lib/api';
@@ -8,14 +8,14 @@ interface HeadlineDisplayProps {
   headline: Headline;
   currentGuess: string;
   isGameOver: boolean;
-  feedback: Feedback;
+  gameState: GameState;
 }
 
 const HeadlineDisplay: React.FC<HeadlineDisplayProps> = ({
   headline,
   currentGuess,
   isGameOver,
-  feedback,
+  gameState,
 }) => {
   const onArticleClick = () => recordArticleClick(headline.id);
   const onRedditClick = () => recordRedditClick(headline.id);
@@ -59,7 +59,11 @@ const HeadlineDisplay: React.FC<HeadlineDisplayProps> = ({
         <div className="mb-6">
           <div>{headline.beforeBlank}</div>
           <div className={`inline-block align-middle mt-2 mb-2 `}>
-            <GuessDisplay currentGuess={currentGuess} feedback={feedback} />
+            <GuessDisplay
+              currentGuess={currentGuess}
+              gameState={gameState}
+              correctAnswer={headline.correctAnswer}
+            />
           </div>
           <div>{headline.afterBlank}</div>
         </div>
