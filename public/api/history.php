@@ -11,6 +11,7 @@ try {
     $query = "
         SELECT 
             h.id,
+            h.game_num,
             h.headline,
             h.before_blank,
             h.after_blank,

@@ -191,3 +191,28 @@ function confirmProceed($message) {
     exit;
   }
 }
+
+/**
+ * EXITs if headline is not needed and not ignoring failure
+ */
+function checkIfHeadlineIsNeeded(bool $ignore_failure) {
+  $status = getStatus();
+
+  $seconds_since_last_headline = $status['secondsSinceLastHeadline'];
+  $hours_since_last_headline = $seconds_since_last_headline / 3600;
+  echo "hours since last headline: $hours_since_last_headline\n";
+
+  // The next headline should be genearted if the last one was created more than 23 hours ago.
+  // This is to account for the time it takes to generate the next headline.
+  // The script is run as a cron job with expression like "*/5 20 * * *" to avoid a shift.
+  if ($hours_since_last_headline < 23) {
+    echo "*** Headline is recent. ***\n";
+
+    if ($ignore_failure) {
+      echo " ---> Requesting to ignore failure. Proceeding anyway\n\n";
+    } else {
+      echo " ---> Exiting. No need to generate a new headline.\n";
+      exit(0);
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 // Tuning constants
 const FADE_DISTANCE = 3; // How many items to show on each side
@@ -17,7 +17,7 @@ const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(
 const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (choices.length > 0) {
       onSetGuess(choices[selectedIndex]);
     }
@@ -38,9 +38,9 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
   };
 
   // Drag support
-  const dragStartX = React.useRef<number | null>(null);
-  const dragStartIndex = React.useRef<number>(0);
-  const dragging = React.useRef(false);
+  const dragStartX = useRef<number | null>(null);
+  const dragStartIndex = useRef<number>(0);
+  const dragging = useRef(false);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     dragging.current = true;

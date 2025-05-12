@@ -4,10 +4,30 @@ MySQL tables. Here for reference only.
 
 CREATE TABLE headline (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    game_num INT UNSIGNED NOT NULL,
     headline TEXT NOT NULL,
     before_blank TEXT NOT NULL,
     after_blank TEXT NOT NULL,
     hint TEXT,
+    eplanation TEXT NOT NULL,
+    article_url TEXT NOT NULL,
+    reddit_url TEXT NOT NULL,
+    correct_answer VARCHAR(255) NOT NULL,
+    possible_answers JSON NOT NULL,
+    publish_time DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_publish_time (publish_time),
+    FULLTEXT INDEX idx_headline (headline)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ CREATE TABLE headline_preview (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    headline TEXT NOT NULL,
+    before_blank TEXT NOT NULL,
+    after_blank TEXT NOT NULL,
+    hint TEXT,
+    eplanation TEXT NOT NULL,
     article_url TEXT NOT NULL,
     reddit_url TEXT NOT NULL,
     correct_answer VARCHAR(255) NOT NULL,
@@ -55,6 +75,7 @@ try {
     $query = '
         SELECT 
             h.id,
+            h.game_num,
             h.headline,
             h.before_blank,
             h.after_blank,
@@ -67,8 +88,6 @@ try {
             hs.total_plays,
             hs.total_correct_guesses,
             hs.total_incorrect_guesses,
-            -- hs.share_count,
-            -- hs.article_click_count,
             hs.first_guess_correct_count
         FROM headline h
         LEFT JOIN headline_stats hs ON h.id = hs.headline_id

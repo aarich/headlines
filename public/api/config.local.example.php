@@ -15,5 +15,8 @@ return [
     ],
     'google' => [
         'api_key' => 'AIzaSyB0000000000000000000000000000000'
+    ],
+    'admin' => [
+        'key' => 'admin_key'
     ]
 ];

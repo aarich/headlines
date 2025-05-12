@@ -6,22 +6,13 @@ require_once 'daily-helpers.php';
 
 // Parse CLI arguments
 $short_opts = "";
-$long_opts = ["dry-run"];
+$long_opts = ["dry-run", "preview"];
 $cli_options = getopt($short_opts, $long_opts);
 $dry_run = isset($cli_options['dry-run']);
-
+$save_to_preview = isset($cli_options['preview']);
 
 try {
-  $status = getStatus();
-
-  $seconds_since_last_headline = $status['secondsSinceLastHeadline'];
-  $hours_since_last_headline = $seconds_since_last_headline / 3600;
-  echo "hours since last headline: $hours_since_last_headline\n";
-
-  if ($hours_since_last_headline < 23) {
-    echo "*** Headline is recent ***\n";
-    echo "--> this is manual mode. Proceeding.\n";
-  }
+  checkIfHeadlineIsNeeded(true);
 
   echo "\n";
   $headline = getInput("headline");
@@ -64,8 +55,7 @@ try {
   if ($dry_run) {
     echo "Dry run: Headline not inserted into the database.\n";
   } else {
-    insertHeadline($headline, $before_blank, $after_blank, $hint, $article_url, $reddit_url, $correct_answer, $possible_answers, $publish_time, $explanation);
-    echo "Headline inserted into the database.\n";
+    insertHeadline($headline, $before_blank, $after_blank, $hint, $article_url, $reddit_url, $correct_answer, $possible_answers, $publish_time, $explanation, $save_to_preview);
   }
 } catch (Exception $e) {
   echo "Error: " . $e->getMessage() . "\n";

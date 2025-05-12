@@ -16,6 +16,9 @@ $config = [
     ],
     'google' => [
         'api_key' => 'api_key'
+    ],
+    'admin' => [
+        'key' => 'admin_key'
     ]
 ];
 

@@ -33,7 +33,7 @@ const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, game
   }, []);
 
   const currentStreak = useMemo(
-    () => (headline ? getCurrentStreak(Object.values(scores), headline.id - 1) : undefined),
+    () => (headline ? getCurrentStreak(Object.values(scores), headline.gameNum - 1) : undefined),
     [headline, scores, gameState.correct]
   );
 
@@ -102,6 +102,7 @@ const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, game
                 headline={h}
                 revealWord={revealWords && !(i === 0 && hideFirstItem)}
                 isLatest={i === 0}
+                hasCompleted={`${h.id}` in scores}
               />
             ))}
           </div>

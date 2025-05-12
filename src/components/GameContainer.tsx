@@ -51,7 +51,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
       if (gameState.wrongGuesses.length === 0) {
         incrementStat('firstGuessCorrectCount');
       }
-      saveResult(headline.id, new Date(), gameState.wrongGuesses.length, expertMode);
+      saveResult(headline, new Date(), gameState.wrongGuesses.length, expertMode);
       recordGameCompleted(headline.id, { guesses: gameState.wrongGuesses.map(g => g.guess) });
     } else {
       expertInputRef.current?.focus();

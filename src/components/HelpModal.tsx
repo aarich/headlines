@@ -18,7 +18,10 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
       <div className="space-y-4 text-gray-700 dark:text-gray-200">
         <ul className="list-disc pl-6">
           <li>We show you a real headline with one word missing. Your job? Guess that word!</li>
-          <li>Play in Normal mode (pick from choices) or go Expert (type your guess).</li>
+          <li>
+            Guess by typing the word you think fits. Or, switch off Expert mode to choose from
+            pre-selected choices.
+          </li>
           <li>
             Headlines are real stories from the last day or so. They come from{' '}
             <a
@@ -54,6 +57,8 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             }}
             correctAnswer={'x' + GUESS.slice(1) + 'x'.repeat(4)}
             forceExpertMode
+            prefix=""
+            suffix=""
           />
         </div>
         <ul className="list-disc pl-6">

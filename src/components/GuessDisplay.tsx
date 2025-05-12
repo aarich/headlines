@@ -7,6 +7,9 @@ interface GuessDisplayProps {
   gameState: GameState;
   correctAnswer: string;
   forceExpertMode?: boolean;
+  /** prefix and suffix are in case the removed word is quoted or otherwise surrounded by punction */
+  prefix: string;
+  suffix: string;
 }
 
 type CharDisplay = { char: string; className?: string };
@@ -21,6 +24,8 @@ const GuessDisplay: React.FC<GuessDisplayProps> = ({
   gameState: { hints },
   correctAnswer,
   forceExpertMode,
+  prefix,
+  suffix,
 }) => {
   const { expertMode, colorBlindMode } = useSettings().settings;
 
@@ -44,7 +49,7 @@ const GuessDisplay: React.FC<GuessDisplayProps> = ({
       }
     } else if (i > correctAnswer.length - 1) {
       // Extra guess
-      const className = expertMode ? wrongCharClass : undefined;
+      const className = forceExpertMode ? wrongCharClass : undefined;
       chars.push({ char: currentGuess[i], className });
     } else if (i >= (hints?.chars ?? 0)) {
       // No information about this character
@@ -60,6 +65,7 @@ const GuessDisplay: React.FC<GuessDisplayProps> = ({
 
   return (
     <>
+      <span>{prefix}</span>
       {chars.map(({ char, className = '' }, index) => {
         const isSpace = char === ' ';
         return (
@@ -67,10 +73,11 @@ const GuessDisplay: React.FC<GuessDisplayProps> = ({
             key={`${index}-${char}`}
             className={`${className} ${isSpace ? SPACE_CHAR_CLASS : ''}`}
           >
-            {isSpace && expertMode ? 'ˍ' : char}
+            {isSpace && forceExpertMode ? 'ˍ' : char}
           </span>
         );
       })}
+      <span>{suffix}</span>
     </>
   );
 };

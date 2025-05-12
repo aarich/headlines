@@ -1,6 +1,6 @@
 export interface Headline {
-  // Headline info
   id: number;
+  gameNum: number;
   headline: string;
   correctAnswer: string;
   possibleAnswers: string[];
@@ -17,6 +17,22 @@ export interface Headline {
   totalIncorrectGuesses: number;
   firstGuessCorrectCount: number;
   mostCommonIncorrectGuesses: string[];
+}
+
+export interface PreviewHeadline {
+  id: number;
+  headline: string;
+  beforeBlank: string;
+  afterBlank: string;
+  hint?: string | null;
+  explanation?: string | null;
+  articleUrl: string;
+  redditUrl: string;
+  correctAnswer: string;
+  possibleAnswers: string[];
+  publishTime: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface GameHints {
@@ -59,8 +75,8 @@ export interface Score {
   g: number;
   /** expert mode */
   e: boolean;
-  /** id */
-  i: number;
+  /** game number */
+  n: number;
 }
 
 export type Stat =
@@ -73,6 +89,7 @@ export type Stats = Record<Stat, number>;
 
 export interface HeadlineHistory {
   id: number;
+  gameNum: number;
   headline: string;
   beforeBlank: string;
   afterBlank: string;

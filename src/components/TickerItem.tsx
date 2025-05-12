@@ -1,12 +1,13 @@
 import React from 'react';
 import { HeadlineHistory } from '../types';
 import { timeSince } from '../lib/ui';
-import { PlayIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, PlayIcon } from '@heroicons/react/24/outline';
 
 interface TickerItemProps {
   headline: HeadlineHistory;
   revealWord: boolean;
   isLatest: boolean;
+  hasCompleted: boolean;
 }
 
 const TickerItem: React.FC<TickerItemProps> = ({
@@ -25,6 +26,7 @@ const TickerItem: React.FC<TickerItemProps> = ({
   },
   revealWord,
   isLatest,
+  hasCompleted,
 }) => {
   const articleSite = articleUrl.split('/')[2];
 
@@ -72,6 +74,11 @@ const TickerItem: React.FC<TickerItemProps> = ({
           </span>
         </span>
         <span className="px-2">
+          {hasCompleted ? (
+            <span className="pr-2">
+              <CheckIcon className="w-5 h-5 inline-block" title="Completed" />
+            </span>
+          ) : null}
           <a href={isLatest ? '/' : `/?id=${id}`} className="pr-4" title="Play this headline">
             <PlayIcon className="w-5 h-5 inline-block" />
           </a>

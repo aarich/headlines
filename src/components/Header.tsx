@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   QuestionMarkCircleIcon,
   Cog6ToothIcon,
@@ -16,7 +16,7 @@ const Header: React.FC<HeaderProps> = ({ onSettings, onHelp, onStats }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Close menu on navigation or outside click
-  React.useEffect(() => {
+  useEffect(() => {
     if (!menuOpen) return;
     const handle = () => {
       setMenuOpen(false);

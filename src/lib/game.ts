@@ -145,8 +145,8 @@ export const getNextRevealType = (
   hints: GameHints | undefined,
   correctAnswer: string
 ): 'char' | 'clue' | undefined => {
-  // Reveal the next character until half of the word is revealed. Then reveal the clue. Then continue revealing characters.
-  if (!hints || hints.chars < correctAnswer.length / 2) {
+  // Reveal the next character until 3 chars or half of the word is revealed. Then reveal the clue. Then continue revealing characters.
+  if (!hints || hints.chars < Math.min(correctAnswer.length / 2, 3)) {
     return 'char';
   }
 

@@ -10,6 +10,8 @@ const ExpertInput = forwardRef<HTMLInputElement, ExpertInputProps>(
     return (
       <input
         ref={ref}
+        autoCapitalize="off"
+        autoCorrect="off"
         type="text"
         value={currentGuess}
         onChange={e => {

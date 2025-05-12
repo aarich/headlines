@@ -4,13 +4,15 @@ import { DisplayMode } from '../types';
 import Modal from './common/Modal';
 import Toggle from './common/Toggle';
 import ButtonGroup from './common/ButtonGroup';
+import { getAdminKey } from '../lib/storage';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenAdmin: () => void;
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onOpenAdmin }) => {
   const {
     settings: { displayMode, expertMode, showAnimations, colorBlindMode },
     updateSettings,
@@ -27,9 +29,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     { value: 'system' as DisplayMode, label: 'System' },
   ];
 
+  const showAdminButton = getAdminKey() || window.location.search.includes('admin=true');
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Settings">
       <div className="space-y-6">
+        {showAdminButton && (
+          <button onClick={onOpenAdmin} className="btn btn-primary">
+            Open Admin Panel
+          </button>
+        )}
         <ButtonGroup
           title="Display"
           options={displayModeOptions}

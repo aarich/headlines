@@ -1,8 +1,8 @@
 <?php
 // Enable CORS for development
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PATCH, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Methods: GET, POST, PATCH, OPTIONS, DELETE');
+header('Access-Control-Allow-Headers: Content-Type, x-admin-key');
 
 // Handle preflight requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -22,6 +22,8 @@ if (strpos($request_uri, '/api/headline') !== false) {
     require_once 'history.php';
 } else if (strpos($request_uri, '/api/status') !== false) {
     require_once 'status.php';
+} else if (strpos($request_uri, '/api/preview') !== false) {
+    require_once 'preview.php';
 } else {
     http_response_code(404);
     echo json_encode(['error' => 'Not found']);

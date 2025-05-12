@@ -1,25 +1,48 @@
-import { GameState, Score, Stat, Stats } from '../types';
+import { GameState, Headline, Score, Stat, Stats } from '../types';
 
 const STORAGE_KEYS = {
   SCORES: 'scores',
   STATS: 'stats',
   STARTED: 'started',
   GAME_STATE: 'games',
+  ADMIN_KEY: 'admin',
 } as const;
+
+const handleScoreSchemaChanges = (scores: Record<string, Score>): Record<string, Score> => {
+  // For each change that has been made to the schema, need to process the update.
+  // First: i was changed to n. Here are all the ids possible before the change
+  const ids = [6, 8, 9, 10, 16, 19, 20, 25];
+  Object.keys(scores)
+    .sort()
+    .forEach(key => {
+      const id: number = parseInt(key);
+      if (!scores[key].n) {
+        const n = ids.indexOf(id) + 1;
+        if (n !== 0) {
+          scores[id].n = n;
+        }
+
+        // @ts-expect-error
+        delete scores[id].i;
+      }
+    });
+
+  return scores;
+};
 
 export const getStoredScores = (): Record<string, Score> => {
   const scores = localStorage.getItem(STORAGE_KEYS.SCORES);
-  return scores ? JSON.parse(scores) : {};
+  return handleScoreSchemaChanges(scores ? JSON.parse(scores) : {});
 };
 
 export const saveResult = (
-  id: number,
+  headline: Headline,
   date: Date,
   wrongGuesses: number,
   expertMode: boolean
 ): void => {
   const scores = getStoredScores();
-  scores[`${id}`] = { i: id, d: date.getTime(), g: wrongGuesses, e: expertMode };
+  scores[headline.id] = { n: headline.gameNum, d: date.getTime(), g: wrongGuesses, e: expertMode };
   localStorage.setItem(STORAGE_KEYS.SCORES, JSON.stringify(scores));
 };
 
@@ -71,12 +94,14 @@ export const storeGameState = (id: number, gameState: GameState): void => {
     const parsed = JSON.parse(currentGameState);
     parsed[`${id}`] = gameState;
 
-    if (Math.random() < 0.05) {
-      // remove anything 7 days older than the one we're working on now.
-      const oldGameState = Object.keys(parsed).filter(key => parseInt(key) < id - 7);
-      oldGameState.forEach(key => delete parsed[key]);
-    }
-
     localStorage.setItem(STORAGE_KEYS.GAME_STATE, JSON.stringify(parsed));
   }
+};
+
+export const getAdminKey = (): string | undefined => {
+  return localStorage.getItem(STORAGE_KEYS.ADMIN_KEY) ?? undefined;
+};
+
+export const storeAdminKey = (key: string): void => {
+  localStorage.setItem(STORAGE_KEYS.ADMIN_KEY, key);
 };

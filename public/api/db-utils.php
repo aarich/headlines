@@ -177,22 +177,47 @@ function handleGameAction($headlineId, $action, $data = []) {
     return updateHeadlineStats($headlineId, $updates);
 }
 
-function insertHeadline(string $headline, string $before_blank, string $after_blank, string $hint, string $article_url, string $reddit_url, string $correct_answer, array $possible_answers, string $publish_time, string $explanation) {
+function insertHeadline(string $headline, string $before_blank, string $after_blank, string $hint, string $article_url, string $reddit_url, string $correct_answer, array $possible_answers, string $publish_time, string $explanation, bool $save_to_preview) {
     $possible_answers = array_map('trim', $possible_answers);
     $possible_answers = array_filter($possible_answers); // Remove empty values
     $possible_answers = ['answers' => $possible_answers];
 
     $db = getDbConnection();
-    $stmt = $db->prepare('INSERT INTO headline (headline, before_blank, after_blank, hint, article_url, reddit_url, correct_answer, possible_answers, publish_time, explanation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-    $stmt->execute([$headline, $before_blank, $after_blank, $hint, $article_url, $reddit_url, $correct_answer, json_encode($possible_answers), $publish_time, $explanation]);
 
+    $table = $save_to_preview ? 'headline_preview' : 'headline';
+    $db_cols = ['headline', 'before_blank', 'after_blank', 'hint', 'article_url', 'reddit_url', 'correct_answer', 'possible_answers', 'publish_time', 'explanation'];
+    $params = [$headline, $before_blank, $after_blank, $hint, $article_url, $reddit_url, $correct_answer, json_encode($possible_answers), $publish_time, $explanation];
 
-    // get the just inserted headline id
+    if (!$save_to_preview) {
+        // Find the highest game number already in the table
+        $stmt = $db->prepare("SELECT MAX(game_num) AS max_game_num FROM $table");
+        $stmt->execute();
+        $max_game_num = $stmt->fetch(PDO::FETCH_ASSOC)['max_game_num'] ?? 0;
+        $db_cols[] = 'game_num';
+        $params[] = $max_game_num + 1;
+    }
+
+    $db_cols_str = implode(', ', $db_cols);
+    $params_str = implode(', ', array_fill(0, count($db_cols), '?'));
+
+    $stmt = $db->prepare("INSERT INTO $table ($db_cols_str) VALUES ($params_str)");
+    $stmt->execute($params);
+
     $headlineId = $db->lastInsertId();
+    echo "Inserted headline with ID: $headlineId\n";
 
-    // insert the headline stats
-    $stmt = $db->prepare('INSERT INTO headline_stats (headline_id) VALUES (?)');
-    $stmt->execute([$headlineId]);
+    if (!$save_to_preview) {
+        // If not saving to preview, also insert into headline_stats
+        $stmt = $db->prepare('INSERT INTO headline_stats (headline_id) VALUES (?)');
+        $stmt->execute([$headlineId]);
+        echo "Inserted headline stats\n";
+
+        // Since we just added a headline into the non-preview table, delete anything in the preview table
+        $stmt = $db->prepare('DELETE FROM headline_preview');
+        $stmt->execute();
+        $rows_deleted = $stmt->rowCount();
+        echo "Deleted $rows_deleted preview headlines\n";
+    }
 }
 
 function getStatus() {

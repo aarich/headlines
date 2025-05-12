@@ -14,6 +14,7 @@ $long_opts = [
   "model:",      // Requires a value
   "dry-run",
   "skip-status",
+  "preview"
 ];
 $cli_options = getopt($short_opts, $long_opts);
 
@@ -21,26 +22,10 @@ $gpt_model_name = $cli_options['model'] ?? 'gemini-2.5-pro-exp-03-25'; // gemini
 $dry_run = isset($cli_options['dry-run']);
 $skip_age_verification = isset($cli_options['skip-status']);
 $auto_confirm = isset($cli_options['y']);
+$save_to_preview = isset($cli_options['preview']);
 
 try {
-  // Check if we actally need to generate a new headline
-  $status = getStatus();
-
-  $seconds_since_last_headline = $status['secondsSinceLastHeadline'];
-  $hours_since_last_headline = $seconds_since_last_headline / 3600;
-  echo "hours since last headline: $hours_since_last_headline\n";
-
-  // The next headline should be genearted if the last one was created more than 23 hours ago.
-  // This is to account for the time it takes to generate the next headline.
-  // The script is run as a cron job with expression like "*/5 20 * * *" to avoid a shift.
-  if ($hours_since_last_headline < 23) {
-    if ($skip_age_verification) {
-      echo "Headline is recent but skip-status was specified. Proceeding.\n";
-    } else {
-      echo "No new headline needed. Exiting.\n";
-      exit(0);
-    }
-  }
+  checkIfHeadlineIsNeeded($skip_age_verification);
 
   // Fetch top posts from Reddit
   $posts = getTopPosts('nottheonion', $reddit_user_agent);
@@ -61,8 +46,6 @@ try {
       'created_utc' => $created_utc,
     ];
   }
-
-  echo "headlines: \n" . print_r($headline_titles, true) . "\n";
 
   // Get initial candidates
   $prompt = getInitialPrompt($headline_titles);
@@ -101,10 +84,28 @@ try {
   $index_of_answer = strpos($headline_lower, $correct_answer_lower);
   $correct_answer = substr($headline, $index_of_answer, strlen($correct_answer));
 
+  // If the word to remove has quotes or other punctuation on the outside, remove them so that they remain part of the headline.
+  $correct_answer = trim($correct_answer, "\"'.,!?()[]{}<>");
+
   // split the headline into before_blank and after_blank
   $parts = explode($correct_answer, $headline, 2);
   $before_blank = $parts[0];
   $after_blank = $parts[1];
+
+  echo "Final headline about to be inserted:\n";
+  echo "Headline: $headline\n";
+  echo "Before blank: $before_blank\n";
+  echo "After blank: $after_blank\n";
+  echo "Correct answer: $correct_answer\n";
+  echo "Possible answers: " . implode(",", $possible_answers) . "\n";
+  echo "Hint: $hint\n";
+  echo "Article URL: $article_url\n";
+  echo "Reddit URL: $reddit_url\n";
+  echo "Publish time: $publish_time\n";
+  echo "Explanation: $explanation\n";
+
+  $will_save_to_preview = $save_to_preview ? 'yes' : 'no';
+  echo "Going to Preview? $will_save_to_preview\n";
 
   if ($auto_confirm) {
     echo "-y was specified, so not asking for confirmation.\n";
@@ -115,7 +116,7 @@ try {
   if ($dry_run) {
     echo "Dry run: Headline not inserted into the database.\n";
   } else {
-    insertHeadline($headline, $before_blank, $after_blank, $hint, $article_url, $reddit_url, $correct_answer, $possible_answers, $publish_time, $explanation);
+    insertHeadline($headline, $before_blank, $after_blank, $hint, $article_url, $reddit_url, $correct_answer, $possible_answers, $publish_time, $explanation, $save_to_preview);
     echo "Headline inserted into the database.\n";
   }
 } catch (Exception $e) {
