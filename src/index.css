@@ -20,7 +20,7 @@
   }
 
   .modal-content {
-    @apply bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4;
+    @apply bg-white dark:bg-gray-800 rounded-lg p-6 w-full mx-4;
   }
 
   .toggle-switch {

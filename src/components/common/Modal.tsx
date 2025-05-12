@@ -1,3 +1,4 @@
+import { XMarkIcon } from '@heroicons/react/24/outline';
 import React, { useEffect } from 'react';
 
 interface ModalProps {
@@ -5,9 +6,10 @@ interface ModalProps {
   onClose: () => void;
   title: string | React.ReactNode;
   children: React.ReactNode;
+  large?: boolean;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, large = false }) => {
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -20,9 +22,11 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
+
+  const sizeClass = large ? 'max-w-md md:max-w-3xl' : 'max-w-md';
   return (
     <div className="modal z-50 flex items-center justify-center" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
+      <div className={`modal-content ${sizeClass}`} onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h2>
           <button
@@ -30,7 +34,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
             onClick={onClose}
             aria-label="Close Modal"
           >
-            ×
+            <XMarkIcon className="h-6 w-6" />
           </button>
         </div>
         <div className="max-h-[60vh] overflow-y-auto">{children}</div>

@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Modal from './common/Modal';
 import { fetchPreviewHeadlines, publishPreviewHeadline, deleteFromPreview } from '../lib/api';
 import { getAdminKey, storeAdminKey } from '../lib/storage';
 import { PreviewHeadline } from '../types';
 import { useToast } from '../contexts/ToastContext';
 import Loading from './common/Loading';
-import { PaperAirplaneIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, EyeSlashIcon, PaperAirplaneIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { shuffleArray } from '../lib/ui';
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -17,6 +18,8 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const [previews, setPreviews] = useState<PreviewHeadline[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [revealWords, setRevealWords] = useState(false);
+
   const toast = useToast();
 
   const loadPreviews = useCallback(async () => {
@@ -85,8 +88,32 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
     );
   };
 
+  const items = useMemo(
+    () =>
+      previews.map(preview => {
+        const { articleUrl: url, possibleAnswers, correctAnswer } = preview;
+        const articleSite = url.split('/')[2];
+        const choices = [...possibleAnswers, correctAnswer];
+        shuffleArray(choices);
+        return { ...preview, articleSite, choices };
+      }),
+    [previews]
+  );
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Admin">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={
+        <>
+          Admin
+          <button className="mx-4" onClick={() => setRevealWords(!revealWords)}>
+            {revealWords ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
+          </button>
+        </>
+      }
+      large
+    >
       <div className="space-y-4 text-gray-700 dark:text-gray-200">
         {adminKey && (
           <>
@@ -99,26 +126,29 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
             {!isLoading && !error && previews.length === 0 && <p>No preview headlines found.</p>}
             {!isLoading && previews.length > 0 && (
               <ul className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                {previews.map(preview => {
-                  const articleSite = preview.articleUrl.split('/')[2];
-
-                  return (
-                    <li
-                      key={preview.id}
-                      className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md shadow-sm flex justify-between items-center"
-                    >
-                      <div>
-                        <p>
-                          {preview.beforeBlank} [???] {preview.afterBlank}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {preview.correctAnswer} | {preview.possibleAnswers.join(', ')}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {articleSite} | {preview.publishTime}
-                        </p>
-                      </div>
-                      <div className="flex space-x-2">
+                {items.map(preview => (
+                  <li
+                    key={preview.id}
+                    className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md shadow-sm flex justify-between items-stretch"
+                  >
+                    <div>
+                      <p>
+                        {revealWords
+                          ? preview.headline
+                          : `${preview.beforeBlank} [???] ${preview.afterBlank}`}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {preview.choices.join(', ')}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-600 italic">
+                        {preview.hint}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {preview.articleSite} | {preview.publishTime}
+                      </p>
+                    </div>
+                    <div>
+                      <div className="flex h-full flex-col justify-around">
                         <button
                           onClick={() => handlePublish(preview.id)}
                           className="btn btn-ghost btn-sm text-xs p-1 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
@@ -136,9 +166,9 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                           <TrashIcon className="h-5 w-5" />
                         </button>
                       </div>
-                    </li>
-                  );
-                })}
+                    </div>
+                  </li>
+                ))}
               </ul>
             )}
             <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">

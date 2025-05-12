@@ -36,7 +36,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onOpenAd
       <div className="space-y-6">
         {showAdminButton && (
           <button onClick={onOpenAdmin} className="btn btn-primary">
-            Open Admin Panel
+            Admin
           </button>
         )}
         <ButtonGroup
