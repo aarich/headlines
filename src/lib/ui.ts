@@ -1,5 +1,6 @@
 import { ToastType } from '../components/Toast';
 import { DEFAULT_TOAST_DURATION, ToastFn } from '../contexts/ToastContext';
+import { fetchHeadline, GetHeadlineArgs } from './api';
 
 export const plural = (count: number, singular: string, suffix = 's'): string =>
   `${singular}${count === 1 ? '' : suffix}`;
@@ -100,4 +101,44 @@ export const shuffleArray = (array: unknown[]) => {
     const j = Math.floor(Math.random() * (i + 1));
     [array[i], array[j]] = [array[j], array[i]];
   }
+};
+
+/**
+ * Checks if the parameter name is in the url
+ * - If so, returns the value as a number in an object
+ * - If not, returns empty object and removes the param from the URL
+ */
+const validateNumParameter = <T extends string>(
+  urlParams: URLSearchParams,
+  name: T
+): { [key in T]?: number } => {
+  const value = urlParams.get(name);
+
+  if (isNaN(Number(value))) {
+    urlParams.delete(name as string);
+    window.history.replaceState({}, '', `?${urlParams.toString()}`);
+    return {};
+  }
+
+  return { [name]: Number(value) } as { [key in T]?: number };
+};
+
+export const fetchHeadlineBasedOnQueryParameters = async () => {
+  const urlParams = new URLSearchParams(window.location.search);
+
+  const hasId = urlParams.has('id');
+  const hasGame = urlParams.has('game');
+
+  if (hasId && hasGame) {
+    throw new Error("Unsupported URL. Only one of 'id' or 'game' should be provided.");
+  }
+
+  let args: GetHeadlineArgs = {};
+  if (hasId) {
+    args = validateNumParameter(urlParams, 'id');
+  } else if (hasGame) {
+    args = validateNumParameter(urlParams, 'game');
+  }
+
+  return await fetchHeadline(args);
 };

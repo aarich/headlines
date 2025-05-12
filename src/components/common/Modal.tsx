@@ -25,10 +25,17 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, large =
 
   const sizeClass = large ? 'max-w-md md:max-w-3xl' : 'max-w-md';
   return (
-    <div className="modal z-50 flex items-center justify-center" onClick={onClose}>
+    <div
+      className="modal z-50 flex items-center justify-center"
+      onClick={onClose}
+      aria-modal="true"
+      aria-labelledby="modal-title"
+    >
       <div className={`modal-content ${sizeClass}`} onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white" id="modal-title">
+            {title}
+          </h2>
           <button
             className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             onClick={onClose}

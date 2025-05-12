@@ -5,14 +5,16 @@ import {
   Bars3Icon,
   ChartPieIcon,
 } from '@heroicons/react/24/outline';
+import { Headline } from '../types';
 
 interface HeaderProps {
   onSettings: () => void;
   onHelp: () => void;
   onStats: () => void;
+  headline: Headline | undefined;
 }
 
-const Header: React.FC<HeaderProps> = ({ onSettings, onHelp, onStats }) => {
+const Header: React.FC<HeaderProps> = ({ onSettings, onHelp, onStats, headline }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Close menu on navigation or outside click
@@ -100,7 +102,7 @@ const Header: React.FC<HeaderProps> = ({ onSettings, onHelp, onStats }) => {
         )}
       </div>
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-        <a href="/">Find the Leek</a>
+        <a href="/">Find the Leek{headline ? ` #${headline.gameNum}` : ''}</a>
       </h1>
     </header>
   );

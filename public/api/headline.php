@@ -68,8 +68,15 @@ require_once 'db-utils.php';
 header('Content-Type: application/json');
 
 try {
-    // Get the headline ID from query parameter if provided
-    $headlineId = isset($_GET['id']) ? (int)$_GET['id'] : null;
+    // Get the two optional parameters. Zero or one of them should be provided (never both)
+    $headline_id = isset($_GET['id']) ? (int)$_GET['id'] : null;
+    $headline_game_num = isset($_GET['game']) ? (int)$_GET['game'] : null;
+
+    // Throw an error if they were both set
+    if ($headline_id && $headline_game_num) {
+        http_response_code(400);
+        throw new Exception('Only one of id or game should be provided.');
+    }
 
     // Prepare the base query
     $query = '
@@ -93,11 +100,14 @@ try {
         LEFT JOIN headline_stats hs ON h.id = hs.headline_id
     ';
 
-    // Add WHERE clause if headline ID is provided
-    if ($headlineId) {
+    if ($headline_id) {
         $query .= ' WHERE h.id = ?';
         $stmt = getDbConnection()->prepare($query);
-        $stmt->execute([$headlineId]);
+        $stmt->execute([$headline_id]);
+    } else if ($headline_game_num) {
+        $query .= ' WHERE h.game_num = ?';
+        $stmt = getDbConnection()->prepare($query);
+        $stmt->execute([$headline_game_num]);
     } else {
         $query .= ' ORDER BY h.id DESC LIMIT 1';
         $stmt = getDbConnection()->query($query);

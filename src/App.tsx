@@ -4,7 +4,7 @@ import Header from './components/Header';
 import GameContainer from './components/GameContainer';
 import SettingsModal from './components/SettingsModal';
 import HelpModal from './components/HelpModal';
-import { fetchHeadline, recordGameStarted } from './lib/api';
+import { recordGameStarted } from './lib/api';
 import AdminModal from './components/AdminModal'; // Import the new modal
 import { SettingsProvider } from './contexts/SettingsContext';
 import StatsModal from './components/StatsModal';
@@ -18,6 +18,7 @@ import {
 } from './lib/storage';
 import { ToastProvider } from './contexts/ToastContext';
 import Loading from './components/common/Loading';
+import { fetchHeadlineBasedOnQueryParameters } from './lib/ui';
 
 function App() {
   const [headline, setHeadline] = useState<Headline>();
@@ -36,10 +37,7 @@ function App() {
     }
 
     setIsLoading(true);
-    // use the id from the url if it's specified in the query params
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.has('id') ? urlParams.get('id')! : undefined;
-    fetchHeadline(id)
+    fetchHeadlineBasedOnQueryParameters()
       .then(setHeadline)
       .catch(err => {
         setError(err.message);
@@ -101,6 +99,7 @@ function App() {
               onSettings={() => setIsSettingsOpen(true)}
               onHelp={() => setIsHelpOpen(true)}
               onStats={() => setIsStatsOpen(true)}
+              headline={headline}
             />
             <main className="w-full flex flex-col items-center flex-1">
               {isLoading ? (

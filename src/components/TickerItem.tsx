@@ -22,7 +22,7 @@ const TickerItem: React.FC<TickerItemProps> = ({
     articleUrl,
     redditUrl,
     headline,
-    id,
+    gameNum,
   },
   revealWord,
   isLatest,
@@ -79,7 +79,11 @@ const TickerItem: React.FC<TickerItemProps> = ({
               <CheckIcon className="w-5 h-5 inline-block" title="Completed" />
             </span>
           ) : null}
-          <a href={isLatest ? '/' : `/?id=${id}`} className="pr-4" title="Play this headline">
+          <a
+            href={isLatest ? '/' : `/?game=${gameNum}`}
+            className="pr-4"
+            title="Play this headline"
+          >
             <PlayIcon className="w-5 h-5 inline-block" />
           </a>
           <a href={redditUrl} target="_blank" rel="noopener noreferrer" title="View on Reddit">

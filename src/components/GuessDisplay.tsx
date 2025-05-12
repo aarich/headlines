@@ -27,9 +27,9 @@ const GuessDisplay: React.FC<GuessDisplayProps> = ({
   prefix,
   suffix,
 }) => {
-  const { expertMode, colorBlindMode } = useSettings().settings;
+  const { expertMode: expertModeSetting, colorBlindMode } = useSettings().settings;
 
-  const isExpertMode = forceExpertMode || expertMode;
+  const isExpertMode = forceExpertMode || expertModeSetting;
 
   const wrongCharClass = WRONG_CHAR_CLASS + (colorBlindMode ? ' line-through' : '');
   const correctCharClass = CORRECT_CHAR_CLASS + (colorBlindMode ? ' underline' : '');
@@ -49,7 +49,7 @@ const GuessDisplay: React.FC<GuessDisplayProps> = ({
       }
     } else if (i > correctAnswer.length - 1) {
       // Extra guess
-      const className = forceExpertMode ? wrongCharClass : undefined;
+      const className = isExpertMode ? wrongCharClass : undefined;
       chars.push({ char: currentGuess[i], className });
     } else if (i >= (hints?.chars ?? 0)) {
       // No information about this character
@@ -73,7 +73,7 @@ const GuessDisplay: React.FC<GuessDisplayProps> = ({
             key={`${index}-${char}`}
             className={`${className} ${isSpace ? SPACE_CHAR_CLASS : ''}`}
           >
-            {isSpace && forceExpertMode ? 'ˍ' : char}
+            {isSpace && isExpertMode ? 'ˍ' : char}
           </span>
         );
       })}

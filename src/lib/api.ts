@@ -12,8 +12,17 @@ export interface DeletePreviewsResult {
   message: string;
 }
 
-export const fetchHeadline = async (id?: string): Promise<Headline> => {
-  const response = await fetch(`${config.apiUrl}/api/headline${id ? `?id=${id}` : ''}`);
+export type GetHeadlineArgs = { id?: number; game?: number };
+
+export const fetchHeadline = async (args: GetHeadlineArgs): Promise<Headline> => {
+  let search = '';
+  if (args.id) {
+    search = `?id=${args.id}`;
+  } else if (args.game) {
+    search = `?game=${args.game}`;
+  }
+
+  const response = await fetch(`${config.apiUrl}/api/headline${search}`);
   if (!response.ok) {
     if (response.status === 404) {
       throw new Error("This game doesn't exist. Try a different one.");

@@ -22,26 +22,24 @@ interface GameContainerProps {
 const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setGameState }) => {
   const { expertMode } = useSettings().settings;
   const [currentGuess, setCurrentGuess] = useState('');
-  const [isGameOver, setIsGameOver] = useState(false);
   const expertInputRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
 
   useEffect(() => {
-    if (gameState.correct && !isGameOver) {
-      setIsGameOver(true);
-      const hasIdParam = window.location.search.includes('id=');
-      if (hasIdParam) {
+    if (gameState.correct) {
+      const hasParam =
+        window.location.search.includes('id=') || window.location.search.includes('game=');
+      if (hasParam) {
         toast('Great job!', 'success');
       } else {
         toast('Great job today!', 'success');
       }
     }
-  }, [gameState.correct, isGameOver, toast]);
+  }, [gameState.correct, toast]);
 
   const handleGuess = useCallback(() => {
     if (!currentGuess) return;
     const isCorrect = checkAnswer(currentGuess, headline.correctAnswer, expertMode);
-    setIsGameOver(isCorrect);
 
     if (isCorrect) {
       toast('Nice!', 'success');
@@ -74,16 +72,16 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
   }, [currentGuess, gameState, headline, setGameState, expertMode, toast]);
 
   useEffect(() => {
-    if (!isGameOver) {
+    if (!gameState.correct) {
       const handleKeyPress = ({ key }: { key: string }) =>
-        key === 'Enter' && !isGameOver && handleGuess();
+        key === 'Enter' && !gameState.correct && handleGuess();
 
       window.addEventListener('keydown', handleKeyPress);
       return () => {
         window.removeEventListener('keydown', handleKeyPress);
       };
     }
-  }, [handleGuess, isGameOver]);
+  }, [handleGuess, gameState.correct]);
 
   const nextHintType = getNextRevealType(gameState.hints, headline.correctAnswer);
 
@@ -108,12 +106,12 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
         <HeadlineDisplay
           headline={headline}
           currentGuess={currentGuess}
-          isGameOver={isGameOver}
+          isGameOver={gameState.correct}
           gameState={gameState}
         />
         <div className="flex flex-col items-center w-full">
           <div className="w-full flex justify-center">
-            {isGameOver ? null : expertMode ? (
+            {gameState.correct ? null : expertMode ? (
               <ExpertInput
                 ref={expertInputRef}
                 onSetGuess={setCurrentGuess}
@@ -127,12 +125,12 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
           {/* Button row: grid for game, flex for share */}
           <div
             className={
-              isGameOver
+              gameState.correct
                 ? 'flex justify-center mt-4 w-full'
                 : 'grid grid-cols-3 items-center gap-4 mt-4 w-full'
             }
           >
-            {isGameOver ? (
+            {gameState.correct ? (
               <ShareButtons gameState={gameState} headline={headline} isExpert={expertMode} />
             ) : (
               <>
