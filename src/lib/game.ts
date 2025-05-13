@@ -1,6 +1,4 @@
 import { GameHints, GameState, Headline } from '../types';
-import { recordShare } from './api';
-import { getStoredScores } from './storage';
 
 const normalizeString = (str: string): string => {
   return str.toLowerCase().trim();
@@ -38,84 +36,40 @@ export const checkAnswer = (guess: string, correctAnswer: string, expertMode: bo
   return guess === correctAnswer;
 };
 
-export const calculateNewScore = (currentScore: number, isCorrect: boolean): number => {
-  return currentScore + (isCorrect ? 1 : 0);
-};
+export const getNextHint = (
+  headline: Headline,
+  { hints }: GameState,
+  isExpert: boolean
+): GameHints => {
+  let oldHints = hints ?? { clue: false, chars: 0 };
 
-export const calculateNewStreak = (currentStreak: number, isCorrect: boolean): number => {
-  return isCorrect ? currentStreak + 1 : 0;
-};
-
-export const shareScore = (
-  id: number,
-  gameState: GameState,
-  isExpert: boolean,
-  forceCopy: boolean = false
-): void => {
-  recordShare(id);
-
-  let expert = isExpert;
-  const score = getStoredScores()[`${id}`];
-  if (score) {
-    expert = score.e;
-  }
-
-  const countText = gameState.wrongGuesses.map(() => `❌`).join('') + '✅';
-
-  let hintsText = '';
-  if (gameState.hints?.chars) {
-    gameState.hints.chars && (hintsText += '💡');
-    gameState.hints.clue && (hintsText += '🕵️‍♂️');
-    gameState.hints.chars > 1 && (hintsText += '💡'.repeat(gameState.hints.chars - 1));
-  }
-
-  hintsText = hintsText.length > 0 ? hintsText : 'No hints! 😎';
-
-  const expertText = expert ? '\nExpert Mode 🤓' : '';
-
-  const shareText = `I found the leek: ${countText}\n${hintsText}${expertText}\n\n${window.location.href}`;
-
-  if (navigator.share && !forceCopy) {
-    navigator
-      .share({
-        title: 'Headline Puzzle Score',
-        text: shareText,
-      })
-      .catch(console.error);
-  } else {
-    navigator.clipboard.writeText(shareText);
-    alert('Score copied to clipboard!');
-  }
-};
-
-export const getNextHint = (headline: Headline, { hints }: GameState): GameHints => {
-  if (!hints) {
-    return { chars: 1, clue: false };
-  }
-
-  const nextRevealType = getNextRevealType(hints, headline.correctAnswer);
+  const nextRevealType = getNextRevealType(hints, headline.correctAnswer, isExpert);
 
   if (nextRevealType === 'clue') {
-    return { ...hints, clue: true };
+    return { ...oldHints, clue: true };
   }
 
   if (nextRevealType === 'char') {
-    return { ...hints, chars: hints.chars + 1 };
+    return { ...oldHints, chars: oldHints.chars + 1 };
   }
 
-  return hints;
+  // No next hint
+  return oldHints;
 };
 
-export const hasAnyHints = (gameState: GameState): boolean => {
-  return !!(gameState.hints?.chars || gameState.hints?.clue);
-};
+export const hasAnyHints = (gameState: GameState): boolean =>
+  !!(gameState.hints?.chars || gameState.hints?.clue);
+
+export const getNumCharsBeforeClue = (correctAnswer: string, isExpert: boolean) =>
+  // Expert mode gets char reveals. Non-expert mode gets the clue right away.
+  isExpert ? Math.floor(Math.min(correctAnswer.length / 2, 3)) : 0;
 
 export const getNextHintPrompt = (
   { hints }: GameState,
   correctAnswer: string,
   isExpert: boolean
 ): string => {
-  const nextRevealType = getNextRevealType(hints, correctAnswer);
+  const nextRevealType = getNextRevealType(hints, correctAnswer, isExpert);
 
   if (nextRevealType === 'char') {
     // Suggest using non-expert mode if the user has already revealed a character and is in expert mode
@@ -143,10 +97,16 @@ export const getNextHintPrompt = (
 
 export const getNextRevealType = (
   hints: GameHints | undefined,
-  correctAnswer: string
+  correctAnswer: string,
+  isExpert: boolean
 ): 'char' | 'clue' | undefined => {
   // Reveal the next character until 3 chars or half of the word is revealed. Then reveal the clue. Then continue revealing characters.
-  if (!hints || hints.chars < Math.min(correctAnswer.length / 2, 3)) {
+  const numCharsBeforeClue = getNumCharsBeforeClue(correctAnswer, isExpert);
+  if (!hints) {
+    return numCharsBeforeClue === 0 ? 'clue' : 'char';
+  }
+
+  if (hints.chars < numCharsBeforeClue) {
     return 'char';
   }
 

@@ -44,6 +44,7 @@ export interface GameState {
   correct: boolean;
   wrongGuesses: WrongGuess[];
   hints?: GameHints;
+  completedAt?: number;
 }
 
 export interface WrongGuess {

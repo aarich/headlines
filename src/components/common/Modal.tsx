@@ -6,24 +6,34 @@ interface ModalProps {
   onClose: () => void;
   title: string | React.ReactNode;
   children: React.ReactNode;
-  large?: boolean;
+  mdSize?: '3xl' | 'xl';
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, large = false }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, mdSize }) => {
   useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+    if (isOpen) {
+      // Store the original body overflow style
+      const originalOverflow = document.body.style.overflow;
+      // Prevent background scroll
+      document.body.style.overflow = 'hidden';
 
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          onClose();
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
+      // Cleanup function to restore original body overflow and remove listener
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isOpen, onClose]);
   if (!isOpen) return null;
 
-  const sizeClass = large ? 'max-w-md md:max-w-3xl' : 'max-w-md';
+  const sizeClass = `max-w-md ${mdSize ? 'md:max-w-' + mdSize : ''}`;
   return (
     <div
       className="modal z-50 flex items-center justify-center"

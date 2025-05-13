@@ -49,7 +49,7 @@ const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, game
   const hideFirstItem = useMemo(() => !scores[`${history?.[0]?.id}`], [history, scores]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Stats">
+    <Modal isOpen={isOpen} onClose={onClose} title="Stats" mdSize="3xl">
       <div className="space-y-4 text-gray-700 dark:text-gray-200">
         {Object.keys(scores).length === 0 ? (
           <>
@@ -92,7 +92,7 @@ const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, game
                 )}
               </button>
             </h3>
-            <p className="text-sm text-gray-500 mb-2">
+            <p className="text-sm text-gray-500 mb-3">
               See how everyone's doing on recent headlines:
             </p>
 
@@ -101,6 +101,7 @@ const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, game
                 key={h.id}
                 headline={h}
                 revealWord={revealWords && !(i === 0 && hideFirstItem)}
+                isCurrent={headline?.id === h.id}
                 isLatest={i === 0}
                 hasCompleted={`${h.id}` in scores}
               />

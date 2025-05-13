@@ -112,7 +112,7 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
           </button>
         </>
       }
-      large
+      mdSize="3xl"
     >
       <div className="space-y-4 text-gray-700 dark:text-gray-200">
         {adminKey && (

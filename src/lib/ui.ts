@@ -1,6 +1,9 @@
 import { ToastType } from '../components/Toast';
 import { DEFAULT_TOAST_DURATION, ToastFn } from '../contexts/ToastContext';
-import { fetchHeadline, GetHeadlineArgs } from './api';
+import { GameState, Headline } from '../types';
+import { fetchHeadline, GetHeadlineArgs, recordShare } from './api';
+import { getNumCharsBeforeClue } from './game';
+import { getStoredScores } from './storage';
 
 export const plural = (count: number, singular: string, suffix = 's'): string =>
   `${singular}${count === 1 ? '' : suffix}`;
@@ -13,27 +16,32 @@ export const timeSince = (
 
   let interval = seconds / 31536000;
 
+  const fmt = (interval: number, unit: string) => {
+    const rounded = Math.round(interval);
+    return `${rounded} ${plural(rounded, unit)}`;
+  };
+
   if (interval > 1 || (smallestInterval === 'y' && interval > 0.7)) {
-    return Math.floor(interval) + ' years';
+    return fmt(interval, 'year');
   }
   interval = seconds / 2592000;
   if (interval > 1 || (smallestInterval === 'm' && interval > 0.7)) {
-    return Math.floor(interval) + ' months';
+    return fmt(interval, 'month');
   }
   interval = seconds / 86400;
   if (interval > 1 || (smallestInterval === 'd' && interval > 0.7)) {
-    return Math.floor(interval) + ' days';
+    return fmt(interval, 'day');
   }
 
   interval = seconds / 3600;
   if (interval > 1 || (smallestInterval === 'h' && interval > 0.7)) {
-    return Math.floor(interval) + ' hours';
+    return fmt(interval, 'hour');
   }
   interval = seconds / 60;
   if (interval > 1 || (smallestInterval === 'm' && interval > 0.7)) {
-    return Math.floor(interval) + ' m';
+    return fmt(interval, 'minute');
   }
-  return Math.floor(seconds) + ' s';
+  return fmt(seconds, 'second');
 };
 
 const toastRandomMessage = (
@@ -141,4 +149,49 @@ export const fetchHeadlineBasedOnQueryParameters = async () => {
   }
 
   return await fetchHeadline(args);
+};
+
+export const getShareScoreText = (headline: Headline, gameState: GameState, isExpert: boolean) => {
+  const countText = gameState.wrongGuesses.map(() => `❌`).join('') + '🧅';
+
+  const numCharsBeforeClue = getNumCharsBeforeClue(headline.correctAnswer, isExpert);
+  let hintsText = '';
+  if (gameState.hints?.chars) {
+    for (let i = 0; i < gameState.hints.chars; i++) {
+      hintsText += '💡';
+
+      if (i === numCharsBeforeClue - 1 && gameState.hints.clue) {
+        hintsText += '🕵';
+      }
+    }
+  }
+
+  hintsText = hintsText.length > 0 ? hintsText : 'No hints! 😎';
+
+  const expertText = isExpert ? '\nExpert Mode 🤓' : '';
+
+  return `I found the leek: ${countText}\n${hintsText}${expertText}\n\n${window.location.href}`;
+};
+
+export const shareScore = (
+  headline: Headline,
+  gameState: GameState,
+  isExpert: boolean,
+  forceCopy: boolean = false
+): void => {
+  const score = getStoredScores()[`${headline.id}`];
+  const shareText = getShareScoreText(headline, gameState, score?.e || isExpert);
+
+  if (navigator.share && !forceCopy) {
+    navigator
+      .share({
+        title: 'Headline Puzzle Score',
+        text: shareText,
+      })
+      .then(() => recordShare(headline.id))
+      .catch(error => error.name !== 'AbortError' && console.error(error));
+  } else {
+    navigator.clipboard.writeText(shareText);
+    alert('Score copied to clipboard!');
+  }
 };

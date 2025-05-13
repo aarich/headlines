@@ -32,19 +32,22 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
       if (hasParam) {
         toast('Great job!', 'success');
       } else {
-        toast('Great job today!', 'success');
+        // We are on today's game. If it was completed in the last ~5 seconds, it means we just completed it
+        // and should say "Nice". If it's older than that, say "Great job today" as a reminder the game is already won.
+        const isOlderThanFiveSeconds = Date.now() - gameState.completedAt! < 5000;
+        if (gameState.completedAt)
+          toast(isOlderThanFiveSeconds ? 'Great job today!' : 'Nice!', 'success');
       }
     }
-  }, [gameState.correct, toast]);
+  }, [gameState.completedAt, gameState.correct, toast]);
 
   const handleGuess = useCallback(() => {
     if (!currentGuess) return;
     const isCorrect = checkAnswer(currentGuess, headline.correctAnswer, expertMode);
 
     if (isCorrect) {
-      toast('Nice!', 'success');
       setCurrentGuess(headline.correctAnswer);
-      setGameState(prev => ({ ...prev, correct: true }));
+      setGameState(prev => ({ ...prev, correct: true, completedAt: Date.now() }));
       incrementStat('totalPlays');
       if (gameState.wrongGuesses.length === 0) {
         incrementStat('firstGuessCorrectCount');
@@ -83,12 +86,12 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
     }
   }, [handleGuess, gameState.correct]);
 
-  const nextHintType = getNextRevealType(gameState.hints, headline.correctAnswer);
+  const nextHintType = getNextRevealType(gameState.hints, headline.correctAnswer, expertMode);
 
   const onHintClick = useCallback(() => {
     if (nextHintType) {
       if (window.confirm(getNextHintPrompt(gameState, headline.correctAnswer, expertMode))) {
-        setGameState(g => ({ ...g, hints: getNextHint(headline, g) }));
+        setGameState(g => ({ ...g, hints: getNextHint(headline, g, expertMode) }));
         toast('Hint revealed!', 'info');
       }
     }

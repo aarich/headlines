@@ -7,6 +7,7 @@ interface TickerItemProps {
   headline: HeadlineHistory;
   revealWord: boolean;
   isLatest: boolean;
+  isCurrent: boolean;
   hasCompleted: boolean;
 }
 
@@ -26,6 +27,7 @@ const TickerItem: React.FC<TickerItemProps> = ({
   },
   revealWord,
   isLatest,
+  isCurrent,
   hasCompleted,
 }) => {
   const articleSite = articleUrl.split('/')[2];
@@ -33,16 +35,24 @@ const TickerItem: React.FC<TickerItemProps> = ({
   const percentSolved = (100 * totalCorrectGuesses) / (totalPlays || 1);
   const percentFirstTry = (100 * firstGuessCorrectCount) / (totalPlays || 1);
   return (
-    <div className="mb-2 p-2 rounded bg-gray-100 dark:bg-gray-700">
+    <div className="relative mb-5 p-2 rounded bg-gray-100 dark:bg-gray-700">
+      {(isLatest || isCurrent) && (
+        <span className="absolute -top-3 right-2 bg-green-500 text-white text-xs font-semibold px-2 py-0.5 rounded-md">
+          {isLatest ? 'Today' : 'Viewing'}
+        </span>
+      )}
       {/* HEADLINE */}
-      <a
-        className="italic underline text-blue-500"
-        href={articleUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {revealWord ? headline : `${beforeBlank} [???] ${afterBlank}`}
-      </a>
+      <span className="italic text-gray-500">
+        {`#${gameNum} `}
+        <a
+          className="italic underline text-blue-500"
+          href={articleUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {revealWord ? headline : `${beforeBlank} [???] ${afterBlank}`}
+        </a>
+      </span>
       <div className="text-xs text-gray-500 mb-1">
         <span className="font-light text-xs text-gray-500">{articleSite}</span>
         <span className="mx-1">•</span>
@@ -65,7 +75,7 @@ const TickerItem: React.FC<TickerItemProps> = ({
 
       {/* STATS + LINKS */}
       <div className="flex flex-wrap text-sm flex-row justify-between">
-        <span className="flex flex-row gap-4">
+        <span className="flex flex-row gap-2">
           <span>
             Solved: <b>{percentSolved.toFixed(0)}%</b>
           </span>
@@ -81,7 +91,7 @@ const TickerItem: React.FC<TickerItemProps> = ({
           ) : null}
           <a
             href={isLatest ? '/' : `/?game=${gameNum}`}
-            className="pr-4"
+            className="pr-2"
             title="Play this headline"
           >
             <PlayIcon className="w-5 h-5 inline-block" />

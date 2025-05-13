@@ -98,7 +98,7 @@ Format your response by including
 - the specific word to remove from the headline that meets the above criteria
 - an explanation for why this choice was made. What makes the headline and word to remove meet these preferences?
 - a list of possible word choices that would be funny to suggest as alternatives. Feel free to edit or add to the list as needed to adhere to the guidelines.
-- a brief hint for the answer that is esoteric and not obvious, akin to a crossword clue in that it requires some thought to guess. Don't try to be funny or make a pun here, just think of a clue that might not be obvious at first.
+- a brief hint for the answer that is esoteric and not obvious, akin to a crossword clue in that it requires some thought to guess. Don't use a pun. It can be creative or funny or just a simple clue that doesn't give away the answer right away.
 
 Here is the list of potential choices:
 
