@@ -57,11 +57,12 @@ describe('game.ts', () => {
     });
 
     it('should return true for common verb tense variations in expert mode', () => {
-      expect(checkAnswer('answered', 'answer', true)).toBe(true);
       expect(checkAnswer('answering', 'answer', true)).toBe(true);
-      // Note: 'answers' is already covered by plural check, but base form check is also relevant
-      expect(checkAnswer('answer', 'answered', true)).toBe(true);
       expect(checkAnswer('answer', 'answering', true)).toBe(true);
+      expect(checkAnswer('answered', 'answer', true)).toBe(true);
+      expect(checkAnswer('answer', 'answered', true)).toBe(true);
+      expect(checkAnswer('guide', 'guided', true)).toBe(true);
+      expect(checkAnswer('guided', 'guide', true)).toBe(true);
     });
 
     it('should return false for non-fuzzy match in expert mode', () => {

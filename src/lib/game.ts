@@ -16,17 +16,17 @@ const isFuzzyMatch = (guess: string, correct: string): boolean => {
     return true;
 
   // Handle common verb tenses
-  const commonEndings = ['ed', 'ing', 's'];
-  const baseGuess = commonEndings.reduce(
-    (str, ending) => (str.endsWith(ending) ? str.slice(0, -ending.length) : str),
-    normalizedGuess
-  );
-  const baseCorrect = commonEndings.reduce(
-    (str, ending) => (str.endsWith(ending) ? str.slice(0, -ending.length) : str),
-    normalizedCorrect
-  );
+  const commonEndings = ['ed', 'ing', 's', 'd'];
 
-  return baseGuess === baseCorrect;
+  const areEqualIgnoringCommonEndings = commonEndings.find(ending => {
+    const guessWithoutEnding = guess.endsWith(ending) ? guess.slice(0, -ending.length) : guess;
+    const correctWithoutEnding = correct.endsWith(ending)
+      ? correct.slice(0, -ending.length)
+      : normalizedGuess.slice(0, -ending.length);
+    return guessWithoutEnding === correctWithoutEnding;
+  });
+
+  return areEqualIgnoringCommonEndings !== undefined;
 };
 
 export const checkAnswer = (guess: string, correctAnswer: string, expertMode: boolean): boolean => {
