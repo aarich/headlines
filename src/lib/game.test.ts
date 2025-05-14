@@ -20,11 +20,6 @@ const MOCK_HEADLINE: Headline = {
   hint: 'A clue for the word.',
   articleUrl: 'http://example.com/article',
   redditUrl: 'http://example.com/reddit',
-  totalPlays: 100,
-  totalCorrectGuesses: 50,
-  totalIncorrectGuesses: 50,
-  firstGuessCorrectCount: 25,
-  mostCommonIncorrectGuesses: ['wrong'],
 };
 const ANSWER_LENGTH = MOCK_HEADLINE.correctAnswer.length;
 

@@ -151,11 +151,14 @@ export const fetchHeadlineBasedOnQueryParameters = async () => {
   return await fetchHeadline(args);
 };
 
-export const getShareScoreText = (headline: Headline, gameState: GameState, isExpert: boolean) => {
-  const countText = gameState.wrongGuesses.map(() => `❌`).join('') + '🧅';
-
+export const getHintsText = (headline: Headline, gameState: GameState, isExpert: boolean) => {
   const numCharsBeforeClue = getNumCharsBeforeClue(headline.correctAnswer, isExpert);
+
   let hintsText = '';
+  if (!isExpert && gameState.hints?.clue) {
+    hintsText = '🕵';
+  }
+
   if (gameState.hints?.chars) {
     for (let i = 0; i < gameState.hints.chars; i++) {
       hintsText += '💡';
@@ -166,21 +169,37 @@ export const getShareScoreText = (headline: Headline, gameState: GameState, isEx
     }
   }
 
-  hintsText = hintsText.length > 0 ? hintsText : 'No hints! 😎';
+  return hintsText;
+};
+
+export const getResultText = (
+  headline: Headline,
+  gameState: GameState,
+  isExpert: boolean,
+  forSharing = true
+) => {
+  const countText = gameState.wrongGuesses.map(() => `❌`).join('') + '🧅';
+
+  let hintsText = getHintsText(headline, gameState, isExpert) || 'No hints! 😎';
 
   const expertText = isExpert ? '\nExpert Mode 🤓' : '';
 
-  return `I found the leek: ${countText}\n${hintsText}${expertText}\n\n${window.location.href}`;
+  if (forSharing) {
+    return `I found the leek: ${countText}\n${hintsText}${expertText}\n\n${window.location.href}`;
+  } else {
+    return `${countText}\n${hintsText}${expertText}`;
+  }
 };
 
 export const shareScore = (
   headline: Headline,
   gameState: GameState,
   isExpert: boolean,
+  toast: ToastFn,
   forceCopy: boolean = false
 ): void => {
   const score = getStoredScores()[`${headline.id}`];
-  const shareText = getShareScoreText(headline, gameState, score?.e || isExpert);
+  const shareText = getResultText(headline, gameState, score?.e || isExpert);
 
   if (navigator.share && !forceCopy) {
     navigator
@@ -192,6 +211,6 @@ export const shareScore = (
       .catch(error => error.name !== 'AbortError' && console.error(error));
   } else {
     navigator.clipboard.writeText(shareText);
-    alert('Score copied to clipboard!');
+    toast('Score copied to clipboard!', 'success');
   }
 };

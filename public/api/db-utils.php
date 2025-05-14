@@ -218,6 +218,8 @@ function insertHeadline(string $headline, string $before_blank, string $after_bl
         $rows_deleted = $stmt->rowCount();
         echo "Deleted $rows_deleted preview headlines\n";
     }
+
+    return $headlineId;
 }
 
 function getStatus() {
@@ -245,4 +247,55 @@ function getStatus() {
     ];
 
     return $result;
+}
+
+// $previewData - record from headline_preview
+function promotePreview($previewData) {
+    $db = getDbConnection();
+
+    // Prepare data for insertHeadline function
+    $headlineText = $previewData['headline'];
+    $beforeBlank = $previewData['before_blank'];
+    $afterBlank = $previewData['after_blank'];
+    $hint = $previewData['hint'] ?? '';
+    $articleUrl = $previewData['article_url'];
+    $redditUrl = $previewData['reddit_url'];
+    $correctAnswer = $previewData['correct_answer'];
+    $explanation = $previewData['explanation'] ?? '';
+    $publishTime = $previewData['publish_time'];
+
+    $possibleAnswersDecoded = json_decode($previewData['possible_answers'], true);
+    $possibleAnswersArray = [];
+    if (is_array($possibleAnswersDecoded)) {
+        // Use 'answers' key if present, otherwise assume the decoded JSON is the array itself
+        $possibleAnswersArray = $possibleAnswersDecoded['answers'] ?? $possibleAnswersDecoded;
+    }
+
+    $newHeadlineId = insertHeadline(
+        $headlineText,
+        $beforeBlank,
+        $afterBlank,
+        $hint,
+        $articleUrl,
+        $redditUrl,
+        $correctAnswer,
+        $possibleAnswersArray,
+        $publishTime,
+        $explanation,
+        false // save_to_preview = false
+    );
+
+    if ($newHeadlineId) {
+        // If insert was successful, delete all records from headline_preview
+        $deleteStmt = $db->prepare('DELETE FROM headline_preview');
+        $deleteStmt->execute();
+        $deletedRowCount = $deleteStmt->rowCount();
+
+        return [
+            'newHeadlineId' => $newHeadlineId,
+            'deletedPreviewCount' => $deletedRowCount
+        ];
+    }
+
+    return false;
 }

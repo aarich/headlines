@@ -3,7 +3,7 @@ import {
   timeSince,
   shuffleArray,
   fetchHeadlineBasedOnQueryParameters,
-  getShareScoreText,
+  getResultText,
   shareScore,
 } from './ui';
 import { GameState, Headline } from '../types';
@@ -49,7 +49,6 @@ beforeAll(() => {
     value: { writeText: jest.fn().mockResolvedValue(undefined) },
     writable: true,
   });
-  global.alert = jest.fn();
 });
 
 const MOCK_HEADLINE: Headline = {
@@ -61,14 +60,9 @@ const MOCK_HEADLINE: Headline = {
   beforeBlank: ' Mock ',
   articleUrl: 'https://example.com',
   redditUrl: 'https://example.com/reddit',
-  firstGuessCorrectCount: 100,
-  totalPlays: 1000,
   gameNum: 1,
   hint: "i'ts an example",
-  mostCommonIncorrectGuesses: ['a', 'b'],
   publishTime: '2020',
-  totalCorrectGuesses: 100,
-  totalIncorrectGuesses: 10000,
 };
 
 beforeEach(() => {
@@ -248,7 +242,7 @@ describe('ui.ts', () => {
         ],
       }; // 2 wrong guesses
       const expectedText = `I found the leek: ❌❌🧅\nNo hints! 😎\n\nhttp://localhost/`;
-      expect(getShareScoreText(MOCK_HEADLINE, gameState, false)).toBe(expectedText);
+      expect(getResultText(MOCK_HEADLINE, gameState, false)).toBe(expectedText);
     });
 
     it('should include char hints', () => {
@@ -258,7 +252,18 @@ describe('ui.ts', () => {
         hints: { chars: 2, clue: false },
       };
       const expectedText = `I found the leek: 🧅\n💡💡\n\nhttp://localhost/`;
-      expect(getShareScoreText(MOCK_HEADLINE, gameState, false)).toBe(expectedText);
+      expect(getResultText(MOCK_HEADLINE, gameState, false)).toBe(expectedText);
+    });
+
+    it('should just be the clue in non-expert mode with no characters', () => {
+      const gameState: GameState = {
+        correct: false,
+        wrongGuesses: [],
+        hints: { chars: 0, clue: true },
+      };
+      const expectedText = `I found the leek: 🧅\n🕵\n\nhttp://localhost/`;
+
+      expect(getResultText(MOCK_HEADLINE, gameState, false)).toBe(expectedText);
     });
 
     it('should include char hints up to clue and clue hint', () => {
@@ -269,8 +274,8 @@ describe('ui.ts', () => {
         hints: { chars: 4, clue: true },
       };
 
-      const expectedText = `I found the leek: 🧅\n💡💡💡🕵💡\n\nhttp://localhost/`;
-      expect(getShareScoreText(MOCK_HEADLINE, gameState, false)).toBe(expectedText);
+      const expectedText = `I found the leek: 🧅\n💡💡💡🕵💡\nExpert Mode 🤓\n\nhttp://localhost/`;
+      expect(getResultText(MOCK_HEADLINE, gameState, true)).toBe(expectedText);
     });
 
     it('should include char hints up to clue and after clue hint', () => {
@@ -281,14 +286,14 @@ describe('ui.ts', () => {
         hints: { chars: 4, clue: true },
       };
 
-      const expectedText = `I found the leek: 🧅\n💡💡\u{1f575}💡💡\n\nhttp://localhost/`;
-      expect(getShareScoreText(MOCK_HEADLINE, gameState, false)).toBe(expectedText);
+      const expectedText = `I found the leek: 🧅\n💡💡🕵💡💡\nExpert Mode 🤓\n\nhttp://localhost/`;
+      expect(getResultText(MOCK_HEADLINE, gameState, true)).toBe(expectedText);
     });
 
     it('should include expert mode text', () => {
       const gameState: GameState = { wrongGuesses: [{ guess: 'x', timestamp: 1 }], correct: false };
       const expectedText = `I found the leek: ❌🧅\nNo hints! 😎\nExpert Mode 🤓\n\nhttp://localhost/`;
-      expect(getShareScoreText(MOCK_HEADLINE, gameState, true)).toBe(expectedText);
+      expect(getResultText(MOCK_HEADLINE, gameState, true)).toBe(expectedText);
     });
 
     it('should handle all elements combined', () => {
@@ -303,12 +308,13 @@ describe('ui.ts', () => {
         hints: { chars: 3, clue: true },
       };
       const expectedText = `I found the leek: ❌❌❌🧅\n💡💡🕵💡\nExpert Mode 🤓\n\nhttp://localhost/`;
-      expect(getShareScoreText(MOCK_HEADLINE, gameState, true)).toBe(expectedText);
+      expect(getResultText(MOCK_HEADLINE, gameState, true)).toBe(expectedText);
     });
   });
 
   describe('shareScore', () => {
     const mockGameState: GameState = { wrongGuesses: [], correct: false };
+    const mockToast = jest.fn();
 
     beforeEach(() => {
       mockGetStoredScores.mockReturnValue({}); // Default no stored score
@@ -317,6 +323,7 @@ describe('ui.ts', () => {
         value: { search: '', href: 'http://localhost/' },
         writable: true,
       });
+      mockToast.mockClear();
     });
 
     afterEach(() => {
@@ -325,7 +332,7 @@ describe('ui.ts', () => {
     });
 
     it('should call recordShare on successful navigator.share', async () => {
-      shareScore(MOCK_HEADLINE, mockGameState, false, false); // forceCopy should be false
+      shareScore(MOCK_HEADLINE, mockGameState, false, mockToast, false); // forceCopy should be false
       expect(navigator.share).toHaveBeenCalled();
       await Promise.resolve(); // Ensure promise chain in shareScore resolves
       expect(mockRecordShare).toHaveBeenCalledWith(MOCK_HEADLINE.id);
@@ -336,7 +343,7 @@ describe('ui.ts', () => {
       const shareError = new Error('Share failed');
       (navigator.share as jest.Mock).mockRejectedValue(shareError);
 
-      shareScore(MOCK_HEADLINE, mockGameState, false, false); // forceCopy should be false
+      shareScore(MOCK_HEADLINE, mockGameState, false, mockToast, false); // forceCopy should be false
       expect(navigator.share).toHaveBeenCalled();
 
       // Wait for the promise rejection to be handled
@@ -349,10 +356,9 @@ describe('ui.ts', () => {
 
     it('should use clipboard.writeText if navigator.share is not available', () => {
       Object.defineProperty(navigator, 'share', { value: undefined, writable: true }); // Simulate no share API
-      const expectedClipboardText = `I found the leek: 🧅\nNo hints! 😎\n\nhttp://localhost/`;
-      shareScore(MOCK_HEADLINE, mockGameState, false, false); // forceCopy should be false to test fallback
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expectedClipboardText);
-      expect(alert).toHaveBeenCalledWith('Score copied to clipboard!');
+      shareScore(MOCK_HEADLINE, mockGameState, false, mockToast, false); // forceCopy should be false to test fallback
+      expect(navigator.clipboard.writeText).toHaveBeenCalled();
+      expect(mockToast).toHaveBeenCalledWith('Score copied to clipboard!', 'success');
       Object.defineProperty(navigator, 'share', {
         value: jest.fn().mockResolvedValue(undefined),
         writable: true,
@@ -360,10 +366,9 @@ describe('ui.ts', () => {
     });
 
     it('should use clipboard.writeText if forceCopy is true', () => {
-      const expectedClipboardText = `I found the leek: 🧅\nNo hints! 😎\n\nhttp://localhost/`;
-      shareScore(MOCK_HEADLINE, mockGameState, false, true);
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expectedClipboardText);
-      expect(alert).toHaveBeenCalledWith('Score copied to clipboard!');
+      shareScore(MOCK_HEADLINE, mockGameState, false, mockToast, true);
+      expect(navigator.clipboard.writeText).toHaveBeenCalled();
+      expect(mockToast).toHaveBeenCalledWith('Score copied to clipboard!', 'success');
       expect(navigator.share).not.toHaveBeenCalled();
     });
 
@@ -374,7 +379,7 @@ describe('ui.ts', () => {
       // isExpertProvided (arg 3) is false, but stored score has e: true, so expert should be true.
       // forceCopy (arg 4) is true.
       const expectedClipboardTextExpert = `I found the leek: 🧅\nNo hints! 😎\nExpert Mode 🤓\n\nhttp://localhost/`;
-      shareScore(MOCK_HEADLINE, mockGameState, false, true);
+      shareScore(MOCK_HEADLINE, mockGameState, false, mockToast, true);
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expectedClipboardTextExpert);
     });
 
@@ -383,7 +388,7 @@ describe('ui.ts', () => {
 
       // Test with isExpertProvided = true
       const expectedClipboardTextExpert = `I found the leek: 🧅\nNo hints! 😎\nExpert Mode 🤓\n\nhttp://localhost/`;
-      shareScore(MOCK_HEADLINE, mockGameState, true, true); // isExpert = true, forceCopy true
+      shareScore(MOCK_HEADLINE, mockGameState, true, mockToast, true); // isExpert = true, forceCopy true
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expectedClipboardTextExpert);
 
       // Clear mock for the next call in the same test
@@ -391,7 +396,7 @@ describe('ui.ts', () => {
 
       // Test with isExpertProvided = false
       const expectedClipboardTextNotExpert = `I found the leek: 🧅\nNo hints! 😎\n\nhttp://localhost/`;
-      shareScore(MOCK_HEADLINE, mockGameState, false, true); // isExpert = false, forceCopy true
+      shareScore(MOCK_HEADLINE, mockGameState, false, mockToast, true); // isExpert = false, forceCopy true
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expectedClipboardTextNotExpert);
     });
   });

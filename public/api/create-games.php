@@ -2,7 +2,7 @@
 
 require_once 'db-utils.php';
 require_once 'prompts.php';
-require_once 'daily-helpers.php';
+require_once 'create-helpers.php';
 
 $config = require __DIR__ . '/config.php';
 $reddit_user_agent = $config['reddit']['user_agent'];
@@ -12,13 +12,16 @@ $gemini_api_key = $config['google']['api_key'];
 $short_opts = "y";
 $long_opts = [
   "model:",      // Requires a value
+  "ignore-patterns:",
   "dry-run",
   "skip-status",
   "preview"
 ];
 $cli_options = getopt($short_opts, $long_opts);
 
-$gpt_model_name = $cli_options['model'] ?? 'gemini-2.5-pro-exp-03-25'; // gemini-2.5-flash-preview-04-17
+$gpt_model_name = $cli_options['model'] ?? 'gemini-2.5-pro-preview-03-25'; // gemini-2.5-flash-preview-04-17 gemini-2.5-pro-preview-03-25 gemini-2.5-pro-exp-03-25
+$ignore_patterns = $cli_options['ignore-patterns'] ? explode(',', $cli_options['ignore-patterns']) : [];
+echo "Ignore patterns: " . implode(", ", $ignore_patterns) . "\n";
 $dry_run = isset($cli_options['dry-run']);
 $skip_age_verification = isset($cli_options['skip-status']);
 $auto_confirm = isset($cli_options['y']);
@@ -34,11 +37,26 @@ try {
   $headlines_full = [];
   foreach ($posts['data']['children'] as $post) {
     $title = convert_smart_quotes($post['data']['title']);
+
+    // Ignore this one if it contains any of the strings in ignore_patterns.
+    $should_ignore = false;
+    foreach ($ignore_patterns as $pattern) {
+      if (strpos($title, $pattern) !== false) {
+        $should_ignore = true;
+        break;
+      }
+    }
+
+    if ($should_ignore) {
+      continue;
+    }
+
+
     $url = $post['data']['url'];
     $reddit_url = "https://www.reddit.com" . $post['data']['permalink'];
     $created_utc = $post['data']['created_utc'];
-    $headline_titles[] = $title;
 
+    $headline_titles[] = $title;
     $headlines_full[] = [
       'headline' => $title,
       'url' => $url,

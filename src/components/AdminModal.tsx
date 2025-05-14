@@ -1,11 +1,22 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Modal from './common/Modal';
-import { fetchPreviewHeadlines, publishPreviewHeadline, deleteFromPreview } from '../lib/api';
+import {
+  fetchPreviewHeadlines,
+  publishPreviewHeadline,
+  deleteFromPreview,
+  selectPreviewHeadline,
+} from '../lib/api';
 import { getAdminKey, storeAdminKey } from '../lib/storage';
 import { PreviewHeadline } from '../types';
 import { useToast } from '../contexts/ToastContext';
 import Loading from './common/Loading';
-import { EyeIcon, EyeSlashIcon, PaperAirplaneIcon, TrashIcon } from '@heroicons/react/24/outline';
+import {
+  EyeIcon,
+  EyeSlashIcon,
+  PaperAirplaneIcon,
+  TrashIcon,
+  CheckCircleIcon,
+} from '@heroicons/react/24/outline';
 import { shuffleArray } from '../lib/ui';
 
 interface AdminModalProps {
@@ -75,9 +86,15 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
     await doAction(msg, () => publishPreviewHeadline(id));
   };
 
+  const handleSelect = async (id: number) => {
+    const headlineToSelect = previews.find(preview => preview.id === id)?.headline;
+    const msg = `SELECT preview?\n\n${headlineToSelect}`;
+    await doAction(msg, () => selectPreviewHeadline(id));
+  };
+
   const handleDeleteSingle = async (id: number) => {
     const headlineToDelete = previews.find(preview => preview.id === id)?.headline;
-    const msg = `DELETE preview?: ${id}?\n\n${headlineToDelete}`;
+    const msg = `DELETE preview?\n\n${headlineToDelete}`;
     await doAction(msg, () => deleteFromPreview(id));
   };
 
@@ -129,13 +146,13 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                 {items.map(preview => (
                   <li
                     key={preview.id}
-                    className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md shadow-sm flex justify-between items-stretch"
+                    className={`p-3 rounded-md shadow-sm flex justify-between items-stretch bg-gray-50 dark:bg-gray-800`}
                   >
                     <div>
                       <p>
                         {revealWords
                           ? preview.headline
-                          : `${preview.beforeBlank} [???] ${preview.afterBlank}`}
+                          : `${preview.beforeBlank}[???]${preview.afterBlank}`}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         {preview.choices.join(', ')}
@@ -143,12 +160,22 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                       <p className="text-xs text-gray-500 dark:text-gray-600 italic">
                         {preview.hint}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {preview.articleSite} | {preview.publishTime}
+                      <p className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400">
+                        <a href={preview.articleUrl} target="_blank" rel="noopener noreferrer">
+                          {preview.articleSite} | {preview.publishTime}
+                        </a>
                       </p>
                     </div>
                     <div>
                       <div className="flex h-full flex-col justify-around">
+                        <button
+                          onClick={() => handleSelect(preview.id)}
+                          className={`btn btn-ghost btn-sm text-xs p-1 ${preview.isSelected ? 'text-green-500 dark:text-green-400' : ''}`}
+                          disabled={isLoading}
+                          title="Select this preview"
+                        >
+                          <CheckCircleIcon className="h-5 w-5" />
+                        </button>
                         <button
                           onClick={() => handlePublish(preview.id)}
                           className="btn btn-ghost btn-sm text-xs p-1 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"

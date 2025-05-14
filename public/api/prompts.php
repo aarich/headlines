@@ -98,7 +98,7 @@ Format your response by including
 - the specific word to remove from the headline that meets the above criteria
 - an explanation for why this choice was made. What makes the headline and word to remove meet these preferences?
 - a list of possible word choices that would be funny to suggest as alternatives. Feel free to edit or add to the list as needed to adhere to the guidelines.
-- a brief hint for the answer that is esoteric and not obvious, akin to a crossword clue in that it requires some thought to guess. Don't use a pun. It can be creative or funny or just a simple clue that doesn't give away the answer right away.
+- a brief hint for the answer that is esoteric and not obvious, akin to a crossword clue in that it requires some thought to guess. Don't use a pun. It can be creative or funny or just a short simple clue that doesn't give away the answer right away.
 
 Here is the list of potential choices:
 
@@ -106,22 +106,20 @@ $initial_candidates_str
 ";
 }
 
-function getFinalGenerationConfig() {
-    return [
+function getFinalGenerationConfig($include_explanation = true) {
+    $schema = [
         "responseMimeType" => "application/json",
         "responseSchema" => [
             "type" => "object",
             "required" => [
                 "headline",
                 "word_to_remove",
-                "explanation",
                 "replacements",
                 "hint"
             ],
             "properties" => [
                 "headline" => ["type" => "string"],
                 "word_to_remove" => ["type" => "string"],
-                "explanation" => ["type" => "string"],
                 "hint" => ["type" => "string"],
                 "replacements" => [
                     "type" => "array",
@@ -130,4 +128,34 @@ function getFinalGenerationConfig() {
             ]
         ]
     ];
+
+    if ($include_explanation) {
+        $schema["responseSchema"]['properties']['explanation'] = ["type" => "string"];
+        $schema["responseSchema"]['required'][] = 'explanation';
+    }
+
+    return $schema;
+}
+
+
+
+function getChooseFromPreviewsPrompt($previewsStr) {
+    global $guidelines;
+    return  "
+Below are some options for a fun guessing game. Each option is about a headline and was chosen since it seems like it could have been written by The Onion, but they are truly real headlines. 
+The game involves guessing a missing word from an absurd-but-real headline. So choose a headline that would be fun for that game. 
+Here are the guidelines to help you choose. None of them are strict rules since it might be impossible to find a headline to meet all of them. If any option blatantly violates the guidelines, you can ignore it and choose one that better suits the guidelines.
+
+$guidelines
+
+You are to select the best option and provide the following information.
+- the original headline as it was published.
+- the specific word to remove from the headline that meets the above criteria
+- a list of possible word choices that would be funny to suggest as alternatives. Feel free to edit or add to the list as needed to adhere to the guidelines.
+- a brief hint for the answer that is esoteric and not obvious, akin to a crossword clue in that it requires some thought to guess. Don't use a pun. It can be creative or funny or just a simple clue that doesn't give away the answer right away. Feel free to edit this.
+
+Here is the list of potential choices:
+
+$previewsStr
+";
 }

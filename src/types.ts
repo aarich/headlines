@@ -10,13 +10,6 @@ export interface Headline {
   hint: string;
   articleUrl: string;
   redditUrl: string;
-
-  // Public stats
-  totalPlays: number;
-  totalCorrectGuesses: number;
-  totalIncorrectGuesses: number;
-  firstGuessCorrectCount: number;
-  mostCommonIncorrectGuesses: string[];
 }
 
 export interface PreviewHeadline {
@@ -31,6 +24,7 @@ export interface PreviewHeadline {
   correctAnswer: string;
   possibleAnswers: string[];
   publishTime: string;
+  isSelected: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -9,7 +9,7 @@ CREATE TABLE headline (
     before_blank TEXT NOT NULL,
     after_blank TEXT NOT NULL,
     hint TEXT,
-    eplanation TEXT NOT NULL,
+    explanation TEXT NOT NULL,
     article_url TEXT NOT NULL,
     reddit_url TEXT NOT NULL,
     correct_answer VARCHAR(255) NOT NULL,
@@ -27,12 +27,13 @@ CREATE TABLE headline (
     before_blank TEXT NOT NULL,
     after_blank TEXT NOT NULL,
     hint TEXT,
-    eplanation TEXT NOT NULL,
+    explanation TEXT NOT NULL,
     article_url TEXT NOT NULL,
     reddit_url TEXT NOT NULL,
     correct_answer VARCHAR(255) NOT NULL,
     possible_answers JSON NOT NULL,
     publish_time DATETIME NOT NULL,
+    is_selected BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_publish_time (publish_time),
@@ -64,95 +65,123 @@ CREATE TABLE wrong_guess (
 */
 
 require_once 'db-utils.php';
+require_once 'auth-utils.php'; // Include the new auth utility
+$config = require __DIR__ . '/config.php'; // For admin key
 
 header('Content-Type: application/json');
 
 try {
-    // Get the two optional parameters. Zero or one of them should be provided (never both)
-    $headline_id = isset($_GET['id']) ? (int)$_GET['id'] : null;
-    $headline_game_num = isset($_GET['game']) ? (int)$_GET['game'] : null;
+    $db = getDbConnection(); // Get DB connection once
+    $method = $_SERVER['REQUEST_METHOD'];
 
-    // Throw an error if they were both set
-    if ($headline_id && $headline_game_num) {
-        http_response_code(400);
-        throw new Exception('Only one of id or game should be provided.');
-    }
+    if ($method === 'POST') {
+        // Use the shared admin auth check
+        requireAdminAuth($config);
 
-    // Prepare the base query
-    $query = '
-        SELECT 
-            h.id,
-            h.game_num,
-            h.headline,
-            h.before_blank,
-            h.after_blank,
-            h.hint,
-            h.article_url,
-            h.reddit_url,
-            h.correct_answer,
-            h.possible_answers,
-            h.publish_time,
-            hs.total_plays,
-            hs.total_correct_guesses,
-            hs.total_incorrect_guesses,
-            hs.first_guess_correct_count
-        FROM headline h
-        LEFT JOIN headline_stats hs ON h.id = hs.headline_id
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            http_response_code(400);
+            throw new Exception('Invalid JSON input: ' . json_last_error_msg());
+        }
+
+        $selectedPreview = $input['selectedPreview'] ?? null;
+
+        if ($selectedPreview !== true) {
+            http_response_code(400);
+            throw new Exception('The "selectedPreview" parameter must be set to true.');
+        }
+
+        // Find the selected preview
+        $stmtPreview = $db->prepare('SELECT * FROM headline_preview WHERE is_selected = TRUE ORDER BY id ASC LIMIT 1');
+        $stmtPreview->execute();
+        $previewData = $stmtPreview->fetch(PDO::FETCH_ASSOC);
+
+        if (!$previewData) {
+            http_response_code(404);
+            throw new Exception('No selected preview headline found in headline_preview table.');
+        }
+
+        $result = promotePreview($previewData);
+
+        if ($result) {
+            $result['message'] = 'Selected preview headline published successfully to the main headline table and all previews cleared.';
+            echo json_encode($result);
+        } else {
+            http_response_code(500);
+            throw new Exception('Failed to publish selected preview headline. Previews not cleared. Output: ' . trim($insertOutput));
+        }
+    } elseif ($method === 'GET') {
+        $headline_id = isset($_GET['id']) ? (int)$_GET['id'] : null;
+        $headline_game_num = isset($_GET['game']) ? (int)$_GET['game'] : null;
+
+        // Throw an error if they were both set
+        if ($headline_id && $headline_game_num) {
+            http_response_code(400);
+            throw new Exception('Only one of id or game should be provided.');
+        }
+
+        // Prepare the base query
+        $query = 'SELECT 
+            id,
+            game_num,
+            headline,
+            before_blank,
+            after_blank,
+            hint,
+            article_url,
+            reddit_url,
+            correct_answer,
+            possible_answers,
+            publish_time
+        FROM headline
     ';
 
-    if ($headline_id) {
-        $query .= ' WHERE h.id = ?';
-        $stmt = getDbConnection()->prepare($query);
-        $stmt->execute([$headline_id]);
-    } else if ($headline_game_num) {
-        $query .= ' WHERE h.game_num = ?';
-        $stmt = getDbConnection()->prepare($query);
-        $stmt->execute([$headline_game_num]);
+        $params = [];
+        if ($headline_id) {
+            $query .= ' WHERE id = ?';
+            $params[] = $headline_id;
+        } else if ($headline_game_num) {
+            $query .= ' WHERE game_num = ?';
+            $params[] = $headline_game_num;
+        } else {
+            $query .= ' ORDER BY id DESC LIMIT 1';
+        }
+
+        $stmt = $db->prepare($query);
+        $stmt->execute($params);
+        $headlineData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$headlineData) {
+            http_response_code(404);
+            throw new Exception('No headlines found.');
+        }
+
+        // Decode the JSON fields
+        $possibleAnswers = json_decode($headlineData['possible_answers'], true);
+        // Ensure 'answers' key exists or default to empty array, then add correct answer
+        $headlineData['possible_answers'] = $possibleAnswers['answers'] ?? [];
+        // append the correct answer to the possible answers
+        $headlineData['possible_answers'][] = $headlineData['correct_answer'];
+
+        // shuffle the possible answers
+        shuffle($headlineData['possible_answers']);
+
+        // Convert all snake case to camel case
+        $camelCaseHeadline = array_combine(
+            array_map(function ($key) {
+                return lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', $key))));
+            }, array_keys($headlineData)),
+            array_values($headlineData)
+        );
+
+        echo json_encode($camelCaseHeadline);
     } else {
-        $query .= ' ORDER BY h.id DESC LIMIT 1';
-        $stmt = getDbConnection()->query($query);
+        http_response_code(405); // Method Not Allowed
+        throw new Exception('Unsupported request method. Only GET and POST are allowed.');
     }
-
-    $headline = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$headline) {
-        http_response_code(404);
-        throw new Exception('No headlines found');
-    }
-
-    // Get the incorrect guesses
-    $stmt = getDbConnection()->prepare('
-        SELECT guess_word, guess_count 
-        FROM wrong_guess 
-        WHERE headline_id = ? 
-        ORDER BY guess_count DESC 
-        LIMIT 10
-    ');
-    $stmt->execute([$headline['id']]);
-    $incorrectGuesses = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-
-    // Decode the JSON fields
-    $possibleAnswers = json_decode($headline['possible_answers'], true);
-    $headline['possible_answers'] = $possibleAnswers['answers'];
-    // append the correct answer to the possible answers
-    $headline['possible_answers'][] = $headline['correct_answer'];
-    $headline['most_common_incorrect_guesses'] = $incorrectGuesses;
-
-    // shuffle the possible answers
-    shuffle($headline['possible_answers']);
-
-    // Convert all snake case to camel case
-    $headline = array_combine(
-        array_map(function ($key) {
-            return lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', $key))));
-        }, array_keys($headline)),
-        array_values($headline)
-    );
-
-    echo json_encode($headline);
 } catch (Exception $e) {
     if (http_response_code() === 200) {
         http_response_code(500);
     }
-    echo json_encode(['error' => 'Failed to fetch headline: ' . $e->getMessage()]);
+    echo json_encode(['error' => $e->getMessage()]);
 }

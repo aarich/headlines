@@ -2,7 +2,7 @@
 
 require_once 'db-utils.php';
 require_once 'prompts.php';
-require_once 'daily-helpers.php';
+require_once 'create-helpers.php';
 
 // Parse CLI arguments
 $short_opts = "";

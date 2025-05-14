@@ -30,3 +30,7 @@ echo "Deploying to $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH..."
 rsync -avz --delete build/ "$DEPLOY_USER@$DEPLOY_HOST:${DEPLOY_PATH}/"
 
 echo "Deployment successful!"
+
+rm -r build
+
+echo "Cleared build directory"

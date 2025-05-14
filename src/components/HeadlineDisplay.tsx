@@ -43,7 +43,9 @@ const HeadlineDisplay: React.FC<HeadlineDisplayProps> = ({
   }
 
   return (
-    <div className="mb-6 text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-center text-gray-800 dark:text-gray-100 leading-relaxed px-2">
+    <div
+      className={`${isGameOver ? 'mb-3' : 'mb-6'} text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-center text-gray-800 dark:text-gray-100 leading-relaxed px-2`}
+    >
       {isGameOver ? (
         <SolvedHeadlineDisplay headline={headline} />
       ) : (

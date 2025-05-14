@@ -25,7 +25,7 @@
     "eject": "react-scripts eject",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "deploy": "sh ./deploy.sh",
-    "generate": "php public/api/daily.php --skip-status"
+    "generate-preview": "php public/api/create-games.php --skip-status --preview"
   },
   "eslintConfig": {
     "extends": [

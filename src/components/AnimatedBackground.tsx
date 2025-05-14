@@ -138,6 +138,7 @@ const AnimatedBackground: React.FC = () => {
               '--float-distance': `-${onion.floatDistance}px`,
               '--move-distance': `${onion.moveDistance}px`,
               '--move-angle': `${onion.moveAngle}deg`,
+              willChange: 'transform',
             } as React.CSSProperties
           }
         >
@@ -161,6 +162,7 @@ const AnimatedBackground: React.FC = () => {
                 zIndex: 0,
                 opacity: 0.7,
                 mixBlendMode: 'screen',
+                willChange: 'transform, opacity, filter',
               }}
             />
           ))}
@@ -180,6 +182,7 @@ const AnimatedBackground: React.FC = () => {
               )`,
               animation: `pulse ${ANIMATION_CONFIG.pulseDuration}s ease-in-out infinite`,
               filter: `blur(8px)`,
+              willChange: 'transform, opacity, filter',
               zIndex: 1,
             }}
           />
@@ -198,6 +201,7 @@ const AnimatedBackground: React.FC = () => {
                 ${isDarkMode ? 'brightness(1.1) invert(0.6)' : 'brightness(0.7) invert(0.15)'}
               `,
                 ['--rotation-direction' as string]: onion.rotationDirection,
+                willChange: 'transform, filter',
               } as React.CSSProperties
             }
           >
@@ -248,11 +252,11 @@ const AnimatedBackground: React.FC = () => {
           @keyframes pulse {
             0%, 100% {
               opacity: 0.7;
-              transform: translate(-50%, -50%) scale(1);
+              transform: scale(1);
             }
             50% {
               opacity: 0.3;
-              transform: translate(-50%, -50%) scale(1.5);
+              transform: scale(1.5);
             }
           }
         `}

@@ -1,28 +1,15 @@
 <?php
 
 require_once 'db-utils.php';
+require_once 'auth-utils.php'; // Include the new auth utility
 $config = require __DIR__ . '/config.php'; // Load configuration
 
 header('Content-Type: application/json');
 
+// Perform admin authentication for all methods in this file
+requireAdminAuth($config);
+
 $method = $_SERVER['REQUEST_METHOD'];
-$adminApiKey = $config['admin']['key'] ?? null;
-
-// Check for the custom admin key header
-$requestApiKey = $_SERVER['HTTP_X_ADMIN_KEY'] ?? null;
-
-if (!$adminApiKey) {
-    // This is a server configuration issue, the admin key should be set.
-    http_response_code(500);
-    echo json_encode(['error' => 'Admin API key is not configured on the server.']);
-    exit;
-}
-
-if ($requestApiKey !== $adminApiKey) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Unauthorized. Invalid or missing X-Admin-Key header.']);
-    exit;
-}
 
 try {
     $db = getDbConnection();
@@ -45,6 +32,9 @@ try {
                 // Store the array of answers, defaulting to an empty array if parsing fails or key missing
                 $preview_row['possible_answers'] = $decodedPossibleAnswers['answers'] ?? $decodedPossibleAnswers ?? [];
             }
+
+            // Replace is_selected with boolean value
+            $preview_row['is_selected'] = $preview_row['is_selected'] === 1;
 
             // Convert all snake_case keys to camelCase
             $camelCasePreview = [];
@@ -153,9 +143,46 @@ try {
             $rowCount = $stmt->rowCount();
             echo json_encode(['message' => "Successfully deleted $rowCount row(s) from headline_preview."]);
         }
+    } elseif ($method === 'PATCH') {
+        // Accepts a single parameter: id (of a preview headline).
+        // Clears any is_selected value on all rows (set to false)
+        // and then sets the specified record's is_selected to true.
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $previewId = $input['id'] ?? null;
+
+        if (!$previewId) {
+            http_response_code(400);
+            throw new Exception('Preview ID is required for selection.');
+        }
+        $previewId = (int)$previewId;
+
+        $db->beginTransaction();
+        try {
+            // Clear all existing selections
+            $stmtClear = $db->prepare('UPDATE headline_preview SET is_selected = FALSE WHERE is_selected = TRUE');
+            $stmtClear->execute();
+
+            // Set the new selection
+            $stmtSet = $db->prepare('UPDATE headline_preview SET is_selected = TRUE WHERE id = ?');
+            $stmtSet->execute([$previewId]);
+            $rowCount = $stmtSet->rowCount();
+
+            $db->commit();
+
+            if ($rowCount > 0) {
+                echo json_encode(['message' => "Successfully selected preview headline with ID: $previewId."]);
+            } else {
+                http_response_code(404); // Or 400 if ID not found is a client error
+                throw new Exception("Preview headline not found with ID: $previewId, or it was already selected.");
+            }
+        } catch (Exception $e) {
+            $db->rollBack();
+            throw $e;
+        }
     } else {
         http_response_code(405); // Method Not Allowed
-        throw new Exception('Unsupported request method. Only GET, POST, DELETE are allowed.');
+        throw new Exception('Unsupported request method. Only GET, POST, PATCH, DELETE are allowed.');
     }
 } catch (Exception $e) {
     if (http_response_code() === 200) { // If no HTTP error code has been set by a throw before

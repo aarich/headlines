@@ -8,6 +8,12 @@ export interface PublishPreviewResult {
   details: string;
 }
 
+export interface SelectPreviewResult {
+  message: string;
+  newHeadlineId: number;
+  deletedPreviewCount: number;
+}
+
 export interface DeletePreviewsResult {
   message: string;
 }
@@ -98,6 +104,23 @@ export const fetchPreviewHeadlines = async (): Promise<PreviewHeadline[]> => {
       .json()
       .catch(() => ({ error: 'Failed to fetch preview headlines' }));
     throw new Error(errorData.error || `Failed to fetch preview headlines: ${response.statusText}`);
+  }
+  return response.json();
+};
+
+export const selectPreviewHeadline = async (previewId: number): Promise<SelectPreviewResult> => {
+  const response = await fetch(`${config.apiUrl}/api/preview`, {
+    method: 'PATCH',
+    headers: getAdminHeaders(),
+    body: JSON.stringify({ id: previewId }),
+  });
+  if (!response.ok) {
+    const errorData = await response
+      .json()
+      .catch(() => ({ error: 'Failed to select a preview headline' }));
+    throw new Error(
+      errorData.error || `Failed to select a preview headline: ${response.statusText}`
+    );
   }
   return response.json();
 };

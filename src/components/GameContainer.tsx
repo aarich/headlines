@@ -11,7 +11,7 @@ import { LightBulbIcon } from '@heroicons/react/24/outline';
 import { useToast } from '../contexts/ToastContext';
 import { recordGameCompleted } from '../lib/api';
 import { toastWrongAnswer } from '../lib/ui';
-import WrongGuessList from './WrongGuessList';
+import HintsAndGuesses from './HintsAndGuesses';
 
 interface GameContainerProps {
   headline: Headline;
@@ -34,7 +34,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
       } else {
         // We are on today's game. If it was completed in the last ~5 seconds, it means we just completed it
         // and should say "Nice". If it's older than that, say "Great job today" as a reminder the game is already won.
-        const isOlderThanFiveSeconds = Date.now() - gameState.completedAt! < 5000;
+        const isOlderThanFiveSeconds = Date.now() - gameState.completedAt! > 5000;
         if (gameState.completedAt)
           toast(isOlderThanFiveSeconds ? 'Great job today!' : 'Nice!', 'success');
       }
@@ -126,49 +126,36 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
           </div>
 
           {/* Button row: grid for game, flex for share */}
-          <div
-            className={
-              gameState.correct
-                ? 'flex justify-center mt-4 w-full'
-                : 'grid grid-cols-3 items-center gap-4 mt-4 w-full'
-            }
-          >
-            {gameState.correct ? (
-              <ShareButtons gameState={gameState} headline={headline} isExpert={expertMode} />
-            ) : (
-              <>
-                <div />
-                <button
-                  className="justify-self-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  onClick={handleGuess}
-                  disabled={!currentGuess}
-                >
-                  Submit
-                </button>
-                {nextHintType ? (
-                  <button
-                    className="justify-self-start py-2 text-white transition-colors"
-                    title={nextHintType ? 'Get a hint' : 'No more hints available'}
-                    onClick={onHintClick}
-                  >
-                    <LightBulbIcon className="w-5 h-5" />
-                  </button>
-                ) : (
-                  <div />
-                )}
-              </>
-            )}
-          </div>
 
-          {gameState.hints?.clue && (
-            <div className="mt-4 w-full max-w-md">
-              <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                Hint: {headline.hint}
-              </div>
+          {gameState.correct ? (
+            <div className={'flex justify-center mt-4 w-full'}>
+              <ShareButtons gameState={gameState} headline={headline} isExpert={expertMode} />
+            </div>
+          ) : (
+            <div className={'grid grid-cols-3 items-center gap-4 mt-4 w-full'}>
+              <div />
+              <button
+                className="justify-self-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                onClick={handleGuess}
+                disabled={!currentGuess}
+              >
+                Submit
+              </button>
+              {nextHintType ? (
+                <button
+                  className="justify-self-start  text-gray-700 dark:text-gray-200"
+                  title={'Get a hint'}
+                  onClick={onHintClick}
+                >
+                  <LightBulbIcon className="w-5 h-5" />
+                </button>
+              ) : (
+                <div />
+              )}
             </div>
           )}
 
-          <WrongGuessList guesses={gameState.wrongGuesses} />
+          <HintsAndGuesses headline={headline} gameState={gameState} isExpert={expertMode} />
         </div>
       </section>
     </>
