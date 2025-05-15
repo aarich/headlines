@@ -149,7 +149,7 @@ function handleGameAction($headlineId, $action, $data = []) {
             $updates = [
                 'total_correct_guesses' => 1,
                 'total_incorrect_guesses' => count($data['guesses']),
-                'first_guess_correct_count' => count($data['guesses']) === 1 ? 1 : 0
+                'first_guess_correct_count' => count($data['guesses']) === 0 ? 1 : 0
             ];
 
             // Update incorrect guesses if any
