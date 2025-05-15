@@ -1,7 +1,7 @@
 import React from 'react';
 import { HeadlineHistory } from '../types';
 import { timeSince } from '../lib/ui';
-import { CheckIcon, PlayIcon } from '@heroicons/react/24/outline';
+import { CheckIcon } from '@heroicons/react/24/outline';
 
 interface TickerItemProps {
   headline: HeadlineHistory;

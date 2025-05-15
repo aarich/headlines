@@ -30,6 +30,19 @@ $save_to_preview = isset($cli_options['preview']);
 try {
   checkIfHeadlineIsNeeded($skip_age_verification);
 
+  if ($save_to_preview) {
+    // Check preview table. If one was already selected we can stop generating new candidates
+    $db = getDbConnection();
+    $stmt = $db->query('SELECT * FROM headline_preview WHERE is_selected = TRUE LIMIT 1');
+    $preview = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($preview) {
+      echo "*** Found an already selected preview ***\n";
+      echo json_encode($preview, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE);
+      exit(0);
+    }
+  }
+
   // Fetch top posts from Reddit
   $posts = getTopPosts('nottheonion', $reddit_user_agent);
 
