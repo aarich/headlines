@@ -12,20 +12,23 @@ const HintsAndGuesses: React.FC<Props> = ({ gameState, headline, isExpert }) => 
   const { wrongGuesses } = gameState;
   const reversed = wrongGuesses.slice().reverse();
   const hintsText = getHintsText(headline, gameState, isExpert);
+  const showDot = !!(wrongGuesses.length && hintsText);
   return (
     <>
       {gameState.hints?.clue && (
         <div className="mt-4 w-full max-w-md">
-          <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Hint: {headline.hint}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-2 italic">
+            {headline.hint}
+          </div>
         </div>
       )}
       <div className="mt-4 w-full max-w-md">
         <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
           {wrongGuesses.length ? `Guesses: ${wrongGuesses.length}` : null}
+          {showDot && <span className="mx-3">•</span>}
           {hintsText && (
             <>
-              <span className="mx-3">•</span>Hints:{' '}
-              <span className="tracking-widest">{hintsText}</span>
+              Hints: <span className="tracking-widest">{hintsText}</span>
             </>
           )}
         </div>

@@ -203,10 +203,7 @@ export const shareScore = (
 
   if (navigator.share && !forceCopy) {
     navigator
-      .share({
-        title: 'Headline Puzzle Score',
-        text: shareText,
-      })
+      .share({ text: shareText })
       .then(() => recordShare(headline.id))
       .catch(error => error.name !== 'AbortError' && console.error(error));
   } else {

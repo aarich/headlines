@@ -35,9 +35,3 @@ php -S localhost:8000 public/api/server.php
 - Dependencies:
   - Reddit API (to locate candidate headlines)
   - Gemini API (to choose a headline and create the game each day)
-
-## TODO
-
-- More resilient localStorage integration. It seems a bit shaky.
-- Queue game feature to (1) override the next game that will go out and (2) provide a conisten release time.
-- Tests

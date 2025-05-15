@@ -17,11 +17,13 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({ gameState, headline, isExpe
 
   return (
     <div>
-      <div className="text-center whitespace-pre-wrap">{resultText}</div>
+      <div className="text-left whitespace-pre-wrap text-gray-700 dark:text-gray-200 mx-auto w-fit">
+        Guesses: {resultText}
+      </div>
       <div className="flex flex-row items-center justify-center gap-4">
         {hasShareAPI && (
           <button
-            className="mt-4 px-4 py-2 border-2 border-green-500 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+            className="mt-4 px-4 py-2 border-2 border-green-500 bg-green-500 rounded-md hover:bg-green-600 transition-colors"
             onClick={() => shareScore(headline, gameState, isExpert, toast)}
           >
             Share Results

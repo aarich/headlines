@@ -28,7 +28,7 @@ const Header: React.FC<HeaderProps> = ({ onSettings, onHelp, onStats, headline }
   }, [menuOpen]);
 
   return (
-    <header className="w-full text-center py-6 mb-6 relative">
+    <header className="w-full text-center py-6 relative">
       {/* Desktop icons */}
       <div className="absolute top-4 right-4 gap-2 hidden md:flex">
         <button
@@ -87,7 +87,7 @@ const Header: React.FC<HeaderProps> = ({ onSettings, onHelp, onStats, headline }
                 onStats();
               }}
             >
-              <ChartPieIcon className="w-5 h-5" /> Statistics
+              <ChartPieIcon className="w-5 h-5" /> History
             </button>
             <button
               className="flex items-center gap-2 px-4 py-3 text-base text-gray-100 hover:bg-gray-800 transition text-left"
@@ -101,11 +101,25 @@ const Header: React.FC<HeaderProps> = ({ onSettings, onHelp, onStats, headline }
           </div>
         )}
       </div>
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-        <a href="/">Find the Leek{headline ? ` #${headline.gameNum}` : ''}</a>
-      </h1>
+      <div className="w-fit mx-auto">
+        <h1
+          className="relative text-3xl font-bold text-gray-900 dark:text-white tracking-tight
+                     before:content-[''] before:absolute before:inset-0 before:bg-white before:dark:bg-black
+                     before:blur-[20px] before:-z-10 before:rounded-xl"
+        >
+          <a href="/">Find the Leek</a>
+        </h1>
+        {headline && (
+          <p
+            className="relative text-sm text-gray-600 dark:text-gray-400 mt-1
+                       before:content-[''] before:absolute before:inset-0 before:bg-white before:dark:bg-black
+                       before:blur-[15px] before:opacity-60 before:-z-10 before:rounded-lg"
+          >
+            Game #{headline.gameNum}
+          </p>
+        )}
+      </div>
     </header>
   );
 };
-
 export default Header;

@@ -189,11 +189,14 @@ const AnimatedBackground: React.FC = () => {
 
           {/* Onion image with rotation */}
           <div
-            className="relative z-10"
+            className="absolute z-10"
             style={
               {
                 width: '100%',
                 height: '100%',
+                left: '50%',
+                top: '50%',
+                transform: `translate(-50%, -50%)`,
                 animation: `rotate ${onion.rotationDuration}s linear infinite`,
                 filter: `
                 hue-rotate(${hue}deg) 
@@ -242,21 +245,21 @@ const AnimatedBackground: React.FC = () => {
 
           @keyframes rotate {
             from {
-              transform: rotate(0deg);
+              transform: translate(-50%, -50%) rotate(0deg);
             }
             to {
-              transform: rotate(calc(360deg * var(--rotation-direction)));
+              transform: translate(-50%, -50%) rotate(calc(360deg * var(--rotation-direction)));
             }
           }
 
           @keyframes pulse {
             0%, 100% {
               opacity: 0.7;
-              transform: scale(1);
+              transform: translate(-50%, -50%) scale(1);
             }
             50% {
               opacity: 0.3;
-              transform: scale(1.5);
+              transform: translate(-50%, -50%) scale(1.5);
             }
           }
         `}
