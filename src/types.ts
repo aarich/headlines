@@ -12,6 +12,8 @@ export interface Headline {
   redditUrl: string;
 }
 
+export type PreviewHeadlineStatus = 'selected' | 'rejected' | null;
+
 export interface PreviewHeadline {
   id: number;
   headline: string;
@@ -24,7 +26,7 @@ export interface PreviewHeadline {
   correctAnswer: string;
   possibleAnswers: string[];
   publishTime: string;
-  isSelected: boolean;
+  status: PreviewHeadlineStatus;
   createdAt: string;
   updatedAt: string;
 }

@@ -20,7 +20,11 @@ $long_opts = [
 $cli_options = getopt($short_opts, $long_opts);
 
 $gpt_model_name = $cli_options['model'] ?? 'gemini-2.5-pro-preview-03-25'; // gemini-2.5-flash-preview-04-17 gemini-2.5-pro-preview-03-25 gemini-2.5-pro-exp-03-25
-$ignore_patterns = $cli_options['ignore-patterns'] ? explode(',', $cli_options['ignore-patterns']) : [];
+$ignore_patterns = [];
+if (isset($cli_options['ignore-patterns'])) {
+  $ignore_patterns =  explode(',', $cli_options['ignore-patterns']);
+}
+
 echo "Ignore patterns: " . implode(", ", $ignore_patterns) . "\n";
 $dry_run = isset($cli_options['dry-run']);
 $skip_age_verification = isset($cli_options['skip-status']);
@@ -30,18 +34,26 @@ $save_to_preview = isset($cli_options['preview']);
 try {
   checkIfHeadlineIsNeeded($skip_age_verification);
 
-  if ($save_to_preview) {
-    // Check preview table. If one was already selected we can stop generating new candidates
-    $db = getDbConnection();
-    $stmt = $db->query('SELECT * FROM headline_preview WHERE is_selected = TRUE LIMIT 1');
-    $preview = $stmt->fetch(PDO::FETCH_ASSOC);
+  $db = getDbConnection();
+  $rejected_headline_texts = [];
 
-    if ($preview) {
+  // Fetch all previews to check for selected or rejected status
+  $stmt = $db->query('SELECT headline, status FROM headline_preview');
+  $all_previews = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+  foreach ($all_previews as $preview_item) {
+    if ($save_to_preview && $preview_item['status'] === 'selected') {
       echo "*** Found an already selected preview ***\n";
-      echo json_encode($preview, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE);
+      echo $preview_item['headline'];
       exit(0);
     }
+
+    if ($preview_item['status'] === 'rejected') {
+      $rejected_headline_texts[] = $preview_item['headline'];
+    }
   }
+
+  echo count($rejected_headline_texts) . " rejected headlines found. They will be skipped.\n";
 
   // Fetch top posts from Reddit
   $posts = getTopPosts('nottheonion', $reddit_user_agent);
@@ -50,6 +62,12 @@ try {
   $headlines_full = [];
   foreach ($posts['data']['children'] as $post) {
     $title = convert_smart_quotes($post['data']['title']);
+
+    // Ignore this one if it matches a rejected headline
+    if (in_array($title, $rejected_headline_texts, true)) {
+      echo "Skipping (already rejected): $title\n";
+      continue;
+    }
 
     // Ignore this one if it contains any of the strings in ignore_patterns.
     $should_ignore = false;

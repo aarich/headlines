@@ -1,4 +1,4 @@
-import { Headline, HeadlineHistory, PreviewHeadline } from '../types';
+import { Headline, HeadlineHistory, PreviewHeadline, PreviewHeadlineStatus } from '../types';
 import config from '../config';
 import { getAdminKey } from './storage';
 
@@ -8,10 +8,8 @@ export interface PublishPreviewResult {
   details: string;
 }
 
-export interface SelectPreviewResult {
+export interface UpdatePreviewStatusResult {
   message: string;
-  newHeadlineId: number;
-  deletedPreviewCount: number;
 }
 
 export interface DeletePreviewsResult {
@@ -108,16 +106,19 @@ export const fetchPreviewHeadlines = async (): Promise<PreviewHeadline[]> => {
   return response.json();
 };
 
-export const selectPreviewHeadline = async (previewId: number): Promise<SelectPreviewResult> => {
+export const updatePreviewHeadlineStatus = async (
+  previewId: number,
+  status: PreviewHeadlineStatus
+): Promise<UpdatePreviewStatusResult> => {
   const response = await fetch(`${config.apiUrl}/api/preview`, {
     method: 'PATCH',
     headers: getAdminHeaders(),
-    body: JSON.stringify({ id: previewId }),
+    body: JSON.stringify({ id: previewId, status }),
   });
   if (!response.ok) {
     const errorData = await response
       .json()
-      .catch(() => ({ error: 'Failed to select a preview headline' }));
+      .catch(() => ({ error: 'Failed to update preview headline status' }));
     throw new Error(
       errorData.error || `Failed to select a preview headline: ${response.statusText}`
     );

@@ -16,12 +16,20 @@ const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(
 
 const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const wheelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (choices.length > 0) {
       onSetGuess(choices[selectedIndex]);
     }
   }, [selectedIndex, choices, onSetGuess]);
+
+  useEffect(() => {
+    // Set focus for keyboard support
+    if (wheelRef.current) {
+      wheelRef.current.focus();
+    }
+  }, []);
 
   // Keyboard support
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -89,7 +97,8 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
 
   return (
     <div
-      className="relative w-full max-w-2xl mx-auto h-20 overflow-hidden select-none flex items-center justify-center"
+      className="relative w-full max-w-2xl mx-auto h-20 overflow-hidden select-none flex items-center justify-center focus:outline-none"
+      ref={wheelRef}
       tabIndex={0}
       onKeyDown={handleKeyDown}
       onWheel={handleWheel}
@@ -100,7 +109,7 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
       style={{ height: 80 }}
     >
       <div
-        className="absolute left-1/2 top-1/2"
+        className="absolute left-1/2 top-1/2 "
         style={{ transform: 'translate(-50%, -50%)', width: '100%', height: '100%' }}
       >
         {choices.map((choice, index) => {
@@ -114,7 +123,7 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
             <button
               key={choice}
               type="button"
-              className={`absolute top-1/2 font-medium rounded-lg transition-colors text-xl
+              className={`absolute top-1/2 font-medium rounded-lg transition-colors text-xl focus:outline-none
                 ${isSelected ? 'z-15 text-blue-600 dark:text-blue-400 shadow-lg font-bold' : 'text-gray-600 dark:text-gray-400 bg-transparent'}
                 cursor-pointer hover:text-blue-500 dark:hover:text-blue-300`}
               style={{

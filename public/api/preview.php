@@ -33,9 +33,6 @@ try {
                 $preview_row['possible_answers'] = $decodedPossibleAnswers['answers'] ?? $decodedPossibleAnswers ?? [];
             }
 
-            // Replace is_selected with boolean value
-            $preview_row['is_selected'] = $preview_row['is_selected'] === 1;
-
             // Convert all snake_case keys to camelCase
             $camelCasePreview = [];
             foreach ($preview_row as $key => $value) {
@@ -144,37 +141,59 @@ try {
             echo json_encode(['message' => "Successfully deleted $rowCount row(s) from headline_preview."]);
         }
     } elseif ($method === 'PATCH') {
-        // Accepts a single parameter: id (of a preview headline).
-        // Clears any is_selected value on all rows (set to false)
-        // and then sets the specified record's is_selected to true.
+        // Accepts parameters: id (of a preview headline) and status ('selected', 'rejected', or null).
+        // Sets the specified record's status.
+        // If status is 'selected', it ensures no other record is 'selected'.
 
         $input = json_decode(file_get_contents('php://input'), true);
         $previewId = $input['id'] ?? null;
+        $status = $input['status'] ?? null;
 
         if (!$previewId) {
             http_response_code(400);
-            throw new Exception('Preview ID is required for selection.');
+            throw new Exception('Preview ID is required for updating status.');
         }
         $previewId = (int)$previewId;
 
+        if ($status !== null && !in_array($status, ['selected', 'rejected'])) {
+            http_response_code(400);
+            throw new Exception("Invalid status value. Must be 'selected', 'rejected', or null.");
+        }
+
         $db->beginTransaction();
         try {
-            // Clear all existing selections
-            $stmtClear = $db->prepare('UPDATE headline_preview SET is_selected = FALSE WHERE is_selected = TRUE');
-            $stmtClear->execute();
+            // If setting to 'selected', first clear any other 'selected' status
+            if ($status === 'selected') {
+                $stmtClear = $db->prepare('UPDATE headline_preview SET status = NULL WHERE status = "selected"');
+                $stmtClear->execute();
+            }
 
-            // Set the new selection
-            $stmtSet = $db->prepare('UPDATE headline_preview SET is_selected = TRUE WHERE id = ?');
-            $stmtSet->execute([$previewId]);
+            // Set the new status for the specified preview ID
+            $stmtSet = $db->prepare('UPDATE headline_preview SET status = ? WHERE id = ?');
+            if ($status === null) {
+                $stmtSet->bindValue(1, null, PDO::PARAM_NULL);
+            } else {
+                $stmtSet->bindValue(1, $status, PDO::PARAM_STR);
+            }
+            $stmtSet->bindValue(2, $previewId, PDO::PARAM_INT);
+            $stmtSet->execute();
             $rowCount = $stmtSet->rowCount();
 
             $db->commit();
 
             if ($rowCount > 0) {
-                echo json_encode(['message' => "Successfully selected preview headline with ID: $previewId."]);
+                $statusMessage = $status === null ? "cleared" : "set to '$status'";
+                echo json_encode(['message' => "Successfully updated status for preview headline with ID: $previewId (status $statusMessage)."]);
             } else {
                 http_response_code(404); // Or 400 if ID not found is a client error
-                throw new Exception("Preview headline not found with ID: $previewId, or it was already selected.");
+                // Check if the record exists at all
+                $stmtCheck = $db->prepare('SELECT id FROM headline_preview WHERE id = ?');
+                $stmtCheck->execute([$previewId]);
+                if (!$stmtCheck->fetch()) {
+                    throw new Exception("Preview headline not found with ID: $previewId.");
+                }
+                // If it exists but rowCount is 0, it means the status was already what we tried to set it to.
+                echo json_encode(['message' => "Preview headline with ID: $previewId already had the status '$status' or status was unchanged."]);
             }
         } catch (Exception $e) {
             $db->rollBack();

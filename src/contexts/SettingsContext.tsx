@@ -30,18 +30,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       settings.displayMode === 'dark' || (settings.displayMode === 'system' && systemDark);
 
     document.documentElement.classList.toggle('dark', effectivelyDark);
-
-    // Update meta theme-color after styles are applied
-    // Use requestAnimationFrame to ensure computed styles are up-to-date.
-    requestAnimationFrame(() => {
-      const hasBg = document.getElementById('has-bg');
-      if (!hasBg) {
-        console.error('Element with id "has-bg" not found');
-        return;
-      }
-      const bgColor = getComputedStyle(hasBg).backgroundColor;
-      document.querySelector("meta[name='theme-color']")?.setAttribute('content', bgColor);
-    });
   }, [settings]);
 
   const updateSettings = (newSettings: Partial<Settings>) => {

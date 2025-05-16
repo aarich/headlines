@@ -1,23 +1,23 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import Modal from './common/Modal';
 import {
-  fetchPreviewHeadlines,
-  publishPreviewHeadline,
-  deleteFromPreview,
-  selectPreviewHeadline,
-} from '../lib/api';
-import { getAdminKey, storeAdminKey } from '../lib/storage';
-import { PreviewHeadline } from '../types';
-import { useToast } from '../contexts/ToastContext';
-import Loading from './common/Loading';
-import {
+  CheckCircleIcon,
   EyeIcon,
   EyeSlashIcon,
   PaperAirplaneIcon,
-  TrashIcon,
-  CheckCircleIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useToast } from '../contexts/ToastContext';
+import {
+  deleteFromPreview,
+  fetchPreviewHeadlines,
+  publishPreviewHeadline,
+  updatePreviewHeadlineStatus,
+} from '../lib/api';
+import { getAdminKey, storeAdminKey } from '../lib/storage';
 import { shuffleArray } from '../lib/ui';
+import { PreviewHeadline, PreviewHeadlineStatus } from '../types';
+import Loading from './common/Loading';
+import Modal from './common/Modal';
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -62,10 +62,10 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   };
 
   const doAction = async <T extends { message: string }>(
-    confirmMessage: string,
-    action: () => Promise<T>
+    action: () => Promise<T>,
+    confirmMessage?: string
   ) => {
-    if (window.confirm(confirmMessage)) {
+    if (!confirmMessage || window.confirm(confirmMessage)) {
       setIsLoading(true);
       try {
         const result = await action();
@@ -83,26 +83,14 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const handlePublish = async (id: number) => {
     const headlineToPublish = previews.find(preview => preview.id === id)?.headline;
     const msg = `PUBLISH preview?\n\n${headlineToPublish}`;
-    await doAction(msg, () => publishPreviewHeadline(id));
+    await doAction(() => publishPreviewHeadline(id), msg);
   };
 
-  const handleSelect = async (id: number) => {
-    const headlineToSelect = previews.find(preview => preview.id === id)?.headline;
-    const msg = `SELECT preview?\n\n${headlineToSelect}`;
-    await doAction(msg, () => selectPreviewHeadline(id));
-  };
-
-  const handleDeleteSingle = async (id: number) => {
-    const headlineToDelete = previews.find(preview => preview.id === id)?.headline;
-    const msg = `DELETE preview?\n\n${headlineToDelete}`;
-    await doAction(msg, () => deleteFromPreview(id));
-  };
+  const setStatus = async (id: number, status: PreviewHeadlineStatus) =>
+    await doAction(() => updatePreviewHeadlineStatus(id, status));
 
   const handleDeleteAll = async () => {
-    await doAction(
-      'Are you sure you want to delete ALL preview headlines? This action cannot be undone.',
-      deleteFromPreview
-    );
+    await doAction(deleteFromPreview, 'Delete ALL preview headlines?');
   };
 
   const items = useMemo(
@@ -146,13 +134,15 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                 {items.map(preview => (
                   <li
                     key={preview.id}
-                    className={`p-3 rounded-md shadow-sm flex justify-between items-stretch bg-gray-50 dark:bg-gray-800`}
+                    className={`p-3 rounded-md shadow-sm flex justify-between items-stretch bg-gray-50 dark:bg-gray-800 ${
+                      preview.status === 'rejected' ? 'opacity-60' : ''
+                    }`}
                   >
                     <div>
-                      <p>
+                      <p className={preview.status === 'rejected' ? 'line-through' : ''}>
                         {revealWords
                           ? preview.headline
-                          : `${preview.beforeBlank}[???]${preview.afterBlank}`}
+                          : `${preview.beforeBlank || ''}[???]${preview.afterBlank || ''}`}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         {preview.choices.join(', ')}
@@ -169,8 +159,8 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                     <div>
                       <div className="flex h-full flex-col justify-around">
                         <button
-                          onClick={() => handleSelect(preview.id)}
-                          className={`btn btn-ghost btn-sm text-xs p-1 ${preview.isSelected ? 'text-green-500 dark:text-green-400' : ''}`}
+                          onClick={() => setStatus(preview.id, 'selected')}
+                          className={`btn btn-ghost btn-sm text-xs p-1 ${preview.status === 'selected' ? 'text-green-500 dark:text-green-400' : 'text-gray-400 dark:text-gray-500 hover:text-green-500 dark:hover:text-green-400'}`}
                           disabled={isLoading}
                           title="Select this preview"
                         >
@@ -185,12 +175,14 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                           <PaperAirplaneIcon className="h-5 w-5" />
                         </button>
                         <button
-                          onClick={() => handleDeleteSingle(preview.id)}
+                          onClick={() =>
+                            setStatus(preview.id, preview.status === 'rejected' ? null : 'rejected')
+                          }
                           className="btn btn-ghost btn-sm text-xs p-1 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                           disabled={isLoading}
-                          title="Delete"
+                          title="Reject"
                         >
-                          <TrashIcon className="h-5 w-5" />
+                          <XCircleIcon className="h-5 w-5" />
                         </button>
                       </div>
                     </div>
@@ -204,7 +196,7 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                 className="btn w-full bg-red-600 hover:bg-red-700 text-white"
                 disabled={isLoading || previews.length === 0}
               >
-                Delete All Previews
+                Delete All
               </button>
             </div>
           </>

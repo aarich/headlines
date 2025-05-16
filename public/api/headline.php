@@ -33,13 +33,13 @@ CREATE TABLE headline (
     correct_answer VARCHAR(255) NOT NULL,
     possible_answers JSON NOT NULL,
     publish_time DATETIME NOT NULL,
-    is_selected BOOLEAN NOT NULL DEFAULT FALSE,
+    status ENUM('selected', 'rejected') DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_publish_time (publish_time),
     FULLTEXT INDEX idx_headline (headline)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
+ 
 CREATE TABLE headline_stats (
     headline_id INT UNSIGNED PRIMARY KEY,
     total_plays INT UNSIGNED DEFAULT 0,
@@ -92,7 +92,7 @@ try {
         }
 
         // Find the selected preview
-        $stmtPreview = $db->prepare('SELECT * FROM headline_preview WHERE is_selected = TRUE ORDER BY id ASC LIMIT 1');
+        $stmtPreview = $db->prepare('SELECT * FROM headline_preview WHERE status = "selected" ORDER BY id ASC LIMIT 1');
         $stmtPreview->execute();
         $previewData = $stmtPreview->fetch(PDO::FETCH_ASSOC);
 

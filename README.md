@@ -2,7 +2,7 @@
 
 # [Find the Leek](https://leeks.mrarich.com) 🧅
 
-A web application where you can guess the missing word in a newspaper headline. The game updates daily with new headlines thanks to Google Gemini API Free Tier.
+A web application where you can guess the missing word in a newspaper headline. The game updates daily with new headlines chosen by an LLM.
 
 ## Development
 
