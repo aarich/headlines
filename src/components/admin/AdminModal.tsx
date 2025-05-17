@@ -24,7 +24,7 @@ import { shuffleArray } from 'lib/ui';
 import { PreviewHeadline, PreviewHeadlineStatus } from 'types';
 import Loading from 'components/common/Loading';
 import Modal from 'components/common/Modal';
-import PreviewForm from 'components/PreviewForm';
+import PreviewForm from 'components/admin/PreviewForm';
 
 interface AdminModalProps {
   isOpen: boolean;

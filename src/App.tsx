@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Headline, GameState } from 'types';
 import Header from 'components/Header';
-import GameContainer from 'components/GameContainer';
+import GameContainer from 'components/game/GameContainer';
 import SettingsModal from 'components/SettingsModal';
 import HelpModal from 'components/HelpModal';
 import { recordGameStarted } from 'lib/api';
-import AdminModal from 'components/AdminModal';
+import AdminModal from 'components/admin/AdminModal';
 import { SettingsProvider } from 'contexts/SettingsContext';
 import StatsModal from 'components/StatsModal';
 import AnimatedBackground from 'components/AnimatedBackground';

@@ -1,7 +1,7 @@
 import React from 'react';
 import Modal from 'components/common/Modal';
 import { LightBulbIcon } from '@heroicons/react/24/outline';
-import GuessDisplay from 'components/GuessDisplay';
+import GuessDisplay from 'components/game/GuessDisplay';
 import { useSettings } from 'contexts/SettingsContext';
 
 interface HelpModalProps {
