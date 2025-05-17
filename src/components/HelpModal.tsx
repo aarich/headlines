@@ -14,7 +14,7 @@ const GUESS = 'onion';
 const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
   const { colorBlindMode } = useSettings().settings;
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="How to Play">
+    <Modal isOpen={isOpen} onClose={onClose} title="How to Play" mdSize="3xl">
       <div className="space-y-4 text-gray-700 dark:text-gray-200">
         <ul className="list-disc pl-6">
           <li>We show you a real headline with one word missing. Your job? Guess that word!</li>

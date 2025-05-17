@@ -4,6 +4,7 @@ import {
   Cog6ToothIcon,
   Bars3Icon,
   ChartPieIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import { Headline } from '../types';
 
@@ -11,10 +12,19 @@ interface HeaderProps {
   onSettings: () => void;
   onHelp: () => void;
   onStats: () => void;
+  onAdmin: () => void;
+  showAdminButton: boolean;
   headline: Headline | undefined;
 }
 
-const Header: React.FC<HeaderProps> = ({ onSettings, onHelp, onStats, headline }) => {
+const Header: React.FC<HeaderProps> = ({
+  onSettings,
+  onHelp,
+  onStats,
+  onAdmin,
+  showAdminButton,
+  headline,
+}) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Close menu on navigation or outside click
@@ -31,6 +41,15 @@ const Header: React.FC<HeaderProps> = ({ onSettings, onHelp, onStats, headline }
     <header className="w-full text-center py-6 relative">
       {/* Desktop icons */}
       <div className="absolute top-4 right-4 gap-2 hidden md:flex">
+        {showAdminButton && (
+          <button
+            className="bg-transparent p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition"
+            onClick={onAdmin}
+            aria-label="Admin"
+          >
+            <ShieldCheckIcon className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+          </button>
+        )}
         <button
           className="bg-transparent p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition"
           onClick={onHelp}
@@ -71,6 +90,17 @@ const Header: React.FC<HeaderProps> = ({ onSettings, onHelp, onStats, headline }
             className="absolute right-0 mt-12 w-40 bg-black bg-opacity-70 rounded-lg shadow-lg flex flex-col items-stretch py-2 z-50"
             onClick={e => e.stopPropagation()}
           >
+            {showAdminButton && (
+              <button
+                className="flex items-center gap-2 px-4 py-3 text-base text-gray-100 hover:bg-gray-800 transition text-left"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onAdmin();
+                }}
+              >
+                <ShieldCheckIcon className="w-5 h-5" /> Admin
+              </button>
+            )}
             <button
               className="flex items-center gap-2 px-4 py-3 text-base text-gray-100 hover:bg-gray-800 transition text-left"
               onClick={() => {
@@ -101,25 +131,16 @@ const Header: React.FC<HeaderProps> = ({ onSettings, onHelp, onStats, headline }
           </div>
         )}
       </div>
-      <div className="w-fit mx-auto">
-        <h1
-          className="relative text-3xl font-bold text-gray-900 dark:text-white tracking-tight
-                     before:content-[''] before:absolute before:inset-0 before:bg-white before:dark:bg-black
-                     before:blur-[20px] before:-z-10 before:rounded-xl"
-        >
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
           <a href="/">Find the Leek</a>
         </h1>
         {headline && (
-          <p
-            className="relative text-sm text-gray-600 dark:text-gray-400 mt-1
-                       before:content-[''] before:absolute before:inset-0 before:bg-white before:dark:bg-black
-                       before:blur-[15px] before:opacity-60 before:-z-10 before:rounded-lg"
-          >
-            Game #{headline.gameNum}
-          </p>
+          <p className="text-sm @text-gray-600 dark:text-gray-400">Game #{headline.gameNum}</p>
         )}
       </div>
     </header>
   );
 };
+
 export default Header;

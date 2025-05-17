@@ -24,6 +24,8 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "serve": "php -S localhost:8000 public/api/server.php",
+    "dev": "npm run start & npm run serve",
     "deploy": "sh ./deploy.sh",
     "generate-preview": "php public/api/create-games.php --skip-status --preview"
   },

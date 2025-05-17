@@ -11,12 +11,8 @@ const isFuzzyMatch = (guess: string, correct: string): boolean => {
   // Exact match
   if (normalizedGuess === normalizedCorrect) return true;
 
-  // Handle plurals
-  if (normalizedGuess === normalizedCorrect + 's' || normalizedCorrect === normalizedGuess + 's')
-    return true;
-
-  // Handle common verb tenses
-  const commonEndings = ['ed', 'ing', 's', 'd'];
+  // Handle common verb tenses and plurals
+  const commonEndings = ['ed', 'ing', 's', 'd', 'es'];
 
   const areEqualIgnoringCommonEndings = commonEndings.find(ending => {
     const guessWithoutEnding = guess.endsWith(ending) ? guess.slice(0, -ending.length) : guess;

@@ -7,8 +7,22 @@ export interface PublishPreviewResult {
   newHeadlineId: number;
   details: string;
 }
+export interface EditablePreviewHeadlineFields {
+  headline: string;
+  hint: string;
+  articleUrl: string;
+  redditUrl: string;
+  correctAnswer: string;
+  publishTime: string;
+  possibleAnswers: string[];
+  status: PreviewHeadlineStatus;
+}
+export interface UpdatePreviewResult {
+  message: string;
+}
 
-export interface UpdatePreviewStatusResult {
+export interface CreatePreviewResult {
+  id: number;
   message: string;
 }
 
@@ -106,31 +120,49 @@ export const fetchPreviewHeadlines = async (): Promise<PreviewHeadline[]> => {
   return response.json();
 };
 
-export const updatePreviewHeadlineStatus = async (
-  previewId: number,
-  status: PreviewHeadlineStatus
-): Promise<UpdatePreviewStatusResult> => {
+export const updatePreviewHeadline = async (
+  id: number,
+  data: EditablePreviewHeadlineFields
+): Promise<UpdatePreviewResult> => {
   const response = await fetch(`${config.apiUrl}/api/preview`, {
     method: 'PATCH',
     headers: getAdminHeaders(),
-    body: JSON.stringify({ id: previewId, status }),
+    body: JSON.stringify({ id, ...data }),
   });
   if (!response.ok) {
     const errorData = await response
       .json()
-      .catch(() => ({ error: 'Failed to update preview headline status' }));
-    throw new Error(
-      errorData.error || `Failed to select a preview headline: ${response.statusText}`
-    );
+      .catch(() => ({ error: 'Failed to update preview headline' }));
+    throw new Error(errorData.error || `Failed to update preview headline: ${response.statusText}`);
   }
   return response.json();
 };
 
-export const publishPreviewHeadline = async (previewId: number): Promise<PublishPreviewResult> => {
+export type CreatePreviewHeadlinePayload = Omit<EditablePreviewHeadlineFields, 'status'>; // publishTime will be included from EditablePreviewHeadlineFields
+
+export const createPreviewHeadline = async (
+  data: CreatePreviewHeadlinePayload
+): Promise<CreatePreviewResult> => {
   const response = await fetch(`${config.apiUrl}/api/preview`, {
     method: 'POST',
     headers: getAdminHeaders(),
-    body: JSON.stringify({ id: previewId }),
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const errorData = await response
+      .json()
+      .catch(() => ({ error: 'Failed to create preview headline' }));
+    throw new Error(errorData.error || `Failed to create preview headline: ${response.statusText}`);
+  }
+  return response.json();
+};
+export const publishPreviewHeadline = async (
+  payload: { previewId: number } | { status: PreviewHeadlineStatus }
+): Promise<PublishPreviewResult> => {
+  const response = await fetch(`${config.apiUrl}/api/headline`, {
+    method: 'POST',
+    headers: getAdminHeaders(),
+    body: JSON.stringify(payload),
   });
   if (!response.ok) {
     const errorData = await response

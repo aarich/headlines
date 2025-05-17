@@ -35,37 +35,35 @@ try {
   checkIfHeadlineIsNeeded($skip_age_verification);
 
   $db = getDbConnection();
-  $rejected_headline_texts = [];
+  $already_proposed_headline_texts = [];
 
-  // Fetch all previews to check for selected or rejected status
   $stmt = $db->query('SELECT headline, status FROM headline_preview');
   $all_previews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
   foreach ($all_previews as $preview_item) {
-    if ($save_to_preview && $preview_item['status'] === 'selected') {
-      echo "*** Found an already selected preview ***\n";
+    if ($save_to_preview && $preview_item['status'] === 'final_selection') {
+      echo "*** Found an already finalized preview ***\n";
       echo $preview_item['headline'];
       exit(0);
     }
 
-    if ($preview_item['status'] === 'rejected') {
-      $rejected_headline_texts[] = $preview_item['headline'];
-    }
+    $already_proposed_headline_texts[] = $preview_item['headline'];
   }
 
-  echo count($rejected_headline_texts) . " rejected headlines found. They will be skipped.\n";
+  echo count($already_proposed_headline_texts) . " existing headlines found. They will be skipped.\n";
 
   // Fetch top posts from Reddit
   $posts = getTopPosts('nottheonion', $reddit_user_agent);
 
+  // Extract titles and URLs from the posts
   $headline_titles = [];
   $headlines_full = [];
   foreach ($posts['data']['children'] as $post) {
     $title = convert_smart_quotes($post['data']['title']);
 
-    // Ignore this one if it matches a rejected headline
-    if (in_array($title, $rejected_headline_texts, true)) {
-      echo "Skipping (already rejected): $title\n";
+    // Ignore this one if it matches an already proposed headline
+    if (in_array($title, $already_proposed_headline_texts, true)) {
+      echo "Skipping (already proposed): $title\n";
       continue;
     }
 
@@ -94,6 +92,13 @@ try {
       'reddit_url' => $reddit_url,
       'created_utc' => $created_utc,
     ];
+  }
+
+
+  // Exit if there were no posts
+  if (empty($headline_titles)) {
+    echo "No posts found. Exiting";
+    exit();
   }
 
   // Get initial candidates
@@ -131,6 +136,10 @@ try {
   $correct_answer_lower = strtolower($correct_answer);
   $headline_lower = strtolower($headline);
   $index_of_answer = strpos($headline_lower, $correct_answer_lower);
+  if ($index_of_answer === false) {
+    // It's possible the LLM hallucinated a word_to_remove that's not in its chosen headline
+    throw new Exception("LLM-provided correct_answer '{$correct_answer}' not found in its version of the headline '{$headline}'.");
+  }
   $correct_answer = substr($headline, $index_of_answer, strlen($correct_answer));
 
   // If the word to remove has quotes or other punctuation on the outside, remove them so that they remain part of the headline.

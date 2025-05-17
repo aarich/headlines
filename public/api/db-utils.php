@@ -257,7 +257,7 @@ function promotePreview($previewData) {
     $headlineText = $previewData['headline'];
     $beforeBlank = $previewData['before_blank'];
     $afterBlank = $previewData['after_blank'];
-    $hint = $previewData['hint'] ?? '';
+    $hint = $previewData['hint'];
     $articleUrl = $previewData['article_url'];
     $redditUrl = $previewData['reddit_url'];
     $correctAnswer = $previewData['correct_answer'];

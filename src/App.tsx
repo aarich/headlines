@@ -5,7 +5,7 @@ import GameContainer from './components/GameContainer';
 import SettingsModal from './components/SettingsModal';
 import HelpModal from './components/HelpModal';
 import { recordGameStarted } from './lib/api';
-import AdminModal from './components/AdminModal'; // Import the new modal
+import AdminModal from './components/AdminModal';
 import { SettingsProvider } from './contexts/SettingsContext';
 import StatsModal from './components/StatsModal';
 import AnimatedBackground from './components/AnimatedBackground';
@@ -14,6 +14,7 @@ import {
   getStoredGameState,
   getStoredScores,
   setStarted,
+  getAdminKey,
   storeGameState,
 } from './lib/storage';
 import { ToastProvider } from './contexts/ToastContext';
@@ -86,6 +87,8 @@ function App() {
     [headline]
   );
 
+  const showAdminButton = !!(getAdminKey() || window.location.search.includes('admin=true'));
+
   return (
     <SettingsProvider>
       <ToastProvider>
@@ -99,6 +102,8 @@ function App() {
               onSettings={() => setIsSettingsOpen(true)}
               onHelp={() => setIsHelpOpen(true)}
               onStats={() => setIsStatsOpen(true)}
+              onAdmin={() => setIsAdminOpen(true)}
+              showAdminButton={showAdminButton}
               headline={headline}
             />
             <main className="w-full flex flex-col items-center flex-1">
@@ -121,14 +126,7 @@ function App() {
               <p>© 2025 Alex Rich</p>
             </footer>
           </div>
-          <SettingsModal
-            isOpen={isSettingsOpen}
-            onClose={() => setIsSettingsOpen(false)}
-            onOpenAdmin={() => {
-              setIsSettingsOpen(false);
-              setIsAdminOpen(true);
-            }}
-          />
+          <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
           <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
           <StatsModal
             isOpen={isStatsOpen}

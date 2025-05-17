@@ -8,7 +8,7 @@ CREATE TABLE headline (
     headline TEXT NOT NULL,
     before_blank TEXT NOT NULL,
     after_blank TEXT NOT NULL,
-    hint TEXT,
+    hint TEXT NOT NULL,
     explanation TEXT NOT NULL,
     article_url TEXT NOT NULL,
     reddit_url TEXT NOT NULL,
@@ -26,14 +26,14 @@ CREATE TABLE headline (
     headline TEXT NOT NULL,
     before_blank TEXT NOT NULL,
     after_blank TEXT NOT NULL,
-    hint TEXT,
+    hint TEXT NOT NULL,
     explanation TEXT NOT NULL,
     article_url TEXT NOT NULL,
     reddit_url TEXT NOT NULL,
     correct_answer VARCHAR(255) NOT NULL,
     possible_answers JSON NOT NULL,
     publish_time DATETIME NOT NULL,
-    status ENUM('selected', 'rejected') DEFAULT NULL,
+    status ENUM('selected', 'final_selection', 'rejected') DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_publish_time (publish_time),
@@ -65,13 +65,13 @@ CREATE TABLE wrong_guess (
 */
 
 require_once 'db-utils.php';
-require_once 'auth-utils.php'; // Include the new auth utility
+require_once 'auth-utils.php';
 $config = require __DIR__ . '/config.php'; // For admin key
 
 header('Content-Type: application/json');
 
 try {
-    $db = getDbConnection(); // Get DB connection once
+    $db = getDbConnection();
     $method = $_SERVER['REQUEST_METHOD'];
 
     if ($method === 'POST') {
@@ -84,21 +84,34 @@ try {
             throw new Exception('Invalid JSON input: ' . json_last_error_msg());
         }
 
-        $selectedPreview = $input['selectedPreview'] ?? null;
+        $previewStatus = $input['previewStatus'] ?? null;
+        $previewId = $input['previewId'] ?? null;
 
-        if ($selectedPreview !== true) {
+        if ($previewStatus === null && $previewData === null) {
             http_response_code(400);
-            throw new Exception('The "selectedPreview" parameter must be set to true.');
+            throw new Exception('The "previewStatus" or a preview ID must be provided');
         }
 
-        // Find the selected preview
-        $stmtPreview = $db->prepare('SELECT * FROM headline_preview WHERE status = "selected" ORDER BY id ASC LIMIT 1');
-        $stmtPreview->execute();
-        $previewData = $stmtPreview->fetch(PDO::FETCH_ASSOC);
+        if ($previewStatus && $previewId) {
+            http_response_code(400);
+            throw new Exception('Only one of "previewStatus" or "previewId" can be set');
+        }
+
+        if ($previewStatus) {
+            // Find the preview with the specified status
+            $stmtPreview = $db->prepare('SELECT * FROM headline_preview WHERE status = ? ORDER BY id ASC LIMIT 1');
+            $stmtPreview->execute([$previewStatus]);
+            $previewData = $stmtPreview->fetch(PDO::FETCH_ASSOC);
+        } else {
+            // Find the preview by ID
+            $stmtPreview = $db->prepare('SELECT * FROM headline_preview WHERE id = ?');
+            $stmtPreview->execute([$previewId]);
+            $previewData = $stmtPreview->fetch(PDO::FETCH_ASSOC);
+        }
 
         if (!$previewData) {
             http_response_code(404);
-            throw new Exception('No selected preview headline found in headline_preview table.');
+            throw new Exception('No preview headline found in headline_preview table.');
         }
 
         $result = promotePreview($previewData);

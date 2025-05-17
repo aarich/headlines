@@ -12,15 +12,15 @@ export interface Headline {
   redditUrl: string;
 }
 
-export type PreviewHeadlineStatus = 'selected' | 'rejected' | null;
+export type PreviewHeadlineStatus = 'selected' | 'final_selection' | 'rejected' | null;
 
 export interface PreviewHeadline {
   id: number;
   headline: string;
   beforeBlank: string;
   afterBlank: string;
-  hint?: string | null;
-  explanation?: string | null;
+  hint: string;
+  explanation: string;
   articleUrl: string;
   redditUrl: string;
   correctAnswer: string;

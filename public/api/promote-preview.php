@@ -44,8 +44,8 @@ try {
 
   $previews_simplified = [];
   foreach ($previews as $previewData) {
-    // If one is selected, just use that
-    if ($previewData['status'] === 'selected') {
+    // If one is selected, just use that. There should only be one with status
+    if ($previewData['status'] === 'selected' || $previewData['status'] === 'final_selection') {
 
       echo "Found a selected preview! Promoting it\n";
       echo json_encode($previewData, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE);

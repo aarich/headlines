@@ -20,8 +20,6 @@ if (strpos($request_uri, '/api/headline') !== false) {
     require_once 'statistics.php';
 } else if (strpos($request_uri, '/api/history') !== false) {
     require_once 'history.php';
-} else if (strpos($request_uri, '/api/status') !== false) {
-    require_once 'status.php';
 } else if (strpos($request_uri, '/api/preview') !== false) {
     require_once 'preview.php';
 } else {

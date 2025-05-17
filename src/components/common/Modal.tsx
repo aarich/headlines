@@ -12,19 +12,13 @@ interface ModalProps {
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, mdSize }) => {
   useEffect(() => {
     if (isOpen) {
-      // Store the original body overflow style
       const originalOverflow = document.body.style.overflow;
       // Prevent background scroll
       document.body.style.overflow = 'hidden';
 
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-          onClose();
-        }
-      };
+      const handleKeyDown = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
       window.addEventListener('keydown', handleKeyDown);
 
-      // Cleanup function to restore original body overflow and remove listener
       return () => {
         document.body.style.overflow = originalOverflow;
         window.removeEventListener('keydown', handleKeyDown);
@@ -33,7 +27,15 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, mdSize 
   }, [isOpen, onClose]);
   if (!isOpen) return null;
 
-  const sizeClass = `max-w-md ${mdSize ? 'md:max-w-' + mdSize : ''}`;
+  let responsiveSizeClass = '';
+  if (mdSize === 'xl') {
+    responsiveSizeClass = 'md:max-w-xl';
+  } else if (mdSize === '3xl') {
+    responsiveSizeClass = 'md:max-w-3xl';
+  }
+
+  const modalContentClasses = `modal-content max-w-md ${responsiveSizeClass}`.trim();
+
   return (
     <div
       className="modal z-50 flex items-center justify-center"
@@ -41,7 +43,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, mdSize 
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div className={`modal-content ${sizeClass}`} onClick={e => e.stopPropagation()}>
+      <div className={modalContentClasses} onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white" id="modal-title">
             {title}
@@ -54,7 +56,9 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, mdSize 
             <XMarkIcon className="h-6 w-6" />
           </button>
         </div>
-        <div className="max-h-[60vh] overflow-y-auto">{children}</div>
+        <div className="max-h-[60vh] overflow-y-auto scrollbar-width-none [&::-webkit-scrollbar]:hidden">
+          {children}
+        </div>
       </div>
     </div>
   );
