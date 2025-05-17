@@ -1,4 +1,4 @@
-import { Score } from '../types';
+import { Score } from 'types';
 
 export const getCurrentStreak = (scores: Score[], latestGameNum: number) => {
   // Sort the scores by game number biggest to smallest

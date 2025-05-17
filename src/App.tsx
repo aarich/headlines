@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Headline, GameState } from './types';
-import Header from './components/Header';
-import GameContainer from './components/GameContainer';
-import SettingsModal from './components/SettingsModal';
-import HelpModal from './components/HelpModal';
-import { recordGameStarted } from './lib/api';
-import AdminModal from './components/AdminModal';
-import { SettingsProvider } from './contexts/SettingsContext';
-import StatsModal from './components/StatsModal';
-import AnimatedBackground from './components/AnimatedBackground';
+import { Headline, GameState } from 'types';
+import Header from 'components/Header';
+import GameContainer from 'components/GameContainer';
+import SettingsModal from 'components/SettingsModal';
+import HelpModal from 'components/HelpModal';
+import { recordGameStarted } from 'lib/api';
+import AdminModal from 'components/AdminModal';
+import { SettingsProvider } from 'contexts/SettingsContext';
+import StatsModal from 'components/StatsModal';
+import AnimatedBackground from 'components/AnimatedBackground';
 import {
   getStarted,
   getStoredGameState,
@@ -16,10 +16,10 @@ import {
   setStarted,
   getAdminKey,
   storeGameState,
-} from './lib/storage';
-import { ToastProvider } from './contexts/ToastContext';
-import Loading from './components/common/Loading';
-import { fetchHeadlineBasedOnQueryParameters } from './lib/ui';
+} from 'lib/storage';
+import { ToastProvider } from 'contexts/ToastContext';
+import Loading from 'components/common/Loading';
+import { fetchHeadlineBasedOnQueryParameters } from 'lib/ui';
 
 function App() {
   const [headline, setHeadline] = useState<Headline>();

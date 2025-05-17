@@ -1,6 +1,6 @@
 import React from 'react';
-import { GameState, Headline } from '../types';
-import { getHintsText } from '../lib/ui';
+import { GameState, Headline } from 'types';
+import { getHintsText } from 'lib/ui';
 
 interface Props {
   gameState: GameState;

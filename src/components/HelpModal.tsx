@@ -1,8 +1,8 @@
 import React from 'react';
-import Modal from './common/Modal';
+import Modal from 'components/common/Modal';
 import { LightBulbIcon } from '@heroicons/react/24/outline';
-import GuessDisplay from './GuessDisplay';
-import { useSettings } from '../contexts/SettingsContext';
+import GuessDisplay from 'components/GuessDisplay';
+import { useSettings } from 'contexts/SettingsContext';
 
 interface HelpModalProps {
   isOpen: boolean;

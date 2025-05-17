@@ -5,8 +5,8 @@ import {
   getNumCharsBeforeClue,
   getNextHintPrompt,
   getNextRevealType,
-} from './game';
-import { GameState, Headline, GameHints, WrongGuess } from '../types';
+} from 'lib/game';
+import { GameState, Headline, GameHints, WrongGuess } from 'types';
 
 const MOCK_HEADLINE: Headline = {
   id: 1,

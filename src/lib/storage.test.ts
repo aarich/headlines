@@ -11,8 +11,8 @@ import {
   storeGameState,
   getAdminKey,
   storeAdminKey,
-} from './storage';
-import { Headline, Score, GameState, Stats, WrongGuess } from '../types';
+} from 'lib/storage';
+import { Headline, Score, GameState, Stats, WrongGuess } from 'types';
 
 // Mock localStorage
 const localStorageMock = (() => {

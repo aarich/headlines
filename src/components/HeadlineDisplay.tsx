@@ -1,7 +1,7 @@
 import React from 'react';
-import { GameState, Headline } from '../types';
-import GuessDisplay from './GuessDisplay';
-import SolvedHeadlineDisplay from './SolvedHeadlineDisplay';
+import { GameState, Headline } from 'types';
+import GuessDisplay from 'components/GuessDisplay';
+import SolvedHeadlineDisplay from 'components/SolvedHeadlineDisplay';
 
 interface HeadlineDisplayProps {
   headline: Headline;

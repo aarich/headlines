@@ -1,6 +1,6 @@
 import React from 'react';
-import { HeadlineHistory } from '../types';
-import { timeSince } from '../lib/ui';
+import { HeadlineHistory } from 'types';
+import { timeSince } from 'lib/ui';
 import { CheckIcon } from '@heroicons/react/24/outline';
 
 interface TickerItemProps {

@@ -1,9 +1,9 @@
-import { ToastType } from '../components/Toast';
-import { DEFAULT_TOAST_DURATION, ToastFn } from '../contexts/ToastContext';
-import { GameState, Headline } from '../types';
-import { fetchHeadline, GetHeadlineArgs, recordShare } from './api';
-import { getNumCharsBeforeClue } from './game';
-import { getStoredScores } from './storage';
+import { ToastType } from 'components/Toast';
+import { DEFAULT_TOAST_DURATION, ToastFn } from 'contexts/ToastContext';
+import { GameState, Headline } from 'types';
+import { fetchHeadline, GetHeadlineArgs, recordShare } from 'lib/api';
+import { getNumCharsBeforeClue } from 'lib/game';
+import { getStoredScores } from 'lib/storage';
 
 export const plural = (count: number, singular: string, suffix = 's'): string =>
   `${singular}${count === 1 ? '' : suffix}`;

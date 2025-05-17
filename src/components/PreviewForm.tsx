@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { EditablePreviewHeadlineFields, CreatePreviewHeadlinePayload } from '../lib/api';
+import { EditablePreviewHeadlineFields, CreatePreviewHeadlinePayload } from 'lib/api';
 
 interface PreviewFormProps {
   initialData?: EditablePreviewHeadlineFields & { id?: number };

@@ -1,12 +1,12 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useMemo, useState } from 'react';
-import Modal from './common/Modal';
-import { getStoredScores, getStoredStats, saveStats } from '../lib/storage';
-import { getCurrentStreak } from '../lib/scoring';
-import { GameState, Headline, HeadlineHistory } from '../types';
-import { fetchHistory } from '../lib/api';
-import { plural } from '../lib/ui';
-import TickerItem from './TickerItem';
+import Modal from 'components/common/Modal';
+import { getStoredScores, getStoredStats, saveStats } from 'lib/storage';
+import { getCurrentStreak } from 'lib/scoring';
+import { GameState, Headline, HeadlineHistory } from 'types';
+import { fetchHistory } from 'lib/api';
+import { plural } from 'lib/ui';
+import TickerItem from 'components/TickerItem';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 interface StatsModalProps {

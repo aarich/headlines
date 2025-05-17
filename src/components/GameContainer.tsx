@@ -1,17 +1,17 @@
 import React, { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
-import { Headline, GameState } from '../types';
-import { useSettings } from '../contexts/SettingsContext';
-import HeadlineDisplay from './HeadlineDisplay';
-import AnswerWheel from './AnswerWheel';
-import ExpertInput from './ExpertInput';
-import ShareButtons from './ShareButtons';
-import { checkAnswer, getNextHint, getNextHintPrompt, getNextRevealType } from '../lib/game';
-import { incrementStat, saveResult } from '../lib/storage';
+import { Headline, GameState } from 'types';
+import { useSettings } from 'contexts/SettingsContext';
+import HeadlineDisplay from 'components/HeadlineDisplay';
+import AnswerWheel from 'components/AnswerWheel';
+import ExpertInput from 'components/ExpertInput';
+import ShareButtons from 'components/ShareButtons';
+import { checkAnswer, getNextHint, getNextHintPrompt, getNextRevealType } from 'lib/game';
+import { incrementStat, saveResult } from 'lib/storage';
 import { LightBulbIcon } from '@heroicons/react/24/outline';
-import { useToast } from '../contexts/ToastContext';
-import { recordGameCompleted } from '../lib/api';
-import { toastWrongAnswer } from '../lib/ui';
-import HintsAndGuesses from './HintsAndGuesses';
+import { useToast } from 'contexts/ToastContext';
+import { recordGameCompleted } from 'lib/api';
+import { toastWrongAnswer } from 'lib/ui';
+import HintsAndGuesses from 'components/HintsAndGuesses';
 
 interface GameContainerProps {
   headline: Headline;

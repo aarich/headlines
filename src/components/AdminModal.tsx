@@ -9,7 +9,7 @@ import {
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from 'contexts/ToastContext';
 import {
   deleteFromPreview,
   fetchPreviewHeadlines,
@@ -18,13 +18,13 @@ import {
   EditablePreviewHeadlineFields,
   createPreviewHeadline,
   updatePreviewHeadline,
-} from '../lib/api';
-import { getAdminKey, storeAdminKey } from '../lib/storage';
-import { shuffleArray } from '../lib/ui';
-import { PreviewHeadline, PreviewHeadlineStatus } from '../types';
-import Loading from './common/Loading';
-import Modal from './common/Modal';
-import PreviewForm from './PreviewForm';
+} from 'lib/api';
+import { getAdminKey, storeAdminKey } from 'lib/storage';
+import { shuffleArray } from 'lib/ui';
+import { PreviewHeadline, PreviewHeadlineStatus } from 'types';
+import Loading from 'components/common/Loading';
+import Modal from 'components/common/Modal';
+import PreviewForm from 'components/PreviewForm';
 
 interface AdminModalProps {
   isOpen: boolean;

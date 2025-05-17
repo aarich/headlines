@@ -1,6 +1,6 @@
 import React from 'react';
-import { GameState } from '../types';
-import { useSettings } from '../contexts/SettingsContext';
+import { GameState } from 'types';
+import { useSettings } from 'contexts/SettingsContext';
 
 interface GuessDisplayProps {
   currentGuess: string;

@@ -1,4 +1,4 @@
-import { GameHints, GameState, Headline } from '../types';
+import { GameHints, GameState, Headline } from 'types';
 
 const normalizeString = (str: string): string => {
   return str.toLowerCase().trim();

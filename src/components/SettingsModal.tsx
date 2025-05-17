@@ -1,9 +1,9 @@
 import React from 'react';
-import { useSettings } from '../contexts/SettingsContext';
-import { DisplayMode } from '../types';
-import Modal from './common/Modal';
-import Toggle from './common/Toggle';
-import ButtonGroup from './common/ButtonGroup';
+import { useSettings } from 'contexts/SettingsContext';
+import { DisplayMode } from 'types';
+import Modal from 'components/common/Modal';
+import Toggle from 'components/common/Toggle';
+import ButtonGroup from 'components/common/ButtonGroup';
 
 interface SettingsModalProps {
   isOpen: boolean;

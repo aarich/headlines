@@ -1,4 +1,4 @@
-import { GameState, Headline, Score, Stat, Stats } from '../types';
+import { GameState, Headline, Score, Stat, Stats } from 'types';
 
 export const STORAGE_KEYS = {
   SCORES: 'scores',

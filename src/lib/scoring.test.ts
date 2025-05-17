@@ -1,5 +1,5 @@
-import { getCurrentStreak } from './scoring';
-import { Score } from '../types';
+import { getCurrentStreak } from 'lib/scoring';
+import { Score } from 'types';
 
 // Helper to create a mock Score object, only 'n' (gameNum) is relevant for getCurrentStreak
 const createScore = (gameNum: number): Score => ({

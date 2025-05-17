@@ -1,7 +1,7 @@
 import React from 'react';
-import { GameState, Headline } from '../types';
-import { getResultText, shareScore } from '../lib/ui';
-import { useToast } from '../contexts/ToastContext';
+import { GameState, Headline } from 'types';
+import { getResultText, shareScore } from 'lib/ui';
+import { useToast } from 'contexts/ToastContext';
 
 interface ShareButtonsProps {
   gameState: GameState;

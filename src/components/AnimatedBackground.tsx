@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import onionSvg from '../assets/onion.svg';
-import { useSettings } from '../contexts/SettingsContext';
+import onionSvg from 'assets/onion.svg';
+import { useSettings } from 'contexts/SettingsContext';
 
 // Animation constants - feel free to adjust these values
 const ANIMATION_CONFIG = {

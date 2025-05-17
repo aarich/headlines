@@ -5,8 +5,8 @@ import {
   fetchHeadlineBasedOnQueryParameters,
   getResultText,
   shareScore,
-} from './ui';
-import { GameState, Headline } from '../types';
+} from 'lib/ui';
+import { GameState, Headline } from 'types';
 
 // Mocks
 jest.mock('./api', () => ({

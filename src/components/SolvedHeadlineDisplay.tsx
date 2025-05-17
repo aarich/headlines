@@ -1,7 +1,7 @@
 import React from 'react';
-import { Headline } from '../types';
+import { Headline } from 'types';
 import { GlobeAltIcon } from '@heroicons/react/24/outline';
-import { recordArticleClick, recordRedditClick } from '../lib/api';
+import { recordArticleClick, recordRedditClick } from 'lib/api';
 
 interface HeadlineDisplayProps {
   headline: Headline;

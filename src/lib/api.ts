@@ -1,6 +1,6 @@
-import { Headline, HeadlineHistory, PreviewHeadline, PreviewHeadlineStatus } from '../types';
-import config from '../config';
-import { getAdminKey } from './storage';
+import { Headline, HeadlineHistory, PreviewHeadline, PreviewHeadlineStatus } from 'types';
+import config from 'config';
+import { getAdminKey } from 'lib/storage';
 
 export interface PublishPreviewResult {
   message: string;

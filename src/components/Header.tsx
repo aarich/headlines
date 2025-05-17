@@ -6,7 +6,7 @@ import {
   ChartPieIcon,
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
-import { Headline } from '../types';
+import { Headline } from 'types';
 
 interface HeaderProps {
   onSettings: () => void;
