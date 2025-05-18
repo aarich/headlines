@@ -204,7 +204,7 @@ function insertHeadline(string $headline, string $before_blank, string $after_bl
     $stmt->execute($params);
 
     $headlineId = $db->lastInsertId();
-    echo "Inserted headline with ID: $headlineId\n";
+    echo "Inserted headline\n";
 
     if (!$save_to_preview) {
         // If not saving to preview, also insert into headline_stats

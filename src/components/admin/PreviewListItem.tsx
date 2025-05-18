@@ -4,12 +4,12 @@ import {
   PencilIcon,
   PaperAirplaneIcon,
   ShieldCheckIcon,
-  TrashIcon,
+  ArchiveBoxXMarkIcon,
 } from '@heroicons/react/24/outline';
 import React from 'react';
 import { PreviewHeadline, PreviewHeadlineStatus } from 'types';
 
-interface PreviewHeadlineItemProps {
+interface PreviewListItemProps {
   preview: PreviewHeadline & { articleSite: string; choices: string[] };
   revealWords: boolean;
   isLoading: boolean;
@@ -18,7 +18,7 @@ interface PreviewHeadlineItemProps {
   onPublish: (id: number) => void;
 }
 
-const PreviewHeadlineItem: React.FC<PreviewHeadlineItemProps> = ({
+const PreviewListItem: React.FC<PreviewListItemProps> = ({
   preview,
   revealWords,
   isLoading,
@@ -108,7 +108,7 @@ const PreviewHeadlineItem: React.FC<PreviewHeadlineItemProps> = ({
             {isRejected ? (
               <ArrowUturnLeftIcon className="h-5 w-5" />
             ) : (
-              <TrashIcon className="h-5 w-5" />
+              <ArchiveBoxXMarkIcon className="h-5 w-5" />
             )}
           </button>
         </div>
@@ -117,4 +117,4 @@ const PreviewHeadlineItem: React.FC<PreviewHeadlineItemProps> = ({
   );
 };
 
-export default PreviewHeadlineItem;
+export default PreviewListItem;

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { shuffleArray } from 'lib/ui';
 import { PreviewHeadline, PreviewHeadlineStatus } from 'types';
-import PreviewHeadlineItem from 'components/admin/PreviewHeadlineItem';
+import PreviewListItem from 'components/admin/PreviewListItem';
 import Loading from 'components/common/Loading';
 
 interface PreviewListProps {
@@ -55,7 +55,7 @@ const PreviewList: React.FC<PreviewListProps> = ({
       {!isLoading && previews.length > 0 && (
         <ul className="space-y-3 pr-2 max-h-[50vh] overflow-y-auto">
           {sortedPreviews.map(preview => (
-            <PreviewHeadlineItem
+            <PreviewListItem
               key={preview.id}
               preview={preview}
               revealWords={revealWords}

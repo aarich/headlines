@@ -15,10 +15,12 @@ const isFuzzyMatch = (guess: string, correct: string): boolean => {
   const commonEndings = ['ed', 'ing', 's', 'd', 'es'];
 
   const areEqualIgnoringCommonEndings = commonEndings.find(ending => {
-    const guessWithoutEnding = guess.endsWith(ending) ? guess.slice(0, -ending.length) : guess;
-    const correctWithoutEnding = correct.endsWith(ending)
-      ? correct.slice(0, -ending.length)
-      : normalizedGuess.slice(0, -ending.length);
+    const guessWithoutEnding = normalizedGuess.endsWith(ending)
+      ? normalizedGuess.slice(0, -ending.length)
+      : normalizedGuess;
+    const correctWithoutEnding = normalizedCorrect.endsWith(ending)
+      ? normalizedCorrect.slice(0, -ending.length)
+      : normalizedCorrect;
     return guessWithoutEnding === correctWithoutEnding;
   });
 

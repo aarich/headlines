@@ -192,10 +192,10 @@ try {
             $rowCount = $stmt->rowCount();
 
             if ($rowCount > 0) {
-                echo json_encode(['message' => "Successfully deleted preview headline with ID: $previewId."]);
+                echo json_encode(['message' => "Successfully deleted preview."]);
             } else {
                 http_response_code(404);
-                echo json_encode(['error' => "Preview headline not found with ID: $previewId."]);
+                echo json_encode(['error' => "Preview headline not found."]);
             }
         } else {
             // Deletes all rows from the headline_preview table.
@@ -265,7 +265,7 @@ try {
         try {
             // Handle status update logic (ensuring only one has a status)
             if ($statusUpdateValue && $statusUpdateValue !== 'rejected') {
-                $stmtClear = $db->prepare('UPDATE headline_preview SET status = NULL WHERE status IS NOT NULL AND id != ?');
+                $stmtClear = $db->prepare("UPDATE headline_preview SET status = NULL WHERE status IS NOT NULL AND status != 'rejected' AND id != ?");
                 $stmtClear->execute([$previewId]);
             }
 
@@ -276,10 +276,10 @@ try {
             $db->commit();
 
             if ($rowCount > 0) {
-                echo json_encode(['message' => "Successfully updated preview headline with ID: $previewId."]);
+                echo json_encode(['message' => "Successfully updated preview headline."]);
             } else {
                 // Check if the record exists (already done above, $currentData would be false)
-                echo json_encode(['message' => "Preview headline with ID: $previewId was not changed (values might be the same or record not found)."]);
+                echo json_encode(['message' => "Preview headline was not changed (values might be the same or record not found)."]);
             }
         } catch (Exception $e) {
             $db->rollBack();
