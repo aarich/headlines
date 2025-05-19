@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 
 // Tuning constants
 const FADE_DISTANCE = 3; // How many items to show on each side
@@ -31,21 +31,22 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
     }
   }, [selectedIndex, displayChoices, onSetGuess]);
 
-  useEffect(() => {
-    // Set focus for keyboard support
-    if (wheelRef.current) {
-      wheelRef.current.focus();
-    }
-  }, []);
-
   // Keyboard support
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowLeft') {
-      setSelectedIndex(prev => clamp(prev - 1, 0, displayChoices.length - 1));
-    } else if (e.key === 'ArrowRight') {
-      setSelectedIndex(prev => clamp(prev + 1, 0, displayChoices.length - 1));
-    }
-  };
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        setSelectedIndex(prev => clamp(prev - 1, 0, displayChoices.length - 1));
+      } else if (e.key === 'ArrowRight') {
+        setSelectedIndex(prev => clamp(prev + 1, 0, displayChoices.length - 1));
+      }
+    },
+    [displayChoices]
+  );
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   // Wheel support
   const handleWheel = (e: React.WheelEvent) => {
@@ -106,13 +107,10 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
     <div
       className="relative w-full max-w-2xl mx-auto h-20 overflow-hidden select-none flex items-center justify-center focus:outline-none"
       ref={wheelRef}
-      tabIndex={0}
-      onKeyDown={handleKeyDown}
       onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
       role="listbox"
-      aria-activedescendant={displayChoices[selectedIndex]}
       style={{ height: 80 }}
     >
       <div

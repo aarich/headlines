@@ -68,6 +68,11 @@ export const updateGameStats = (
   action: 'game_started' | 'game_completed' | 'article_clicked' | 'shared' | 'reddit_clicked',
   data?: GameCompletedData
 ) => {
+  if (process.env.NODE_ENV === 'development') {
+    // Don't log stats in dev mode
+    return;
+  }
+
   fetch(`${config.apiUrl}/api/statistics`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
