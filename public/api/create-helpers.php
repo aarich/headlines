@@ -174,6 +174,12 @@ function findMostSimilarHeadline($title, $headlines_full) {
     }
   }
 
+  // If the difference is large, return null. We probably just didn't find the headline.
+  if ($minDifference > 10) {
+    return null;
+  }
+
+
   return $mostSimilarHeadline;
 }
 
@@ -214,5 +220,40 @@ function checkIfHeadlineIsNeeded(bool $ignore_failure) {
       echo " ---> Exiting. No need to generate a new headline.\n";
       exit(0);
     }
+  }
+}
+
+/**
+ * Finds a whole word (case-insensitive) in a headline, derives the parts before and after it,
+ * and returns the exact matched segment (trimmed) as the correct answer.
+ *
+ * @param string $headline The full headline text.
+ * @param string $word_to_find The word to search for within the headline.
+ * @return array An associative array with 'before_blank', 'after_blank', and 'actual_correct_answer'.
+ * @throws Exception If the word is not found as a whole word in the headline.
+ */
+function derive_before_after_and_correct_answer(string $headline, string $word_to_find): array {
+  // The pattern uses \b for word boundaries. preg_quote escapes special regex characters in the word itself.
+  // Case-insensitive match.
+  $pattern = '/\b' . preg_quote($word_to_find, '/') . '\b/i';
+
+  if (preg_match($pattern, $headline, $matches, PREG_OFFSET_CAPTURE)) {
+    $matched_segment_in_headline = $matches[0][0];
+    $offset_in_headline = $matches[0][1];
+
+    $actual_correct_answer = trim($matched_segment_in_headline, "\"'.,!?()[]{}<>");
+
+    $before_blank = substr($headline, 0, $offset_in_headline);
+    $after_blank = substr($headline, $offset_in_headline + strlen($matched_segment_in_headline));
+
+    return [
+      'before_blank' => $before_blank,
+      'after_blank' => $after_blank,
+      'actual_correct_answer' => $actual_correct_answer
+    ];
+  } else {
+    throw new Exception(
+      "The word '{$word_to_find}' (as a whole word) could not be found in the headline '{$headline}'."
+    );
   }
 }

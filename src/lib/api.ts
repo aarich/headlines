@@ -138,7 +138,7 @@ export const updatePreviewHeadline = async (
   return response.json();
 };
 
-export type CreatePreviewHeadlinePayload = Omit<EditablePreviewHeadlineFields, 'status'>; // publishTime will be included from EditablePreviewHeadlineFields
+export type CreatePreviewHeadlinePayload = Omit<EditablePreviewHeadlineFields, 'status'>;
 
 export const createPreviewHeadline = async (
   data: CreatePreviewHeadlinePayload

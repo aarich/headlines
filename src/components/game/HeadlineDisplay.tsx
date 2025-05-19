@@ -2,6 +2,7 @@ import React from 'react';
 import { GameState, Headline } from 'types';
 import GuessDisplay from './GuessDisplay';
 import SolvedHeadlineDisplay from './SolvedHeadlineDisplay';
+import { PLACEHOLDER_VALUE } from './AnswerWheel';
 
 interface HeadlineDisplayProps {
   headline: Headline;
@@ -52,8 +53,10 @@ const HeadlineDisplay: React.FC<HeadlineDisplayProps> = ({
         <div className="mb-6">
           <div>{beforeBlank}</div>
           <div className={`inline-block align-middle mt-2 mb-2 `}>
+            {/* If currentGuess is PLACEHOLDER_VALUE, it means "Choose one →" is selected in AnswerWheel. */}
+            {/* In that case, display underscores. Otherwise, display the actual currentGuess. */}
             <GuessDisplay
-              currentGuess={currentGuess}
+              currentGuess={currentGuess === PLACEHOLDER_VALUE ? '__________' : currentGuess}
               gameState={gameState}
               correctAnswer={headline.correctAnswer}
               prefix={prefix}

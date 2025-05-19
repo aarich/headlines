@@ -94,7 +94,6 @@ try {
     ];
   }
 
-
   // Exit if there were no posts
   if (empty($headline_titles)) {
     echo "No posts found. Exiting";
@@ -119,36 +118,38 @@ try {
   $final_choice_data = json_decode($generated_text, true);
 
   // Extract data from the LLM response
-  $headline = $final_choice_data['headline'];
-  $correct_answer = $final_choice_data['word_to_remove'];
+  $llm_headline_text = $final_choice_data['headline'];
+  $llm_word_to_remove = $final_choice_data['word_to_remove'];
   $possible_answers = $final_choice_data['replacements'];
   $hint = $final_choice_data['hint'];
   $explanation = $final_choice_data['explanation'];
 
-  // Match with original data from Reddit and extract additional info
-  $matched_headline = findMostSimilarHeadline($headline, $headlines_full);
-  $headline = $matched_headline['headline'];
-  $article_url = $matched_headline['url'];
-  $reddit_url = $matched_headline['reddit_url'];
-  $publish_time = gmdate('Y-m-d H:i:s', $matched_headline['created_utc']);
-
-  // Ensure the case of correct_answer is consistent with the headline
-  $correct_answer_lower = strtolower($correct_answer);
-  $headline_lower = strtolower($headline);
-  $index_of_answer = strpos($headline_lower, $correct_answer_lower);
-  if ($index_of_answer === false) {
-    // It's possible the LLM hallucinated a word_to_remove that's not in its chosen headline
-    throw new Exception("LLM-provided correct_answer '{$correct_answer}' not found in its version of the headline '{$headline}'.");
+  // Match LLM headline with original data from Reddit to get the definitive headline and URLs
+  $matched_reddit_data = findMostSimilarHeadline($llm_headline_text, $headlines_full);
+  if ($matched_reddit_data === null) {
+    throw new Exception(
+      "LLM's chosen headline '{$llm_headline_text}' was probably a hallucination. Not found in original list."
+    );
   }
-  $correct_answer = substr($headline, $index_of_answer, strlen($correct_answer));
+  $headline = $matched_reddit_data['headline']; // This is the final headline text to be used
+  $article_url = $matched_reddit_data['url'];
+  $reddit_url = $matched_reddit_data['reddit_url'];
+  $publish_time = gmdate('Y-m-d H:i:s', $matched_reddit_data['created_utc']);
 
-  // If the word to remove has quotes or other punctuation on the outside, remove them so that they remain part of the headline.
-  $correct_answer = trim($correct_answer, "\"'.,!?()[]{}<>");
-
-  // split the headline into before_blank and after_blank
-  $parts = explode($correct_answer, $headline, 2);
-  $before_blank = $parts[0];
-  $after_blank = $parts[1];
+  try {
+    $derived_parts = derive_before_after_and_correct_answer($headline, $llm_word_to_remove);
+    $before_blank = $derived_parts['before_blank'];
+    $after_blank = $derived_parts['after_blank'];
+    $correct_answer = $derived_parts['actual_correct_answer']; // This is the one to store
+  } catch (Exception $e) {
+    // The helper throws: "The word '{$word_to_find}' (as a whole word) could not be found in the headline '{$headline}'."
+    // Add the LLM's original headline context for better debugging.
+    throw new Exception(
+      "LLM's chosen word_to_remove ('{$llm_word_to_remove}') processing failed. " .
+        "Original LLM headline: '{$llm_headline_text}'. " .
+        "Error with final headline ('{$headline}'): " . $e->getMessage()
+    );
+  }
 
   echo "Final headline about to be inserted:\n";
   echo "Headline: $headline\n";

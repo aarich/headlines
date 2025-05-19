@@ -85,6 +85,11 @@ try {
   // Match with original preview data and extract additional info. There could be multiple for the same headline, but we will overwrite the generated values anyway.
   $matched_preview = findMostSimilarHeadline($headline, $previews);
 
+  if ($matched_preview === null) {
+    // The LLM likely hallucinated an answer... Just choose the first preview.
+    $matched_preview = $previews[0];
+  }
+
   // Overwrite with any edits made
   $matched_preview['correct_answer'] = $correct_answer;
   $matched_preview['possible_answers'] = json_encode($possible_answers);

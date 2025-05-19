@@ -3,6 +3,7 @@
 require_once 'db-utils.php';
 require_once 'auth-utils.php';
 $config = require __DIR__ . '/config.php';
+require_once 'create-helpers.php';
 
 header('Content-Type: application/json');
 
@@ -60,7 +61,6 @@ function validateAndProcessPreviewInput(array $input, array $allowedFields, bool
                 // http_response_code(400); // Commenting out for now, as MySQL is flexible. Non-empty string check above might be enough.
                 // throw new Exception("Field '$camelCaseField' must be a valid datetime string (e.g., YYYY-MM-DDTHH:MM).");
             }
-            $statusValue = $value;
         }
         // Store the validated (and potentially transformed) value
         if ($dbField === 'possible_answers') {
@@ -71,25 +71,6 @@ function validateAndProcessPreviewInput(array $input, array $allowedFields, bool
     }
     $processedData['status_for_logic'] = $statusValue; // Keep original status for logic if needed
     return $processedData;
-}
-
-/**
- * Derives before_blank and after_blank fields.
- * @param string $headline
- * @param string $correctAnswer
- * @return array Associative array with 'before_blank' and 'after_blank'.
- * @throws Exception If correct answer not found in headline.
- */
-function deriveBlankFields(string $headline, string $correctAnswer): array {
-    $position = strpos($headline, $correctAnswer);
-    if ($position === false) {
-        http_response_code(400);
-        throw new Exception("Correct answer '$correctAnswer' not found within the headline '$headline'. Cannot derive before/after blank parts.");
-    }
-    return [
-        'before_blank' => substr($headline, 0, $position),
-        'after_blank' => substr($headline, $position + strlen($correctAnswer))
-    ];
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -141,7 +122,17 @@ try {
         ];
 
         $processedInput = validateAndProcessPreviewInput($input, $requiredFieldsForCreate, true);
-        $blankFields = deriveBlankFields($processedInput['headline'], $processedInput['correct_answer']);
+
+        try {
+            $blankFields = derive_before_after_and_correct_answer(
+                $processedInput['headline'],
+                $processedInput['correct_answer']
+            );
+            $processedInput['correct_answer'] = $blankFields['actual_correct_answer'];
+        } catch (Exception $e) {
+            http_response_code(400); // Bad request, as the provided correct answer couldn't be found
+            throw $e; // Re-throw the exception from the helper
+        }
 
         $sql = 'INSERT INTO headline_preview (
                     headline, hint, article_url, reddit_url,
@@ -230,8 +221,19 @@ try {
         ];
 
         $processedInput = validateAndProcessPreviewInput($input, $allowedFields, false);
-        $blankFields = deriveBlankFields($processedInput['headline'], $processedInput['correct_answer']);
-        $statusUpdateValue = $processedInput['status_for_logic']; // Get the original status for logic
+
+        try {
+            $blankFields = derive_before_after_and_correct_answer(
+                $processedInput['headline'],
+                $processedInput['correct_answer'] // This is the $word_to_find
+            );
+
+            $processedInput['correct_answer'] = $blankFields['actual_correct_answer'];
+        } catch (Exception $e) {
+            http_response_code(400);
+            throw $e;
+        }
+        $statusUpdateValue = $processedInput['status'] ?? null;
 
         $sql = 'UPDATE headline_preview SET 
                     headline = :headline, 

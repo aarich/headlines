@@ -22,6 +22,9 @@ $guidelines = "
 function getInitialPrompt($headlines_brief) {
     global $guidelines;
 
+    $num_headlines = count($headlines_brief);
+    $candidates_to_provide = min(5, $num_headlines);
+
     $json_str = json_encode($headlines_brief, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE);
 
     return "
@@ -35,7 +38,7 @@ Format your response by including
 - an explanation for why this choice was made. What makes the headline and word to remove meet these preferences?
 - a list of possible word choices that would be funny to suggest as alternatives. Provide at least 5 replacements
 
-Choose at least 5 headlines from this list of candidates:
+Choose at least $candidates_to_provide headlines from this list of candidates:
 
  $json_str";
 }
@@ -136,8 +139,6 @@ function getFinalGenerationConfig($include_explanation = true) {
 
     return $schema;
 }
-
-
 
 function getChooseFromPreviewsPrompt($previewsStr) {
     global $guidelines;

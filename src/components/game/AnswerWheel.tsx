@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 // Tuning constants
 const FADE_DISTANCE = 3; // How many items to show on each side
@@ -6,6 +6,9 @@ const FADE_SPEED = 0.3; // Opacity drop per step
 const SCALE_SPEED = 0.3; // Scale drop per step
 const BLUR_SPEED = 0.8; // Blur amount per step (px)
 const ITEM_WIDTH = 96; // px
+
+export const PLACEHOLDER_VALUE = '##HEADLINES_PLACEHOLDER##';
+const PLACEHOLDER_TEXT = 'Choose one →';
 
 interface AnswerWheelProps {
   choices: string[];
@@ -18,11 +21,15 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const wheelRef = useRef<HTMLDivElement>(null);
 
+  const displayChoices = useMemo(() => [PLACEHOLDER_TEXT, ...choices], [choices]);
+
   useEffect(() => {
-    if (choices.length > 0) {
-      onSetGuess(choices[selectedIndex]);
+    if (selectedIndex === 0) {
+      onSetGuess(PLACEHOLDER_VALUE);
+    } else if (displayChoices.length > 1) {
+      onSetGuess(displayChoices[selectedIndex]);
     }
-  }, [selectedIndex, choices, onSetGuess]);
+  }, [selectedIndex, displayChoices, onSetGuess]);
 
   useEffect(() => {
     // Set focus for keyboard support
@@ -34,15 +41,15 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
   // Keyboard support
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowLeft') {
-      setSelectedIndex(prev => clamp(prev - 1, 0, choices.length - 1));
+      setSelectedIndex(prev => clamp(prev - 1, 0, displayChoices.length - 1));
     } else if (e.key === 'ArrowRight') {
-      setSelectedIndex(prev => clamp(prev + 1, 0, choices.length - 1));
+      setSelectedIndex(prev => clamp(prev + 1, 0, displayChoices.length - 1));
     }
   };
 
   // Wheel support
   const handleWheel = (e: React.WheelEvent) => {
-    setSelectedIndex(prev => clamp(prev + (e.deltaY > 0 ? 1 : -1), 0, choices.length - 1));
+    setSelectedIndex(prev => clamp(prev + (e.deltaY > 0 ? 1 : -1), 0, displayChoices.length - 1));
   };
 
   // Drag support
@@ -62,7 +69,7 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
     const dx = e.clientX - dragStartX.current;
     const deltaIndex = Math.round(-dx / ITEM_WIDTH);
     let newIndex = dragStartIndex.current + deltaIndex;
-    newIndex = clamp(newIndex, 0, choices.length - 1);
+    newIndex = clamp(newIndex, 0, displayChoices.length - 1);
     setSelectedIndex(newIndex);
   };
   const handleMouseUp = () => {
@@ -85,7 +92,7 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
     const dx = e.touches[0].clientX - dragStartX.current;
     const deltaIndex = Math.round(-dx / ITEM_WIDTH);
     let newIndex = dragStartIndex.current + deltaIndex;
-    newIndex = clamp(newIndex, 0, choices.length - 1);
+    newIndex = clamp(newIndex, 0, displayChoices.length - 1);
     setSelectedIndex(newIndex);
   };
   const handleTouchEnd = () => {
@@ -105,27 +112,45 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
       role="listbox"
-      aria-activedescendant={choices[selectedIndex]}
+      aria-activedescendant={displayChoices[selectedIndex]}
       style={{ height: 80 }}
     >
       <div
         className="absolute left-1/2 top-1/2 "
         style={{ transform: 'translate(-50%, -50%)', width: '100%', height: '100%' }}
       >
-        {choices.map((choice, index) => {
+        {displayChoices.map((choiceText, index) => {
           const distance = index - selectedIndex;
           if (Math.abs(distance) > FADE_DISTANCE) return null;
           const opacity = Math.max(0, 1 - Math.abs(distance) * FADE_SPEED);
           const scale = Math.max(0.7, 1 - Math.abs(distance) * SCALE_SPEED);
           const blur = Math.abs(distance) === 0 ? 0 : Math.min(2, Math.abs(distance) * BLUR_SPEED);
           const isSelected = index === selectedIndex;
+          const isPlaceholder = choiceText === PLACEHOLDER_TEXT;
+
+          let buttonClasses =
+            'absolute top-1/2 font-medium rounded-lg transition-colors focus:outline-none cursor-pointer';
+
+          if (isPlaceholder) {
+            buttonClasses += ' italic text-gray-500 dark:text-gray-500 text-sm font-normal'; // Placeholder: italic, gray, smaller, lighter
+            if (isSelected) {
+              buttonClasses += ' z-15'; // Placeholder selected: high z-index, but no bold/shadow/blue
+            }
+          } else {
+            // Regular item
+            if (isSelected) {
+              buttonClasses += ' z-15 text-blue-600 dark:text-blue-400 shadow-lg font-bold';
+            } else {
+              buttonClasses += ' text-gray-600 dark:text-gray-400 bg-transparent';
+            }
+            buttonClasses += ' text-xl hover:text-blue-500 dark:hover:text-blue-300'; // Hover effect for non-placeholders
+          }
+
           return (
             <button
-              key={choice}
+              key={choiceText === PLACEHOLDER_TEXT ? PLACEHOLDER_VALUE : choiceText}
               type="button"
-              className={`absolute top-1/2 font-medium rounded-lg transition-colors text-xl focus:outline-none
-                ${isSelected ? 'z-15 text-blue-600 dark:text-blue-400 shadow-lg font-bold' : 'text-gray-600 dark:text-gray-400 bg-transparent'}
-                cursor-pointer hover:text-blue-500 dark:hover:text-blue-300`}
+              className={buttonClasses}
               style={{
                 left: `calc(50% + ${distance * ITEM_WIDTH}px)`,
                 transform: `translate(-50%, -50%) scale(${scale})`,
@@ -138,9 +163,9 @@ const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
               onClick={() => setSelectedIndex(index)}
               tabIndex={isSelected ? 0 : -1}
               aria-current={isSelected}
-              aria-label={choice}
+              aria-label={choiceText}
             >
-              {choice}
+              {choiceText}
             </button>
           );
         })}

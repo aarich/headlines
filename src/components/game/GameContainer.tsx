@@ -2,7 +2,7 @@ import React, { Dispatch, SetStateAction, useCallback, useEffect, useRef, useSta
 import { Headline, GameState } from 'types';
 import { useSettings } from 'contexts/SettingsContext';
 import HeadlineDisplay from './HeadlineDisplay';
-import AnswerWheel from './AnswerWheel';
+import AnswerWheel, { PLACEHOLDER_VALUE } from './AnswerWheel';
 import ExpertInput from './ExpertInput';
 import ShareButtons from 'components/ShareButtons';
 import { checkAnswer, getNextHint, getNextHintPrompt, getNextRevealType } from 'lib/game';
@@ -137,7 +137,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
               <button
                 className="justify-self-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                 onClick={handleGuess}
-                disabled={!currentGuess}
+                disabled={!currentGuess || currentGuess === PLACEHOLDER_VALUE}
               >
                 Submit
               </button>
