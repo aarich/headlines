@@ -48,7 +48,6 @@ const ANIMATION_CONFIG = {
 
 const AnimatedBackground: React.FC = () => {
   const { settings } = useSettings();
-  const [hue, setHue] = useState(ANIMATION_CONFIG.baseHue);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Initialize onions with unique movement patterns
@@ -103,24 +102,20 @@ const AnimatedBackground: React.FC = () => {
     }
   }, [settings.displayMode]);
 
-  // Animate color
-  useEffect(() => {
-    const colorInterval = setInterval(
-      () => {
-        setHue(prevHue => (prevHue + 1) % (ANIMATION_CONFIG.baseHue + ANIMATION_CONFIG.hueRange));
-      },
-      (ANIMATION_CONFIG.colorChangeDuration * 1000) / ANIMATION_CONFIG.hueRange
-    );
-
-    return () => clearInterval(colorInterval);
-  }, []);
-
   if (!settings.showAnimations) {
     return null;
   }
 
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{}}>
+    <div
+      className="fixed inset-0 overflow-hidden pointer-events-none"
+      style={
+        {
+          animation: `cycleHue ${ANIMATION_CONFIG.colorChangeDuration}s linear infinite`,
+          ['--animated-hue-value' as string]: ANIMATION_CONFIG.baseHue, // Initial value
+        } as React.CSSProperties
+      }
+    >
       {onions.map(onion => (
         <div
           key={onion.id}
@@ -177,8 +172,8 @@ const AnimatedBackground: React.FC = () => {
               top: '50%',
               transform: 'translate(-50%, -50%)',
               background: `radial-gradient(circle, 
-                hsla(${hue}, 70%, ${isDarkMode ? '80%' : '60%'}, ${ANIMATION_CONFIG.glowIntensity}) 0%,
-                hsla(${hue}, 70%, ${isDarkMode ? '80%' : '60%'}, 0) 70%
+                hsla(var(--animated-hue-value), 70%, ${isDarkMode ? '80%' : '60%'}, ${ANIMATION_CONFIG.glowIntensity}) 0%,
+                hsla(var(--animated-hue-value), 70%, ${isDarkMode ? '80%' : '60%'}, 0) 70%
               )`,
               animation: `pulse ${ANIMATION_CONFIG.pulseDuration}s ease-in-out infinite`,
               filter: `blur(8px)`,
@@ -199,7 +194,7 @@ const AnimatedBackground: React.FC = () => {
                 transform: `translate(-50%, -50%)`,
                 animation: `rotate ${onion.rotationDuration}s linear infinite`,
                 filter: `
-                hue-rotate(${hue}deg) 
+                hue-rotate(calc(var(--animated-hue-value) * 1deg))
                 drop-shadow(0 0 8px rgba(255, 255, 255, 0.2))
                 ${isDarkMode ? 'brightness(1.1) invert(0.6)' : 'brightness(0.7) invert(0.15)'}
               `,
@@ -260,6 +255,15 @@ const AnimatedBackground: React.FC = () => {
             50% {
               opacity: 0.3;
               transform: translate(-50%, -50%) scale(1.5);
+            }
+          }
+
+          @keyframes cycleHue {
+            from {
+              --animated-hue-value: ${ANIMATION_CONFIG.baseHue};
+            }
+            to {
+              --animated-hue-value: ${ANIMATION_CONFIG.baseHue + ANIMATION_CONFIG.hueRange};
             }
           }
         `}

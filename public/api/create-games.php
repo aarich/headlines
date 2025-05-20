@@ -35,11 +35,11 @@ try {
   checkIfHeadlineIsNeeded($skip_age_verification);
 
   $db = getDbConnection();
-  $already_proposed_headline_texts = [];
 
   $stmt = $db->query('SELECT headline, status FROM headline_preview');
   $all_previews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+  $already_proposed_headline_texts = [];
   foreach ($all_previews as $preview_item) {
     if ($save_to_preview && $preview_item['status'] === 'final_selection') {
       echo "*** Found an already finalized preview ***\n";
@@ -51,6 +51,14 @@ try {
   }
 
   echo count($already_proposed_headline_texts) . " existing headlines found. They will be skipped.\n";
+
+  // Load recent headlines to ensure we don't re-post them
+  $stmt = $db->query('SELECT headline FROM headline ORDER BY id DESC LIMIT 10');
+  $previous_headlines = $stmt->fetchAll(PDO::FETCH_ASSOC);
+  $already_posted_headline_texts = [];
+  foreach ($previous_headlines as $headline_item) {
+    $already_posted_headline_texts[] = $headline_item['headline'];
+  }
 
   // Fetch top posts from Reddit
   $posts = getTopPosts('nottheonion', $reddit_user_agent);
@@ -64,6 +72,12 @@ try {
     // Ignore this one if it matches an already proposed headline
     if (in_array($title, $already_proposed_headline_texts, true)) {
       echo "Skipping (already proposed): $title\n";
+      continue;
+    }
+
+    // Ignore this one if it matches an already posted headline 
+    if (in_array($title, $already_posted_headline_texts, true)) {
+      echo "Skipping (already posted): $title\n";
       continue;
     }
 
@@ -97,6 +111,13 @@ try {
   // Exit if there were no posts
   if (empty($headline_titles)) {
     echo "No posts found. Exiting";
+    exit();
+  }
+
+  // Exit if we already have gone through half of the top posts
+  $num_proposed = count($already_proposed_headline_texts);
+  if ($num_proposed > 5 && count($headline_titles) < 5) {
+    echo "Already proposed 5 headlines with 5 remaining. Exiting";
     exit();
   }
 
