@@ -185,7 +185,7 @@ export const getResultText = (
   const expertText = isExpert ? '\nExpert Mode 🤓' : '';
 
   if (forSharing) {
-    return `I found the leek: ${countText}\n${hintsText}${expertText}\n\n${window.location.href}`;
+    return `Leek #${headline.gameNum} found!\n\n${window.location.href}\n\n${countText}\n${hintsText}${expertText}`;
   } else {
     return `${countText}\n${hintsText}${expertText}`;
   }
