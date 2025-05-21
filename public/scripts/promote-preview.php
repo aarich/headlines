@@ -1,23 +1,25 @@
 <?php
 
-require_once 'db-utils.php';
+require_once __DIR__ . '/../util/db.php';
+require_once __DIR__ . '/../util/create-helpers.php';
 require_once 'prompts.php';
-require_once 'create-helpers.php';
 
-$config = require __DIR__ . '/config.php';
+$config = require __DIR__ . '/../util/config.php';
 $gemini_api_key = $config['google']['api_key'];
 
 // Parse command-line arguments
 $short_opts = "y";
 $long_opts = [
-  "model:",      // Requires a value
-  "dry-run"
+  "model:",
+  "dry-run",
+  "selected-only"
 ];
 $cli_options = getopt($short_opts, $long_opts);
 
 $gpt_model_name = $cli_options['model'] ?? 'gemini-2.5-pro-preview-03-25'; // gemini-2.5-flash-preview-04-17 gemini-2.5-pro-preview-03-25 gemini-2.5-pro-exp-03-25
 $dry_run = isset($cli_options['dry-run']);
 $auto_confirm = isset($cli_options['y']);
+$selected_only = isset($cli_options['selected-only']);
 
 try {
   checkIfHeadlineIsNeeded(false);
@@ -65,6 +67,11 @@ try {
       'replacements' => $replacements['answers'],
       'hint' => $hint
     ];
+  }
+
+  if ($selected_only) {
+    echo "No selected previews found and --selected-only was specified. Exiting.";
+    exit();
   }
 
   // Choose the best candidate

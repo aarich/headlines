@@ -5,28 +5,22 @@
 </FilesMatch>
 
 # Prevent directory listing
-
 Options -Indexes
 
 # Prevent access to hidden files
-
 <FilesMatch "^\.">
     Require all denied
 </FilesMatch>
 
 # Prevent access to config files
-
 <FilesMatch "config\.(local|example)\.php$">
     Require all denied
 </FilesMatch>
 
-# Prevent access to db-utils.php
-
-<FilesMatch "db-utils.php">
+# Prevent access to db.php
+<FilesMatch "db.php">
     Require all denied
 </FilesMatch>
-
-# Enable URL rewriting
 
 RewriteEngine On
 

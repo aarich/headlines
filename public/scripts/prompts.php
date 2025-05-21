@@ -1,6 +1,8 @@
 
 <?php
 
+$DEFAULT_CANDIDATE_COUNT = 5;
+
 $guidelines = "
 - The headline subject should be SFW but is welcome to be irreverent or absurd
 - The headline subject should be friendly and positive
@@ -21,9 +23,9 @@ $guidelines = "
 
 function getInitialPrompt($headlines_brief) {
     global $guidelines;
-
+    global $DEFAULT_CANDIDATE_COUNT;
     $num_headlines = count($headlines_brief);
-    $candidates_to_provide = min(5, $num_headlines);
+    $candidates_to_provide = min($DEFAULT_CANDIDATE_COUNT, $num_headlines);
 
     $json_str = json_encode($headlines_brief, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE);
 
@@ -43,7 +45,11 @@ Choose at least $candidates_to_provide headlines from this list of candidates:
  $json_str";
 }
 
-function getInitialGenerationConfig() {
+function getInitialGenerationConfig($headlines_brief) {
+    global $DEFAULT_CANDIDATE_COUNT;
+    $num_headlines = count($headlines_brief);
+    $candidates_to_provide = min($DEFAULT_CANDIDATE_COUNT, $num_headlines);
+
     return [
         "responseMimeType" => "application/json",
         "responseSchema" => [
@@ -51,7 +57,7 @@ function getInitialGenerationConfig() {
             "properties" => [
                 "choices" => [
                     "type" => "array",
-                    "minItems" => 7,
+                    "minItems" => $candidates_to_provide,
                     "items" => [
                         "type" => "object",
                         "required" => [
@@ -101,7 +107,9 @@ Format your response by including
 - the specific word to remove from the headline that meets the above criteria
 - an explanation for why this choice was made. What makes the headline and word to remove meet these preferences?
 - a list of possible word choices that would be funny to suggest as alternatives. Feel free to edit or add to the list as needed to adhere to the guidelines.
-- a brief hint for the answer that is esoteric and not obvious, akin to a crossword clue in that it requires some thought to guess. Don't use a pun. It can be creative or funny or just a short simple clue that doesn't give away the answer right away.
+- a brief hint for the answer that is esoteric and not obvious, akin to a crossword clue in that it requires some thought to guess. 
+- The hint should not be a pun. It can be creative or funny or just a short simple clue that doesn't give away the answer right away.
+- The hint should focus on the word itself rather than the context of the headline
 
 Here is the list of potential choices:
 

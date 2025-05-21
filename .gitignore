@@ -1,5 +1,5 @@
 # Configuration files
-public/api/config.local.php
+public/util/config.local.php
 
 # Composer
 /vendor/

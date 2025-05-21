@@ -1,7 +1,6 @@
 <?php
 
-require_once 'db-utils.php';
-require_once 'prompts.php';
+require_once __DIR__ . '/../util/db.php';
 
 /**
  * Recursively cleans string values within an array or object.

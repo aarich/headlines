@@ -1,9 +1,9 @@
 <?php
 
-require_once 'db-utils.php';
-require_once 'auth-utils.php';
-$config = require __DIR__ . '/config.php';
-require_once 'create-helpers.php';
+require_once __DIR__ . '/../util/create-helpers.php';
+require_once __DIR__ . '/../util/db.php';
+require_once __DIR__ . '/../util/auth.php';
+$config = require __DIR__ . '/../util/config.php';
 
 header('Content-Type: application/json');
 

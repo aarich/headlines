@@ -1,5 +1,5 @@
 <?php
-require_once 'db-utils.php';
+require_once __DIR__ . '/../util/db.php';
 
 header('Content-Type: application/json');
 

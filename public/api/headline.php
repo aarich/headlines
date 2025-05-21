@@ -64,9 +64,9 @@ CREATE TABLE wrong_guess (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 */
 
-require_once 'db-utils.php';
-require_once 'auth-utils.php';
-$config = require __DIR__ . '/config.php'; // For admin key
+require_once __DIR__ . '/../util/db.php';
+require_once __DIR__ . '/../util/auth.php';
+$config = require __DIR__ . '/../util/config.php';
 
 header('Content-Type: application/json');
 

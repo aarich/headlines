@@ -1,10 +1,10 @@
 <?php
 
-require_once 'db-utils.php';
+require_once __DIR__ . '/../util/db.php';
+require_once __DIR__ . '/../util/create-helpers.php';
 require_once 'prompts.php';
-require_once 'create-helpers.php';
 
-$config = require __DIR__ . '/config.php';
+$config = require __DIR__ . '/../util/config.php';
 $reddit_user_agent = $config['reddit']['user_agent'];
 $gemini_api_key = $config['google']['api_key'];
 
@@ -123,7 +123,7 @@ try {
 
   // Get initial candidates
   $prompt = getInitialPrompt($headline_titles);
-  $generationConfig = getInitialGenerationConfig();
+  $generationConfig = getInitialGenerationConfig($headline_titles);
   $response = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key, $gpt_model_name);
 
   $generated_text = $response['candidates'][0]['content']['parts'][0]['text'];
