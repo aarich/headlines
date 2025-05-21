@@ -1,28 +1,45 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { shuffleArray } from 'lib/ui';
 import { PreviewHeadline, PreviewHeadlineStatus } from 'types';
 import PreviewListItem from 'components/admin/PreviewListItem';
 import Loading from 'components/common/Loading';
+import {
+  fetchPreviewHeadlines,
+  updatePreviewHeadline,
+  publishPreviewHeadline,
+  EditablePreviewHeadlineFields,
+} from 'lib/api';
+import { useToast } from 'contexts/ToastContext';
 
 interface PreviewListProps {
-  previews: PreviewHeadline[];
   revealWords: boolean;
-  error: string | undefined;
-  isLoading: boolean;
-  handleEdit: (preview: PreviewHeadline) => void;
-  handleSetStatus: (preview: PreviewHeadline, status: PreviewHeadlineStatus) => void;
-  handlePublish: (id: number) => void;
+  onEditRequest: (preview: PreviewHeadline) => void;
 }
 
-const PreviewList: React.FC<PreviewListProps> = ({
-  isLoading,
-  error,
-  previews,
-  revealWords,
-  handleEdit,
-  handleSetStatus,
-  handlePublish,
-}) => {
+const PreviewList: React.FC<PreviewListProps> = ({ revealWords, onEditRequest }) => {
+  const [previews, setPreviews] = useState<PreviewHeadline[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>();
+  const toast = useToast();
+
+  const loadPreviews = useCallback(async () => {
+    setIsLoading(true);
+    setError(undefined);
+    try {
+      const data = await fetchPreviewHeadlines();
+      setPreviews(data);
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to load previews.';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPreviews();
+  }, [loadPreviews]);
+
   const sortedPreviews = useMemo(() => {
     return [...previews]
       .sort((a, b) => {
@@ -43,6 +60,40 @@ const PreviewList: React.FC<PreviewListProps> = ({
       });
   }, [previews]);
 
+  const handleSetStatus = async (preview: PreviewHeadline, status: PreviewHeadlineStatus) => {
+    const newStatus = preview.status === status ? null : status;
+    const { id } = preview;
+    const payload: EditablePreviewHeadlineFields = { ...preview, status: newStatus };
+
+    try {
+      setIsLoading(true); // Indicate loading for this specific action
+      const result = await updatePreviewHeadline(id, payload);
+      toast(result.message || 'Status updated!', 'success');
+      // Refresh previews to show the change
+      await loadPreviews();
+    } catch (err: any) {
+      toast(err.message || 'Failed to update status.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePublish = async (id: number) => {
+    const headlineToPublish = previews.find(preview => preview.id === id)?.headline;
+    if (window.confirm(`PUBLISH preview?\n\n${headlineToPublish}`)) {
+      try {
+        setIsLoading(true);
+        const result = await publishPreviewHeadline({ previewId: id });
+        toast(result.message || 'Published!', 'success');
+        await loadPreviews();
+      } catch (err: any) {
+        toast(err.message || 'Failed to publish.', 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
   return (
     <>
       {isLoading && <Loading />}
@@ -52,15 +103,14 @@ const PreviewList: React.FC<PreviewListProps> = ({
         </p>
       )}
       {!isLoading && !error && previews.length === 0 && <p>No preview headlines found.</p>}
-      {!isLoading && previews.length > 0 && (
-        <ul className="space-y-3 pr-2 max-h-[50vh] overflow-y-auto">
+      {!isLoading && !error && sortedPreviews.length > 0 && (
+        <ul className="space-y-3 pr-2">
           {sortedPreviews.map(preview => (
             <PreviewListItem
               key={preview.id}
               preview={preview}
               revealWords={revealWords}
-              isLoading={isLoading}
-              onEdit={handleEdit}
+              onEdit={() => onEditRequest(preview)}
               onSetStatus={handleSetStatus}
               onPublish={handlePublish}
             />

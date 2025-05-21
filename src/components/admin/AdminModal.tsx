@@ -1,219 +1,143 @@
-import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import React, { ReactNode, useCallback, useEffect, useState } from 'react';
-import { useToast } from 'contexts/ToastContext';
-import {
-  deleteFromPreview,
-  fetchPreviewHeadlines,
-  publishPreviewHeadline,
-  CreatePreviewHeadlinePayload,
-  EditablePreviewHeadlineFields,
-  createPreviewHeadline,
-  updatePreviewHeadline,
-} from 'lib/api';
+import { EyeIcon, EyeSlashIcon, DocumentMagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import React, { ReactNode, useEffect, useState } from 'react';
+import { EditablePreviewHeadlineFields, deleteFromPreview } from 'lib/api';
 import { getAdminKey, storeAdminKey } from 'lib/storage';
-import { PreviewHeadline, PreviewHeadlineStatus } from 'types';
+import { PreviewHeadline } from 'types';
 import Modal from 'components/common/Modal';
 import PreviewForm from 'components/admin/PreviewForm';
-import PreviewList from './PreviewList';
+import ScriptLogViewer from './ScriptLogViewer';
+import PreviewList from './PreviewList'; // Import PreviewList directly
+import { useToast } from 'contexts/ToastContext';
 
 interface AdminModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
+type AdminView = 'previews' | 'form' | 'logs';
 const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
+  const toast = useToast();
   const [adminKey, setAdminKey] = useState(getAdminKey());
-  const [previews, setPreviews] = useState<PreviewHeadline[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string>();
   const [revealWords, setRevealWords] = useState(false);
-  const [editingPreview, setEditingPreview] = useState<
+
+  const [currentView, setCurrentView] = useState<AdminView>('previews');
+  const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
+  const [previewDataForForm, setPreviewDataForForm] = useState<
     EditablePreviewHeadlineFields & { id: number }
   >();
-  const [formMode, setFormMode] = useState<'create' | 'edit'>();
-
-  const toast = useToast();
-
-  const loadPreviews = useCallback(async () => {
-    if (!adminKey) return;
-    setIsLoading(true);
-    setError(undefined);
-    try {
-      const data = await fetchPreviewHeadlines();
-      setPreviews(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load previews.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [adminKey]);
 
   useEffect(() => {
-    if (isOpen && adminKey) {
-      loadPreviews();
+    if (!isOpen) {
+      setPreviewDataForForm(undefined);
     }
-  }, [isOpen, adminKey, loadPreviews]);
+  }, [isOpen, currentView]);
 
-  const handleSetKey = () => {
-    if (adminKey) {
-      storeAdminKey(adminKey);
-      loadPreviews();
-    }
-  };
+  const handleSetKey = () => storeAdminKey(adminKey ?? '');
 
-  const doAction = async <T extends { message: string }>(
-    action: () => Promise<T>,
-    previewsMutation: (previewsState: PreviewHeadline[]) => PreviewHeadline[],
-    confirmMessage?: string
-  ) => {
-    if (!confirmMessage || window.confirm(confirmMessage)) {
-      try {
-        const result = await action();
-        toast(result.message || 'Done!', 'success');
-        setPreviews(previewsMutation);
-      } catch (err: any) {
-        setError(err.message || 'Failed.');
-        toast(err.message || 'Failed.', 'error');
-      }
-    }
-  };
-
-  const handleEdit = (preview: PreviewHeadline) => {
-    setEditingPreview(preview);
+  const handleRequestEditPreview = (preview: PreviewHeadline) => {
+    setPreviewDataForForm(preview as EditablePreviewHeadlineFields & { id: number });
     setFormMode('edit');
+    setCurrentView('form');
   };
 
-  const handleOpenCreateForm = () => {
-    setEditingPreview(undefined);
+  const handleRequestCreatePreview = () => {
+    setPreviewDataForForm(undefined);
     setFormMode('create');
+    setCurrentView('form');
   };
 
-  const handleCancelForm = () => {
-    setEditingPreview(undefined);
-    setFormMode(undefined);
+  const handleFormSuccessOrCancel = () => {
+    setFormMode('create');
+    setPreviewDataForForm(undefined);
+    setCurrentView('previews');
   };
 
-  const handlePublish = async (id: number) => {
-    const headlineToPublish = previews.find(preview => preview.id === id)?.headline;
-    const msg = `PUBLISH preview?\n\n${headlineToPublish}`;
-    await doAction(
-      () => publishPreviewHeadline({ previewId: id }),
-      () => [],
-      msg
-    );
+  const handleRequestViewLogs = () => {
+    setCurrentView('logs');
   };
 
-  const handleSubmitForm = async (
-    data: EditablePreviewHeadlineFields | CreatePreviewHeadlinePayload
-  ) => {
-    setIsLoading(true);
-    setError(undefined);
+  const handleBackToMain = () => {
+    setCurrentView('previews');
+  };
 
-    try {
-      if (formMode === 'edit' && editingPreview?.id) {
-        const result = await updatePreviewHeadline(
-          editingPreview.id,
-          data as EditablePreviewHeadlineFields
-        );
-        toast(result.message || 'Preview updated!', 'success');
-      } else if (formMode === 'create') {
-        const result = await createPreviewHeadline(data as CreatePreviewHeadlinePayload);
-        toast(result.message || 'Preview created!', 'success');
-      } else {
-        throw new Error('Invalid form mode or missing data.');
+  const handleDeleteAllPreviews = async () => {
+    if (window.confirm('Delete ALL preview headlines?')) {
+      try {
+        const result = await deleteFromPreview();
+        toast(result.message || 'All previews deleted!', 'success');
+      } catch (err: any) {
+        toast(err.message || 'Failed to delete all previews.', 'error');
       }
-      setFormMode(undefined);
-      setEditingPreview(undefined);
-      await loadPreviews();
-    } catch (err: any) {
-      const defaultMessage =
-        formMode === 'create' ? 'Failed to create preview.' : 'Failed to save preview.';
-      setError(err.message || defaultMessage);
-      toast(err.message || defaultMessage, 'error');
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const handleSetStatus = async (preview: PreviewHeadline, status: PreviewHeadlineStatus) => {
-    const newStatus = preview.status === status ? null : status;
-    const { id } = preview;
-
-    const payload: EditablePreviewHeadlineFields = { ...preview, status: newStatus };
-    await doAction(
-      () => updatePreviewHeadline(id, payload),
-      prevs => prevs.map(prev => (prev.id === id ? { ...prev, status: newStatus } : prev))
-    );
-  };
-
-  const handleDeleteAll = async () => {
-    await doAction(deleteFromPreview, () => [], 'Delete ALL preview headlines?');
-  };
-
-  let title: string | ReactNode = (
-    <>
-      Admin
-      <button className="mx-4" onClick={() => setRevealWords(!revealWords)}>
-        {revealWords ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
-      </button>
-    </>
-  );
-
-  if (formMode) {
-    title =
-      formMode === 'edit' && editingPreview
-        ? `Edit Preview #${editingPreview.id}`
-        : 'Create New Preview';
+  let title: string | ReactNode;
+  switch (currentView) {
+    case 'previews':
+      title = (
+        <>
+          Admin
+          <button className="mx-4" onClick={() => setRevealWords(!revealWords)}>
+            {revealWords ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
+          </button>
+        </>
+      );
+      break;
+    case 'logs':
+      title = 'Script Execution Logs';
+      break;
+    case 'form':
+      title =
+        formMode === 'edit' ? `Edit Preview #${previewDataForForm?.id}` : 'Create New Preview';
+      break;
   }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} mdSize="3xl">
-      {formMode ? (
+      {currentView === 'form' && (
         <PreviewForm
-          initialData={formMode === 'edit' ? editingPreview : undefined}
-          onSubmit={handleSubmitForm}
-          onCancel={handleCancelForm}
-          isLoading={isLoading}
+          formMode={formMode}
+          initialDataForEdit={formMode === 'edit' ? previewDataForForm : undefined}
+          onSuccess={handleFormSuccessOrCancel}
+          onCancel={handleFormSuccessOrCancel}
         />
-      ) : (
+      )}
+      {currentView === 'logs' && <ScriptLogViewer onBack={handleBackToMain} />}
+      {currentView === 'previews' && (
         <div className="space-y-4 text-gray-700 dark:text-gray-200">
-          {adminKey && (
-            <>
-              <PreviewList
-                previews={previews}
-                revealWords={revealWords}
-                isLoading={isLoading}
-                error={error}
-                handleEdit={handleEdit}
-                handleSetStatus={handleSetStatus}
-                handlePublish={handlePublish}
-              />
-              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex-row flex gap-4">
-                <button
-                  onClick={handleDeleteAll}
-                  className="btn w-full bg-red-600 hover:bg-red-700 text-white"
-                  disabled={isLoading || previews.length === 0}
-                >
-                  Delete All
-                </button>
-                <button
-                  onClick={handleOpenCreateForm}
-                  className="btn btn-primary w-full"
-                  disabled={isLoading}
-                >
-                  Create New
-                </button>
-              </div>
-            </>
-          )}
-          <div>
+          <PreviewList revealWords={revealWords} onEditRequest={handleRequestEditPreview} />
+          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={handleDeleteAllPreviews}
+              className="btn w-full bg-red-600 hover:bg-red-700 text-white"
+              disabled={!adminKey}
+            >
+              Delete All Previews
+            </button>
+            <button
+              onClick={handleRequestCreatePreview}
+              className="btn btn-primary w-full"
+              disabled={!adminKey}
+            >
+              Create New Preview
+            </button>
+            <button
+              onClick={handleRequestViewLogs}
+              className="btn btn-info w-full flex items-center justify-center"
+              disabled={!adminKey}
+            >
+              <DocumentMagnifyingGlassIcon className="w-5 h-5 mr-2" />
+              Logs
+            </button>
+          </div>
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <input
-              value={adminKey}
+              value={adminKey || ''}
               onChange={e => setAdminKey(e.target.value)}
-              className="px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              placeholder="Enter Admin Key"
+              className="px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md"
             />
-            <button onClick={handleSetKey} className="btn btn-secondary mx-4">
-              Set
+            <button onClick={handleSetKey} className="btn btn-secondary ml-2 sm:ml-4">
+              Set Key
             </button>
           </div>
         </div>

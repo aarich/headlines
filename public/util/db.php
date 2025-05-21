@@ -1,5 +1,80 @@
 <?php
 
+/*
+MySQL tables. Here for reference.
+
+CREATE TABLE headline (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    game_num INT UNSIGNED NOT NULL,
+    headline TEXT NOT NULL,
+    before_blank TEXT NOT NULL,
+    after_blank TEXT NOT NULL,
+    hint TEXT NOT NULL,
+    explanation TEXT NOT NULL,
+    article_url TEXT NOT NULL,
+    reddit_url TEXT NOT NULL,
+    correct_answer VARCHAR(255) NOT NULL,
+    possible_answers JSON NOT NULL,
+    publish_time DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_publish_time (publish_time),
+    FULLTEXT INDEX idx_headline (headline)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ CREATE TABLE headline_preview (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    headline TEXT NOT NULL,
+    before_blank TEXT NOT NULL,
+    after_blank TEXT NOT NULL,
+    hint TEXT NOT NULL,
+    explanation TEXT NOT NULL,
+    article_url TEXT NOT NULL,
+    reddit_url TEXT NOT NULL,
+    correct_answer VARCHAR(255) NOT NULL,
+    possible_answers JSON NOT NULL,
+    publish_time DATETIME NOT NULL,
+    status ENUM('selected', 'final_selection', 'rejected') DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_publish_time (publish_time),
+    FULLTEXT INDEX idx_headline (headline)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+ 
+CREATE TABLE headline_stats (
+    headline_id INT UNSIGNED PRIMARY KEY,
+    total_plays INT UNSIGNED DEFAULT 0,
+    total_correct_guesses INT UNSIGNED DEFAULT 0,
+    total_incorrect_guesses INT UNSIGNED DEFAULT 0,
+    share_count INT UNSIGNED DEFAULT 0,
+    article_click_count INT UNSIGNED DEFAULT 0,
+    reddit_click_count INT UNSIGNED DEFAULT 0,
+    first_guess_correct_count INT UNSIGNED DEFAULT 0,
+    FOREIGN KEY (headline_id) REFERENCES headline(id) ON DELETE CASCADE,
+    INDEX idx_total_plays (total_plays)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE wrong_guess (
+    headline_id INT UNSIGNED NOT NULL,
+    guess_word VARCHAR(255) NOT NULL,
+    guess_count INT UNSIGNED DEFAULT 1,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (headline_id, guess_word),
+    FOREIGN KEY (headline_id) REFERENCES headline(id) ON DELETE CASCADE,
+    INDEX idx_guess_count (guess_count)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE script_execution (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    command TEXT NOT NULL,
+    environment VARCHAR(255),
+    message TEXT,
+    status ENUM('success', 'failed', 'completed_early') NOT NULL,
+    INDEX idx_created_date (created_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+*/
+
 function getDbConnection() {
     static $db = null;
     if ($db === null) {

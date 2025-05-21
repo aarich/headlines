@@ -24,6 +24,8 @@ if (strpos($request_uri, '/api/headline') !== false) {
     require_once 'history.php';
 } else if (strpos($request_uri, '/api/preview') !== false) {
     require_once 'preview.php';
+} else if (strpos($request_uri, '/api/logs') !== false) {
+    require_once 'logs.php';
 } else {
     http_response_code(404);
     echo json_encode(['error' => 'Not found']);

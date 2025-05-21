@@ -1,6 +1,6 @@
 # Deny access to all .php files in the api directory except those explicitly allowed
 
-<FilesMatch "^(?!history\.php$|status\.php$|statistics\.php$|preview\.php$|headline\.php$).*\.php$">
+<FilesMatch "^(?!history\.php$|status\.php$|statistics\.php$|preview\.php$|headline\.php$|logs\.php$).*\.php$">
     Require all denied
 </FilesMatch>
 

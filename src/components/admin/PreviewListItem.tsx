@@ -12,7 +12,6 @@ import { PreviewHeadline, PreviewHeadlineStatus } from 'types';
 interface PreviewListItemProps {
   preview: PreviewHeadline & { articleSite: string; choices: string[] };
   revealWords: boolean;
-  isLoading: boolean;
   onEdit: (preview: PreviewHeadline) => void;
   onSetStatus: (preview: PreviewHeadline, status: PreviewHeadlineStatus) => void;
   onPublish: (id: number) => void;
@@ -21,7 +20,6 @@ interface PreviewListItemProps {
 const PreviewListItem: React.FC<PreviewListItemProps> = ({
   preview,
   revealWords,
-  isLoading,
   onEdit,
   onSetStatus,
   onPublish,
@@ -70,7 +68,6 @@ const PreviewListItem: React.FC<PreviewListItemProps> = ({
           <button
             onClick={() => onEdit(preview)}
             className="btn btn-ghost btn-sm text-xs text-yellow-500 hover:text-yellow-700 dark:text-yellow-400 dark:hover:text-yellow-300 flex-1"
-            disabled={isLoading}
             title="Edit"
           >
             <PencilIcon className="h-5 w-5" />
@@ -78,7 +75,6 @@ const PreviewListItem: React.FC<PreviewListItemProps> = ({
           <button
             onClick={() => onSetStatus(preview, 'selected')}
             className={`btn btn-ghost btn-sm text-xs ${preview.status === 'selected' ? 'text-green-500 dark:text-green-400' : 'text-gray-400 dark:text-gray-500 hover:text-green-500 dark:hover:text-green-400'} flex-1`}
-            disabled={isLoading}
             title="Select this preview"
           >
             <CheckCircleIcon className="h-5 w-5" />
@@ -86,7 +82,6 @@ const PreviewListItem: React.FC<PreviewListItemProps> = ({
           <button
             onClick={() => onPublish(preview.id)}
             className="btn btn-ghost btn-sm text-xs text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex-1"
-            disabled={isLoading}
             title="Publish"
           >
             <PaperAirplaneIcon className="h-5 w-5" />
@@ -94,7 +89,6 @@ const PreviewListItem: React.FC<PreviewListItemProps> = ({
           <button
             onClick={() => onSetStatus(preview, 'final_selection')}
             className={`btn btn-ghost btn-sm text-xs ${preview.status === 'final_selection' ? 'text-green-500 dark:text-green-400' : 'text-gray-400 dark:text-gray-500 hover:text-green-500 dark:hover:text-green-400'} flex-1`}
-            disabled={isLoading}
             title="Final Selection"
           >
             <ShieldCheckIcon className="h-5 w-5" />
@@ -102,7 +96,6 @@ const PreviewListItem: React.FC<PreviewListItemProps> = ({
           <button
             onClick={() => onSetStatus(preview, 'rejected')}
             className={`btn btn-ghost btn-sm text-xs ${isRejected ? 'text-yellow-500 hover:text-yellow-700 dark:text-yellow-400 dark:hover:text-yellow-300' : 'text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300'} flex-1`}
-            disabled={isLoading}
             title={isRejected ? 'Restore preview' : 'Reject preview'}
           >
             {isRejected ? (

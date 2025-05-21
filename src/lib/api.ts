@@ -32,6 +32,16 @@ export interface DeletePreviewsResult {
 
 export type GetHeadlineArgs = { id?: number; game?: number };
 
+export interface ScriptLogEntry {
+  id: number;
+  created_date: string; // ISO 8601 date string e.g., "2023-10-27 14:30:00"
+  command: string;
+  environment: string;
+  message: string;
+  status: 'success' | 'failed' | 'completed_early';
+}
+export type ScriptLogResponse = { logs: ScriptLogEntry[] };
+
 export const fetchHeadline = async (args: GetHeadlineArgs): Promise<Headline> => {
   let search = '';
   if (args.id) {
@@ -46,6 +56,41 @@ export const fetchHeadline = async (args: GetHeadlineArgs): Promise<Headline> =>
       throw new Error("This game doesn't exist. Try a different one.");
     }
     throw new Error('Failed to fetch headline');
+  }
+  return response.json();
+};
+
+export interface DeleteScriptLogsResult {
+  message: string;
+  deletedCount?: number;
+}
+
+export const deleteScriptExecutionLogs = async (): Promise<DeleteScriptLogsResult> => {
+  const response = await fetch(`${config.apiUrl}/api/logs`, {
+    method: 'DELETE',
+    headers: getAdminHeaders(),
+  });
+  if (!response.ok) {
+    const errorData = await response
+      .json()
+      .catch(() => ({ error: 'Failed to delete script logs' }));
+    throw new Error(errorData.error || `Failed to delete script logs: ${response.statusText}`);
+  }
+  return response.json();
+};
+
+export const fetchScriptExecutionLogs = async (count: number): Promise<ScriptLogResponse> => {
+  const response = await fetch(`${config.apiUrl}/api/logs?n=${count}`, {
+    method: 'GET',
+    headers: getAdminHeaders(),
+  });
+  if (!response.ok) {
+    const errorData = await response
+      .json()
+      .catch(() => ({ error: `Failed to fetch script execution logs: ${response.statusText}` }));
+    throw new Error(
+      errorData.error || `Failed to fetch script execution logs: ${response.statusText}`
+    );
   }
   return response.json();
 };

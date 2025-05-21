@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { EditablePreviewHeadlineFields, CreatePreviewHeadlinePayload } from 'lib/api';
+import {
+  EditablePreviewHeadlineFields,
+  CreatePreviewHeadlinePayload,
+  createPreviewHeadline,
+  updatePreviewHeadline,
+} from 'lib/api';
+import { useToast } from 'contexts/ToastContext';
 
 interface PreviewFormProps {
-  initialData?: EditablePreviewHeadlineFields & { id?: number };
-  onSubmit: (data: EditablePreviewHeadlineFields | CreatePreviewHeadlinePayload) => Promise<void>;
+  initialDataForEdit?: EditablePreviewHeadlineFields & { id: number }; // For edit mode
+  formMode: 'create' | 'edit';
+  onSuccess: () => void; // Callback for successful submission
   onCancel: () => void;
-  isLoading: boolean;
 }
 
 const defaultFormData: CreatePreviewHeadlinePayload = {
@@ -22,24 +28,29 @@ const defaultFormData: CreatePreviewHeadlinePayload = {
  * Create or edit a preview headline. Note that status is not managed here. It has a default on create and isn't editable via the form.
  */
 const PreviewForm: React.FC<PreviewFormProps> = ({
-  initialData,
-  onSubmit,
+  initialDataForEdit,
+  formMode,
+  onSuccess,
   onCancel,
-  isLoading,
 }) => {
-  const isEdit = !!initialData?.id;
+  const isEditMode = formMode === 'edit';
   const [formData, setFormData] = useState<
     EditablePreviewHeadlineFields | CreatePreviewHeadlinePayload
-  >(isEdit ? initialData : defaultFormData);
+  >(isEditMode && initialDataForEdit ? initialDataForEdit : defaultFormData);
 
   // Separate state for possibleAnswers text input
   const [possibleAnswersText, setPossibleAnswersText] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>();
+  const toast = useToast();
 
   useEffect(() => {
-    if (isEdit && initialData) {
-      setFormData(initialData);
+    if (isEditMode && initialDataForEdit) {
+      setFormData(initialDataForEdit);
       setPossibleAnswersText(
-        Array.isArray(initialData.possibleAnswers) ? initialData.possibleAnswers.join(',') : ''
+        Array.isArray(initialDataForEdit.possibleAnswers)
+          ? initialDataForEdit.possibleAnswers.join(',')
+          : ''
       );
     } else {
       setFormData(defaultFormData);
@@ -49,7 +60,7 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
           : ''
       );
     }
-  }, [initialData, isEdit]);
+  }, [initialDataForEdit, isEditMode]);
 
   const tailwindInputClass =
     'mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm';
@@ -61,8 +72,11 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError(undefined);
+
     // Construct the final data object, parsing possibleAnswers from its text state
     const finalPossibleAnswers = possibleAnswersText
       .split(',')
@@ -71,14 +85,39 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
 
     const dataToSubmitWithParsedAnswers = { ...formData, possibleAnswers: finalPossibleAnswers };
 
-    onSubmit(dataToSubmitWithParsedAnswers);
+    try {
+      if (isEditMode && initialDataForEdit?.id) {
+        const result = await updatePreviewHeadline(
+          initialDataForEdit.id,
+          dataToSubmitWithParsedAnswers as EditablePreviewHeadlineFields
+        );
+        toast(result.message || 'Preview updated!', 'success');
+      } else if (formMode === 'create') {
+        const result = await createPreviewHeadline(
+          dataToSubmitWithParsedAnswers as CreatePreviewHeadlinePayload
+        );
+        toast(result.message || 'Preview created!', 'success');
+      } else {
+        throw new Error('Invalid form mode or missing data.');
+      }
+      onSuccess(); // Call the success callback
+    } catch (err: any) {
+      const defaultMessage =
+        formMode === 'create' ? 'Failed to create preview.' : 'Failed to save preview.';
+      setError(err.message || defaultMessage);
+      toast(err.message || defaultMessage, 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-3 text-gray-700 dark:text-gray-200 max-h-[70vh] overflow-y-auto pr-2"
-    >
+    <form onSubmit={handleSubmit} className="space-y-3 text-gray-700 dark:text-gray-200 pr-2">
+      {error && (
+        <p className="text-red-500 bg-red-100 dark:bg-red-900 dark:text-red-300 p-2 rounded">
+          {error}
+        </p>
+      )}
       <div>
         <label htmlFor="headline" className="block text-sm font-medium">
           Headline
@@ -165,7 +204,7 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
           value={formData.publishTime || ''}
           onChange={e => handleFieldChange('publishTime', e.target.value)}
           className={tailwindInputClass}
-          required={!isEdit}
+          required={!isEditMode}
         />
       </div>
       <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
@@ -174,7 +213,7 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
           className="btn btn-primary w-full sm:col-start-2"
           disabled={isLoading}
         >
-          {isEdit ? 'Save' : 'Create'}
+          {isEditMode ? 'Save Changes' : 'Create Preview'}
         </button>
         <button
           type="button"

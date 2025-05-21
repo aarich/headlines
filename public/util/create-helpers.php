@@ -191,32 +191,30 @@ function getInput($prompt) {
 
 function confirmProceed($message) {
   $line = getInput("$message. Type 'y' to continue");
-  if (trim($line) != 'y') {
-    echo "Exiting.\n";
-    exit;
-  }
+  return trim($line) === 'y';
 }
 
 /**
  * EXITs if headline is not needed and not ignoring failure
+ * @param bool $ignore_failure If true continue even if headline is recent.
  */
-function checkIfHeadlineIsNeeded(bool $ignore_failure) {
+function checkIfHeadlineIsNeeded(bool $ignore_failure, string $command_to_log_on_exit) {
   $status = getStatus();
 
   $seconds_since_last_headline = $status['secondsSinceLastHeadline'];
   $hours_since_last_headline = $seconds_since_last_headline / 3600;
   echo "hours since last headline: $hours_since_last_headline\n";
 
-  // The next headline should be genearted if the last one was created more than 23 hours ago.
-  // This is to account for the time it takes to generate the next headline.
-  // The script is run as a cron job with expression like "*/5 20 * * *" to avoid a shift.
   if ($hours_since_last_headline < 23) {
-    echo "*** Headline is recent. ***\n";
+    $log_message = "*** Headline is recent (" . round($hours_since_last_headline, 2) . " hours old). ***";
+    echo $log_message . "\n";
 
     if ($ignore_failure) {
       echo " ---> Requesting to ignore failure. Proceeding anyway\n\n";
     } else {
       echo " ---> Exiting. No need to generate a new headline.\n";
+      log_script_execution($command_to_log_on_exit, 'completed_early', $log_message);
+
       exit(0);
     }
   }
@@ -254,5 +252,25 @@ function derive_before_after_and_correct_answer(string $headline, string $word_t
     throw new Exception(
       "The word '{$word_to_find}' (as a whole word) could not be found in the headline '{$headline}'."
     );
+  }
+}
+
+/**
+ * Logs script execution details to the database.
+ *
+ * @param string $command The command that was executed.
+ * @param string $status The status of the execution ('success', 'failed', 'completed_early').
+ * @param string $message Optional message (e.g., error message or success details).
+ */
+function log_script_execution(string $command, string $status, string $message = ''): void {
+  try {
+    $db = getDbConnection();
+    $environment = php_uname('n'); // Gets the host name
+    $stmt = $db->prepare(
+      'INSERT INTO script_execution (command, environment, status, message) VALUES (:command, :environment, :status, :message)'
+    );
+    $stmt->execute([':command' => $command, ':environment' => $environment, ':status' => $status, ':message' => $message]);
+  } catch (Exception $e) {
+    error_log("Failed to log script execution to DB. Command: $command, Status: $status, Error: " . $e->getMessage());
   }
 }

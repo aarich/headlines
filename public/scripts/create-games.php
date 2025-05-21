@@ -31,19 +31,21 @@ $skip_age_verification = isset($cli_options['skip-status']);
 $auto_confirm = isset($cli_options['y']);
 $save_to_preview = isset($cli_options['preview']);
 
+$command_name = basename(__FILE__) . ' ' . implode(' ', array_slice($argv, 1));
+
 try {
-  checkIfHeadlineIsNeeded($skip_age_verification);
+  checkIfHeadlineIsNeeded($skip_age_verification, $command_name);
 
   $db = getDbConnection();
 
   $stmt = $db->query('SELECT headline, status FROM headline_preview');
   $all_previews = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
   $already_proposed_headline_texts = [];
   foreach ($all_previews as $preview_item) {
     if ($save_to_preview && $preview_item['status'] === 'final_selection') {
-      echo "*** Found an already finalized preview ***\n";
-      echo $preview_item['headline'];
+      $log_message = "Found an already finalized preview: " . $preview_item['headline'];
+      echo "*** $log_message ***\n";
+      log_script_execution($command_name, 'completed_early', $log_message);
       exit(0);
     }
 
@@ -110,14 +112,18 @@ try {
 
   // Exit if there were no posts
   if (empty($headline_titles)) {
-    echo "No posts found. Exiting";
+    $log_message = "No posts found. Exiting";
+    echo $log_message . "\n";
+    log_script_execution($command_name, 'completed_early', $log_message);
     exit();
   }
 
   // Exit if we already have gone through half of the top posts
   $num_proposed = count($already_proposed_headline_texts);
   if ($num_proposed > 5 && count($headline_titles) < 5) {
-    echo "Already proposed 5 headlines with 5 remaining. Exiting";
+    $log_message = "Already proposed " . $num_proposed . " headlines with " . count($headline_titles) . " remaining. Exiting";
+    echo $log_message . "\n";
+    log_script_execution($command_name, 'completed_early', $log_message);
     exit();
   }
 
@@ -190,15 +196,25 @@ try {
   if ($auto_confirm) {
     echo "-y was specified, so not asking for confirmation.\n";
   } else {
-    confirmProceed("Would you like to submit this headline?");
+    if (!confirmProceed("Would you like to submit this headline?")) {
+      $log_message = "User aborted at confirmation prompt.";
+      echo $log_message . "\n";
+      log_script_execution($command_name, 'completed_early', $log_message);
+      exit;
+    }
   }
 
   if ($dry_run) {
-    echo "Dry run: Headline not inserted into the database.\n";
+    $log_message = "Dry run: Headline not inserted into the database.";
+    echo $log_message . "\n";
+    log_script_execution($command_name, 'success', $log_message);
   } else {
     insertHeadline($headline, $before_blank, $after_blank, $hint, $article_url, $reddit_url, $correct_answer, $possible_answers, $publish_time, $explanation, $save_to_preview);
-    echo "Headline inserted into the database.\n";
+    $log_message = "Headline inserted into the database.";
+    echo $log_message . "\n";
+    log_script_execution($command_name, 'success', $log_message);
   }
 } catch (Exception $e) {
   echo "Error: " . $e->getMessage() . "\n";
+  log_script_execution($command_name, 'failed', $e->getMessage());
 }
