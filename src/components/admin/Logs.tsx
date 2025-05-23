@@ -1,12 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { ScriptLogEntry, fetchScriptExecutionLogs, deleteScriptExecutionLogs } from 'lib/api';
 import Loading from 'components/common/Loading';
-import { ArrowUturnLeftIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { useToast } from 'contexts/ToastContext';
-
-interface ScriptLogViewerProps {
-  onBack: () => void;
-}
+import { ScriptLogEntry, fetchScriptExecutionLogs } from 'lib/api';
+import React, { useCallback, useEffect, useState } from 'react';
 
 const getStatusColor = (status: ScriptLogEntry['status']) => {
   switch (status) {
@@ -21,12 +15,10 @@ const getStatusColor = (status: ScriptLogEntry['status']) => {
   }
 };
 
-const ScriptLogViewer: React.FC<ScriptLogViewerProps> = ({ onBack }) => {
+const Logs = () => {
   const [logs, setLogs] = useState<ScriptLogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
-  const [isDeleting, setIsDeleting] = useState(false);
-  const toast = useToast();
 
   const loadLogs = useCallback(async () => {
     setIsLoading(true);
@@ -46,38 +38,8 @@ const ScriptLogViewer: React.FC<ScriptLogViewerProps> = ({ onBack }) => {
     loadLogs();
   }, [loadLogs]);
 
-  const handleDeleteAllLogs = async () => {
-    if (window.confirm('Are you sure you want to delete ALL script execution logs?')) {
-      setIsDeleting(true);
-      try {
-        const result = await deleteScriptExecutionLogs();
-        toast(result.message || 'All logs deleted successfully!', 'success');
-        setLogs([]);
-      } catch (err: any) {
-        toast(err.message || 'Failed to delete logs.', 'error');
-      } finally {
-        setIsDeleting(false);
-      }
-    }
-  };
-
   return (
     <div className="space-y-4 text-gray-700 dark:text-gray-200">
-      <div className="flex justify-between items-center mb-4">
-        <button onClick={onBack} className="btn btn-secondary flex items-center">
-          <ArrowUturnLeftIcon className="w-5 h-5 mr-2" />
-          Back to Previews
-        </button>
-        <button
-          onClick={handleDeleteAllLogs}
-          className="btn btn-danger flex items-center"
-          disabled={isDeleting || isLoading || logs.length === 0}
-        >
-          <TrashIcon className="w-5 h-5 mr-2" />
-          {isDeleting ? 'Deleting...' : 'Delete All Logs'}
-        </button>
-      </div>
-
       {isLoading && <Loading />}
       {error && (
         <p className="text-red-500 bg-red-100 dark:bg-red-900 dark:text-red-300 p-2 rounded">
@@ -109,7 +71,7 @@ const ScriptLogViewer: React.FC<ScriptLogViewerProps> = ({ onBack }) => {
                 <React.Fragment key={log.id}>
                   <tr>
                     <td className="px-3 py-2 whitespace-nowrap text-xs">
-                      {new Date(log.created_date).toLocaleString('en-US', {
+                      {new Date(log.createdDate.replace(' ', 'T') + 'Z').toLocaleString('en-US', {
                         month: 'numeric',
                         day: 'numeric',
                         hour: 'numeric',
@@ -151,4 +113,4 @@ const ScriptLogViewer: React.FC<ScriptLogViewerProps> = ({ onBack }) => {
   );
 };
 
-export default ScriptLogViewer;
+export default Logs;

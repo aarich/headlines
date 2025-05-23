@@ -1,10 +1,10 @@
 import {
-  CheckCircleIcon,
-  ArrowUturnLeftIcon,
-  PencilIcon,
-  PaperAirplaneIcon,
-  ShieldCheckIcon,
   ArchiveBoxXMarkIcon,
+  ArrowUturnLeftIcon,
+  CheckCircleIcon,
+  PaperAirplaneIcon,
+  PencilIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import React from 'react';
 import { PreviewHeadline, PreviewHeadlineStatus } from 'types';
@@ -25,6 +25,7 @@ const PreviewListItem: React.FC<PreviewListItemProps> = ({
   onPublish,
 }) => {
   const isRejected = preview.status === 'rejected';
+  const publishTime = new Date(preview.publishTime.replace(' ', 'T') + 'Z');
 
   return (
     <li
@@ -61,7 +62,15 @@ const PreviewListItem: React.FC<PreviewListItemProps> = ({
             rel="noopener noreferrer"
             className={isRejected ? 'pointer-events-none' : ''}
           >
-            {preview.articleSite} | {preview.publishTime}
+            {preview.articleSite} |{' '}
+            {publishTime.toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: 'numeric',
+              hour12: true,
+            })}
           </a>
         </p>
         <div className="flex flex-row mt-2 gap-1">

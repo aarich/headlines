@@ -1,13 +1,20 @@
-import { EyeIcon, EyeSlashIcon, DocumentMagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import React, { ReactNode, useEffect, useState } from 'react';
-import { EditablePreviewHeadlineFields, deleteFromPreview } from 'lib/api';
-import { getAdminKey, storeAdminKey } from 'lib/storage';
-import { PreviewHeadline } from 'types';
-import Modal from 'components/common/Modal';
+import {
+  ArrowUturnLeftIcon,
+  DocumentMagnifyingGlassIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  PencilSquareIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import PreviewForm from 'components/admin/PreviewForm';
-import ScriptLogViewer from './ScriptLogViewer';
-import PreviewList from './PreviewList'; // Import PreviewList directly
+import Modal from 'components/common/Modal';
 import { useToast } from 'contexts/ToastContext';
+import { EditablePreviewHeadlineFields, deleteScriptExecutionLogs } from 'lib/api';
+import { getAdminKey, storeAdminKey } from 'lib/storage';
+import React, { useEffect, useState } from 'react';
+import { PreviewHeadline } from 'types';
+import Logs from './Logs';
+import PreviewList from './PreviewList';
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -51,48 +58,71 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
     setCurrentView('previews');
   };
 
-  const handleRequestViewLogs = () => {
-    setCurrentView('logs');
-  };
-
-  const handleBackToMain = () => {
-    setCurrentView('previews');
-  };
-
-  const handleDeleteAllPreviews = async () => {
-    if (window.confirm('Delete ALL preview headlines?')) {
+  const handleDeleteAllLogs = async () => {
+    if (window.confirm('Are you sure you want to delete ALL script execution logs?')) {
       try {
-        const result = await deleteFromPreview();
-        toast(result.message || 'All previews deleted!', 'success');
+        const result = await deleteScriptExecutionLogs();
+        setCurrentView('previews');
+        toast(result.message || 'All logs deleted successfully!', 'success');
       } catch (err: any) {
-        toast(err.message || 'Failed to delete all previews.', 'error');
+        toast(err.message || 'Failed to delete logs.', 'error');
       }
     }
   };
 
-  let title: string | ReactNode;
+  const actions: { Icon: React.ForwardRefExoticComponent<any>; onClick: () => void }[] = [];
+
   switch (currentView) {
     case 'previews':
-      title = (
-        <>
-          Admin
-          <button className="mx-4" onClick={() => setRevealWords(!revealWords)}>
-            {revealWords ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
-          </button>
-        </>
+      actions.push(
+        {
+          Icon: revealWords ? EyeIcon : EyeSlashIcon,
+          onClick: () => setRevealWords(!revealWords),
+        },
+        {
+          Icon: PencilSquareIcon,
+          onClick: handleRequestCreatePreview,
+        },
+        {
+          Icon: DocumentMagnifyingGlassIcon,
+          onClick: () => setCurrentView('logs'),
+        }
       );
       break;
     case 'logs':
-      title = 'Script Execution Logs';
+      actions.push({
+        Icon: ArrowUturnLeftIcon,
+        onClick: () => setCurrentView('previews'),
+      });
+      actions.push({
+        Icon: TrashIcon,
+        onClick: handleDeleteAllLogs,
+      });
       break;
     case 'form':
-      title =
-        formMode === 'edit' ? `Edit Preview #${previewDataForForm?.id}` : 'Create New Preview';
+      actions.push({
+        Icon: ArrowUturnLeftIcon,
+        onClick: () => setCurrentView('previews'),
+      });
       break;
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} mdSize="3xl">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={
+        <>
+          Admin &nbsp;
+          {actions.map(({ Icon, onClick }) => (
+            <button className="mx-2" onClick={onClick} key={`${onClick}`}>
+              <Icon className="w-5 h-5" />
+            </button>
+          ))}
+        </>
+      }
+      mdSize="3xl"
+    >
       {currentView === 'form' && (
         <PreviewForm
           formMode={formMode}
@@ -101,34 +131,10 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
           onCancel={handleFormSuccessOrCancel}
         />
       )}
-      {currentView === 'logs' && <ScriptLogViewer onBack={handleBackToMain} />}
+      {currentView === 'logs' && <Logs />}
       {currentView === 'previews' && (
         <div className="space-y-4 text-gray-700 dark:text-gray-200">
           <PreviewList revealWords={revealWords} onEditRequest={handleRequestEditPreview} />
-          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row gap-4">
-            <button
-              onClick={handleDeleteAllPreviews}
-              className="btn w-full bg-red-600 hover:bg-red-700 text-white"
-              disabled={!adminKey}
-            >
-              Delete All Previews
-            </button>
-            <button
-              onClick={handleRequestCreatePreview}
-              className="btn btn-primary w-full"
-              disabled={!adminKey}
-            >
-              Create New Preview
-            </button>
-            <button
-              onClick={handleRequestViewLogs}
-              className="btn btn-info w-full flex items-center justify-center"
-              disabled={!adminKey}
-            >
-              <DocumentMagnifyingGlassIcon className="w-5 h-5 mr-2" />
-              Logs
-            </button>
-          </div>
           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <input
               value={adminKey || ''}

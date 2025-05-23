@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../util/create-helpers.php';
 require_once __DIR__ . '/../util/db.php';
 require_once __DIR__ . '/../util/auth.php';
+require_once __DIR__ . '/../util/api.php';
 $config = require __DIR__ . '/../util/config.php';
 
 header('Content-Type: application/json');
@@ -97,13 +98,7 @@ try {
                 $preview_row['possible_answers'] = $decodedPossibleAnswers['answers'] ?? $decodedPossibleAnswers ?? [];
             }
 
-            // Convert all snake_case keys to camelCase
-            $camelCasePreview = [];
-            foreach ($preview_row as $key => $value) {
-                $camelCaseKey = lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', $key))));
-                $camelCasePreview[$camelCaseKey] = $value;
-            }
-            $result[] = $camelCasePreview;
+            $result[] = convertToCamelCase($preview_row);
         }
 
         echo json_encode($result);

@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../util/db.php';
 require_once __DIR__ . '/../util/auth.php';
+require_once __DIR__ . '/../util/api.php';
 $config = require __DIR__ . '/../util/config.php';
 
 header('Content-Type: application/json');
@@ -32,13 +33,19 @@ try {
         $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
 
-        $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $logsResult = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        if ($logs === false) {
+        if ($logsResult === false) {
             // This case should ideally not happen if the query is correct and table exists.
             // fetchAll returns an empty array if no rows, or false on error.
             throw new Exception('Failed to fetch script logs.');
         }
+
+        $logs = [];
+        foreach ($logsResult as $row) {
+            $logs[] = convertToCamelCase($row);
+        }
+
         echo json_encode(['logs' => $logs]);
     } elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
         $stmt = $db->prepare('DELETE FROM script_execution');

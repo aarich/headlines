@@ -1,6 +1,6 @@
-import { Headline, HeadlineHistory, PreviewHeadline, PreviewHeadlineStatus } from 'types';
 import config from 'config';
 import { getAdminKey } from 'lib/storage';
+import { Headline, HeadlineHistory, PreviewHeadline, PreviewHeadlineStatus } from 'types';
 
 export interface PublishPreviewResult {
   message: string;
@@ -34,7 +34,7 @@ export type GetHeadlineArgs = { id?: number; game?: number };
 
 export interface ScriptLogEntry {
   id: number;
-  created_date: string; // ISO 8601 date string e.g., "2023-10-27 14:30:00"
+  createdDate: string; // ISO 8601 date string e.g., "2023-10-27 14:30:00"
   command: string;
   environment: string;
   message: string;

@@ -1,13 +1,14 @@
 <?php
 
 require_once __DIR__ . '/../util/db.php';
+require_once __DIR__ . '/../util/api.php';
 
 header('Content-Type: application/json');
 
 $set_response_code = false;
 
 try {
-    // Prepare the base query. It loads the last $days headlines and the stats for each one
+    // Prepare the base query. It loads the last 15 headlines and the stats for each one
     $query = "
         SELECT 
             h.id,
@@ -48,12 +49,7 @@ try {
     for ($i = 0; $i < count($result); $i++) {
         // Convert all snake case to camel case
         $headline = $result[$i];
-        $headline = array_combine(
-            array_map(function ($key) {
-                return lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', $key))));
-            }, array_keys($headline)),
-            array_values($headline)
-        );
+        $headline = convertToCamelCase($headline);
 
         // Decode the wrong guesses JSON
         if (isset($headline['wrongGuesses'])) {

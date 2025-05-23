@@ -1,7 +1,7 @@
+import { CheckIcon } from '@heroicons/react/24/outline';
+import { timeSince } from 'lib/ui';
 import React from 'react';
 import { HeadlineHistory } from 'types';
-import { timeSince } from 'lib/ui';
-import { CheckIcon } from '@heroicons/react/24/outline';
 
 interface TickerItemProps {
   headline: HeadlineHistory;
@@ -15,7 +15,7 @@ const TickerItem: React.FC<TickerItemProps> = ({
   headline: {
     beforeBlank,
     afterBlank,
-    publishTime,
+    publishTime: publishTimeStr,
     totalCorrectGuesses,
     totalPlays,
     firstGuessCorrectCount,
@@ -34,6 +34,7 @@ const TickerItem: React.FC<TickerItemProps> = ({
 
   const percentSolved = (100 * totalCorrectGuesses) / (totalPlays || 1);
   const percentFirstTry = (100 * firstGuessCorrectCount) / (totalPlays || 1);
+  const publishTime = new Date(publishTimeStr.replace(' ', 'T') + 'Z');
   return (
     <div className="relative mb-5 p-2 rounded bg-gray-100 dark:bg-gray-700">
       {(isLatest || isCurrent) && (
@@ -51,7 +52,18 @@ const TickerItem: React.FC<TickerItemProps> = ({
       <div className="text-xs text-gray-500 mb-1">
         <span className="font-light text-xs text-gray-500">{articleSite}</span>
         <span className="mx-1">•</span>
-        {timeSince(new Date(publishTime), 'h')} ago
+        <span
+          title={publishTime.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            hour12: true,
+          })}
+        >
+          {timeSince(publishTime, 'h')} ago
+        </span>
       </div>
 
       {/* WRONG GUESSES */}

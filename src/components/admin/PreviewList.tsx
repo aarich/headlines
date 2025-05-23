@@ -1,15 +1,15 @@
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { shuffleArray } from 'lib/ui';
-import { PreviewHeadline, PreviewHeadlineStatus } from 'types';
 import PreviewListItem from 'components/admin/PreviewListItem';
 import Loading from 'components/common/Loading';
-import {
-  fetchPreviewHeadlines,
-  updatePreviewHeadline,
-  publishPreviewHeadline,
-  EditablePreviewHeadlineFields,
-} from 'lib/api';
 import { useToast } from 'contexts/ToastContext';
+import {
+  EditablePreviewHeadlineFields,
+  fetchPreviewHeadlines,
+  publishPreviewHeadline,
+  updatePreviewHeadline,
+} from 'lib/api';
+import { shuffleArray } from 'lib/ui';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { PreviewHeadline, PreviewHeadlineStatus } from 'types';
 
 interface PreviewListProps {
   revealWords: boolean;
@@ -22,8 +22,8 @@ const PreviewList: React.FC<PreviewListProps> = ({ revealWords, onEditRequest })
   const [error, setError] = useState<string>();
   const toast = useToast();
 
-  const loadPreviews = useCallback(async () => {
-    setIsLoading(true);
+  const loadPreviews = useCallback(async (showLoading = true) => {
+    setIsLoading(showLoading);
     setError(undefined);
     try {
       const data = await fetchPreviewHeadlines();
@@ -66,15 +66,11 @@ const PreviewList: React.FC<PreviewListProps> = ({ revealWords, onEditRequest })
     const payload: EditablePreviewHeadlineFields = { ...preview, status: newStatus };
 
     try {
-      setIsLoading(true); // Indicate loading for this specific action
       const result = await updatePreviewHeadline(id, payload);
       toast(result.message || 'Status updated!', 'success');
-      // Refresh previews to show the change
-      await loadPreviews();
+      await loadPreviews(false);
     } catch (err: any) {
       toast(err.message || 'Failed to update status.', 'error');
-    } finally {
-      setIsLoading(false);
     }
   };
 

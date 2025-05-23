@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../util/db.php';
 require_once __DIR__ . '/../util/auth.php';
+require_once __DIR__ . '/../util/api.php';
 $config = require __DIR__ . '/../util/config.php';
 
 header('Content-Type: application/json');
@@ -115,13 +116,7 @@ try {
         // shuffle the possible answers
         shuffle($headlineData['possible_answers']);
 
-        // Convert all snake case to camel case
-        $camelCaseHeadline = array_combine(
-            array_map(function ($key) {
-                return lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', $key))));
-            }, array_keys($headlineData)),
-            array_values($headlineData)
-        );
+        $camelCaseHeadline = convertToCamelCase($headlineData);
 
         echo json_encode($camelCaseHeadline);
     } else {
