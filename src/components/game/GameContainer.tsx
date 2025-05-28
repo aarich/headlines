@@ -12,6 +12,7 @@ import { useToast } from 'contexts/ToastContext';
 import { recordGameCompleted } from 'lib/api';
 import { toastWrongAnswer } from 'lib/ui';
 import HintsAndGuesses from './HintsAndGuesses';
+import Suggestions from './Suggestions';
 
 interface GameContainerProps {
   headline: Headline;
@@ -125,11 +126,9 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
             )}
           </div>
 
-          {/* Button row: grid for game, flex for share */}
-
           {gameState.correct ? (
-            <div className={'flex justify-center mt-4 w-full'}>
-              <ShareButtons gameState={gameState} headline={headline} isExpert={expertMode} />
+            <div className="mt-6 w-full">
+              <ShareButtons gameState={gameState} headline={headline} isExpert={expertMode} />{' '}
             </div>
           ) : (
             <div className={'grid grid-cols-3 items-center gap-4 mt-4 w-full'}>
@@ -156,6 +155,8 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
           )}
 
           <HintsAndGuesses headline={headline} gameState={gameState} isExpert={expertMode} />
+
+          <Suggestions headline={headline} gameState={gameState} setGameState={setGameState} />
         </div>
       </section>
     </>

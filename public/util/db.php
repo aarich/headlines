@@ -73,6 +73,23 @@ CREATE TABLE script_execution (
     status ENUM('success', 'failed', 'completed_early') NOT NULL,
     INDEX idx_created_date (created_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE suggestion (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    headline_id INT UNSIGNED NOT NULL,
+    suggestion_text TEXT NOT NULL,
+    votes INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (headline_id) REFERENCES headline(id) ON DELETE CASCADE,
+    INDEX idx_headline_id_votes (headline_id, votes DESC),
+    UNIQUE INDEX idx_headline_suggestion (headline_id, suggestion_text(255))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE blocked_words (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    word VARCHAR(255) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 */
 
 function getDbConnection() {

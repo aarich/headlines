@@ -62,6 +62,33 @@ const toastRandomMessage = (
   toast(text, toastType, DEFAULT_TOAST_DURATION, messageClass);
 };
 
+export const toastSuccessfulSuggestion = (toast: ToastFn) => {
+  const confirmations = ['Submitted', 'Sent', 'Got it', 'Received'];
+  const affirmations = [
+    'Thanks for the laugh!',
+    'Good one.',
+    'Very funny indeed',
+    'Made me chuckle.',
+    'That was a good one!',
+    'Your humor is appreciated.',
+    'Keep the funny ideas coming!',
+    'That was clever.',
+    "You're a comedy genius!",
+    'Very witty!',
+    'Thanks for contributing!',
+    'We got a real comedian here',
+    'Clever one, Seinfeld',
+    "You're a star.",
+    "Mic drop, I'm sure",
+  ];
+  const punctuations = ['.', '!'];
+  const messages = confirmations.flatMap(c =>
+    punctuations.flatMap(p => affirmations.map(a => `${c}${p} ${a}`))
+  );
+
+  toastRandomMessage(toast, 'success', messages);
+};
+
 export const toastWrongAnswer = (toast: ToastFn) => {
   toastRandomMessage(toast, 'warning', [
     'Not quite',
@@ -77,6 +104,11 @@ export const toastWrongAnswer = (toast: ToastFn) => {
     'Not even close',
     'Wrong answer',
     'Not the right answer',
+    'Wrongaroo',
+    'Incorrect guess',
+    'Not the one',
+    'Guess again',
+    'Nope, not that',
   ]);
 };
 

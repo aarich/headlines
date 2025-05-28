@@ -1,6 +1,12 @@
 import config from 'config';
 import { getAdminKey } from 'lib/storage';
-import { Headline, HeadlineHistory, PreviewHeadline, PreviewHeadlineStatus } from 'types';
+import {
+  Headline,
+  HeadlineHistory,
+  PreviewHeadline,
+  PreviewHeadlineStatus,
+  Suggestion,
+} from 'types';
 
 export interface PublishPreviewResult {
   message: string;
@@ -59,6 +65,49 @@ export const fetchHeadline = async (args: GetHeadlineArgs): Promise<Headline> =>
   }
   return response.json();
 };
+
+export async function createSuggestion(
+  headlineId: number,
+  suggestionText: string
+): Promise<{ message: string; id: number }> {
+  const response = await fetch(`${config.apiUrl}/api/suggestions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ headlineId, suggestionText }),
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Failed to create suggestion' }));
+    throw new Error(errorData.error || `HTTP error ${response.status}: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+export async function voteForSuggestion(suggestionId: number): Promise<{ message: string }> {
+  const response = await fetch(`${config.apiUrl}/api/suggestions?id=${suggestionId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json', // Good practice to include, though PATCH body is empty here
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response
+      .json()
+      .catch(() => ({ error: 'Failed to vote for suggestion' }));
+    throw new Error(errorData.error || `HTTP error ${response.status}: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+export async function getGameSuggestions(headlineId: number): Promise<Suggestion[]> {
+  const response = await fetch(`${config.apiUrl}/api/suggestions?headlineId=${headlineId}`);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Failed to fetch suggestions' }));
+    throw new Error(errorData.error || `HTTP error ${response.status}: ${response.statusText}`);
+  }
+  return response.json();
+}
 
 export interface DeleteScriptLogsResult {
   message: string;
@@ -144,8 +193,6 @@ export const recordArticleClick = (id: number) => updateGameStats(id, 'article_c
 export const recordRedditClick = (id: number) => updateGameStats(id, 'reddit_clicked');
 
 export const recordShare = (id: number) => updateGameStats(id, 'shared');
-
-// --- Admin Preview API Functions ---
 
 const getAdminHeaders = () => {
   const adminKey = getAdminKey();

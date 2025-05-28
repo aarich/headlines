@@ -41,6 +41,9 @@ export interface GameState {
   wrongGuesses: WrongGuess[];
   hints?: GameHints;
   completedAt?: number;
+  suggestion?: string;
+  /** IDs of suggestions */
+  votes?: number[];
 }
 
 export interface WrongGuess {
@@ -99,4 +102,12 @@ export interface HeadlineHistory {
   totalIncorrectGuesses: number;
   firstGuessCorrectCount: number;
   wrongGuesses: { word: string; count: number }[];
+}
+
+export interface Suggestion {
+  id: number;
+  headlineId: number;
+  suggestionText: string;
+  votes: number;
+  createdAt: string;
 }

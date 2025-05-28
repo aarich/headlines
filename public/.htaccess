@@ -1,6 +1,6 @@
 # Deny access to all .php files in the api directory except those explicitly allowed
 
-<FilesMatch "^(?!history\.php$|status\.php$|statistics\.php$|preview\.php$|headline\.php$|logs\.php$).*\.php$">
+<FilesMatch "^(?!(?:history|status|statistics|preview|headline|suggestions|logs)\.php$).*\.php$">
     Require all denied
 </FilesMatch>
 
@@ -9,16 +9,6 @@ Options -Indexes
 
 # Prevent access to hidden files
 <FilesMatch "^\.">
-    Require all denied
-</FilesMatch>
-
-# Prevent access to config files
-<FilesMatch "config\.(local|example)\.php$">
-    Require all denied
-</FilesMatch>
-
-# Prevent access to db.php
-<FilesMatch "db.php">
     Require all denied
 </FilesMatch>
 
@@ -36,13 +26,13 @@ RewriteRule ^api/([^/]+)$ api/$1.php [L]
     Header set Access-Control-Allow-Origin "*" env=CORS_REQUEST
     Header set Access-Control-Allow-Methods "GET, POST, PATCH, OPTIONS" env=CORS_REQUEST
     Header set Access-Control-Allow-Headers "Content-Type, x-admin-key" env=CORS_REQUEST
-    <FilesMatch "^(headline\.php)$">
+    <FilesMatch "^headline\.php$">
         Header set Cache-Control "max-age=300, public"
     </FilesMatch>
-    <FilesMatch "^statistics\.php$">
+    <FilesMatch "^(?:statistics|suggestions)\.php$">
         Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
     </FilesMatch>
-    <FilesMatch "^(?!headline\.php$|statistics\.php$).*\.php$">
+    <FilesMatch "^(?!(?:headline|statistics|suggestions)\.php$).*\.php$">
         Header set Cache-Control "max-age=60, public"
     </FilesMatch>
 </IfModule>
