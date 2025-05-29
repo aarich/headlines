@@ -210,7 +210,7 @@ export const getResultText = (
   isExpert: boolean,
   forSharing = true
 ) => {
-  const countText = gameState.wrongGuesses.map(() => `❌`).join('') + '🧅';
+  const countText = (gameState.wrongGuesses ?? []).map(() => `❌`).join('') + '🧅';
 
   let hintsText = getHintsText(headline, gameState, isExpert) || 'No hints! 😎';
 

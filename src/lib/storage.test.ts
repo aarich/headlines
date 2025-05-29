@@ -50,7 +50,6 @@ const MOCK_HEADLINE: Headline = {
 };
 
 const MOCK_GAME_STATE: GameState = {
-  correct: false,
   wrongGuesses: [{ guess: 'test', timestamp: Date.now() } as WrongGuess],
   hints: { chars: 1, clue: false },
 };

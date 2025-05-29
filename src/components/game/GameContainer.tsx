@@ -27,7 +27,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
   const toast = useToast();
 
   useEffect(() => {
-    if (gameState.correct) {
+    if (gameState.completedAt) {
       const hasParam =
         window.location.search.includes('id=') || window.location.search.includes('game=');
       if (hasParam) {
@@ -40,7 +40,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
           toast(isOlderThanFiveSeconds ? 'Great job today!' : 'Nice!', 'success');
       }
     }
-  }, [gameState.completedAt, gameState.correct, toast]);
+  }, [gameState.completedAt, toast]);
 
   const handleGuess = useCallback(() => {
     if (!currentGuess) return;
@@ -50,15 +50,18 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
       setCurrentGuess(headline.correctAnswer);
       setGameState(prev => ({ ...prev, correct: true, completedAt: Date.now() }));
       incrementStat('totalPlays');
-      if (gameState.wrongGuesses.length === 0) {
+      if (!gameState.wrongGuesses?.length) {
         incrementStat('firstGuessCorrectCount');
       }
-      saveResult(headline, new Date(), gameState.wrongGuesses.length, expertMode);
-      recordGameCompleted(headline.id, { guesses: gameState.wrongGuesses.map(g => g.guess) });
+      saveResult(headline, new Date(), gameState.wrongGuesses?.length || 0, expertMode);
+      recordGameCompleted(
+        headline.id,
+        gameState.wrongGuesses?.map(g => g.guess)
+      );
     } else {
       expertInputRef.current?.focus();
 
-      if (gameState.wrongGuesses.find(g => g.guess === currentGuess)) {
+      if (gameState.wrongGuesses?.find(g => g.guess === currentGuess)) {
         toast('Already guessed!', 'warning');
         return;
       } else {
@@ -67,7 +70,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
       incrementStat('totalIncorrectGuesses');
       setGameState(({ wrongGuesses, ...rest }) => ({
         ...rest,
-        wrongGuesses: [...wrongGuesses, { guess: currentGuess, timestamp: Date.now() }],
+        wrongGuesses: [...(wrongGuesses ?? []), { guess: currentGuess, timestamp: Date.now() }],
       }));
       if (expertMode) {
         setCurrentGuess('');
@@ -76,16 +79,13 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
   }, [currentGuess, gameState, headline, setGameState, expertMode, toast]);
 
   useEffect(() => {
-    if (!gameState.correct) {
-      const handleKeyPress = ({ key }: { key: string }) =>
-        key === 'Enter' && !gameState.correct && handleGuess();
+    if (!gameState.completedAt) {
+      const handleKeyPress = ({ key }: { key: string }) => key === 'Enter' && handleGuess();
 
       window.addEventListener('keydown', handleKeyPress);
-      return () => {
-        window.removeEventListener('keydown', handleKeyPress);
-      };
+      return () => window.removeEventListener('keydown', handleKeyPress);
     }
-  }, [handleGuess, gameState.correct]);
+  }, [handleGuess, gameState.completedAt]);
 
   const nextHintType = getNextRevealType(gameState.hints, headline.correctAnswer, expertMode);
 
@@ -110,12 +110,12 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
         <HeadlineDisplay
           headline={headline}
           currentGuess={currentGuess}
-          isGameOver={gameState.correct}
+          isGameOver={!!gameState.completedAt}
           gameState={gameState}
         />
         <div className="flex flex-col items-center w-full">
           <div className="w-full flex justify-center">
-            {gameState.correct ? null : expertMode ? (
+            {gameState.completedAt ? null : expertMode ? (
               <ExpertInput
                 ref={expertInputRef}
                 onSetGuess={setCurrentGuess}
@@ -126,7 +126,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
             )}
           </div>
 
-          {gameState.correct ? (
+          {gameState.completedAt ? (
             <div className="w-full">
               <ShareButtons gameState={gameState} headline={headline} isExpert={expertMode} />{' '}
             </div>

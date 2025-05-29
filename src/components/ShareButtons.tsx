@@ -18,7 +18,7 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({ gameState, headline, isExpe
   return (
     <div>
       <div className="text-left whitespace-pre-wrap text-gray-700 dark:text-gray-200 mx-auto w-fit">
-        {gameState.wrongGuesses.length ? 'Guesses: ' : 'First try! '}
+        {gameState.wrongGuesses?.length ? 'Guesses: ' : 'First try! '}
         {resultText}
       </div>
       <div className="flex flex-row items-center justify-center gap-4">

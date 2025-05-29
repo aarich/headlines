@@ -185,8 +185,8 @@ export const updateGameStats = (
 // Convenience functions for specific actions
 export const recordGameStarted = (id: number) => updateGameStats(id, 'game_started');
 
-export const recordGameCompleted = (id: number, data: GameCompletedData) =>
-  updateGameStats(id, 'game_completed', data);
+export const recordGameCompleted = (id: number, guesses: string[] = []) =>
+  updateGameStats(id, 'game_completed', { guesses });
 
 export const recordArticleClick = (id: number) => updateGameStats(id, 'article_clicked');
 

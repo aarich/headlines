@@ -236,7 +236,6 @@ describe('ui.ts', () => {
 
     it('should generate basic share text with no hints and not expert', () => {
       const gameState: GameState = {
-        correct: false,
         wrongGuesses: [
           { guess: 'x', timestamp: 1 },
           { guess: 'y', timestamp: 2 },
@@ -246,22 +245,23 @@ describe('ui.ts', () => {
       expect(getResultText(MOCK_HEADLINE, gameState, false, true)).toBe(expectedText);
     });
 
+    it('should show no guesses for empty array and undefined', () => {
+      const emptyArrayState: GameState = { wrongGuesses: [] };
+      const undefinedState: GameState = {};
+
+      const expectedText = `Leek #1 found!\n\nhttp://localhost/\n\n🧅\nNo hints! 😎`;
+      expect(getResultText(MOCK_HEADLINE, emptyArrayState, false, true)).toBe(expectedText);
+      expect(getResultText(MOCK_HEADLINE, undefinedState, false, true)).toBe(expectedText);
+    });
+
     it('should include char hints', () => {
-      const gameState: GameState = {
-        correct: false,
-        wrongGuesses: [],
-        hints: { chars: 2, clue: false },
-      };
+      const gameState: GameState = { hints: { chars: 2, clue: false } };
       const expectedText = `Leek #1 found!\n\nhttp://localhost/\n\n🧅\n💡💡`;
       expect(getResultText(MOCK_HEADLINE, gameState, false, true)).toBe(expectedText);
     });
 
     it('should just be the clue in non-expert mode with no characters', () => {
-      const gameState: GameState = {
-        correct: false,
-        wrongGuesses: [],
-        hints: { chars: 0, clue: true },
-      };
+      const gameState: GameState = { hints: { chars: 0, clue: true } };
       const expectedText = `Leek #1 found!\n\nhttp://localhost/\n\n🧅\n🕵`;
 
       expect(getResultText(MOCK_HEADLINE, gameState, false, true)).toBe(expectedText);
@@ -270,8 +270,6 @@ describe('ui.ts', () => {
     it('should include char hints up to clue and clue hint', () => {
       mockGetNumCharsBeforeClue.mockReturnValue(3);
       const gameState: GameState = {
-        correct: false,
-        wrongGuesses: [],
         hints: { chars: 4, clue: true },
       };
 
@@ -281,18 +279,14 @@ describe('ui.ts', () => {
 
     it('should include char hints up to clue and after clue hint', () => {
       mockGetNumCharsBeforeClue.mockReturnValue(2);
-      const gameState: GameState = {
-        correct: false,
-        wrongGuesses: [],
-        hints: { chars: 4, clue: true },
-      };
+      const gameState: GameState = { hints: { chars: 4, clue: true } };
 
       const expectedText = `Leek #1 found!\n\nhttp://localhost/\n\n🧅\n💡💡🕵💡💡\nExpert Mode 🤓`;
       expect(getResultText(MOCK_HEADLINE, gameState, true, true)).toBe(expectedText);
     });
 
     it('should include expert mode text', () => {
-      const gameState: GameState = { wrongGuesses: [{ guess: 'x', timestamp: 1 }], correct: false };
+      const gameState: GameState = { wrongGuesses: [{ guess: 'x', timestamp: 1 }] };
       const expectedText = `Leek #1 found!\n\nhttp://localhost/\n\n❌🧅\nNo hints! 😎\nExpert Mode 🤓`;
       expect(getResultText(MOCK_HEADLINE, gameState, true, true)).toBe(expectedText);
     });
@@ -300,7 +294,6 @@ describe('ui.ts', () => {
     it('should handle all elements combined', () => {
       mockGetNumCharsBeforeClue.mockReturnValue(2);
       const gameState: GameState = {
-        correct: false,
         wrongGuesses: [
           { guess: 'x', timestamp: 1 },
           { guess: 'x', timestamp: 1 },
@@ -314,7 +307,7 @@ describe('ui.ts', () => {
   });
 
   describe('shareScore', () => {
-    const mockGameState: GameState = { wrongGuesses: [], correct: false };
+    const mockGameState: GameState = {};
     const mockToast = jest.fn();
 
     beforeEach(() => {

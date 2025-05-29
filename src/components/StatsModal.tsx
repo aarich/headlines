@@ -17,8 +17,8 @@ interface StatsModalProps {
 }
 
 const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, gameState }) => {
-  const scores = useMemo(() => getStoredScores(), [gameState.correct]);
-  const stats = useMemo(() => getStoredStats(), [gameState.correct]);
+  const scores = useMemo(() => getStoredScores(), [gameState.completedAt]);
+  const stats = useMemo(() => getStoredStats(), [gameState.completedAt]);
   const [history, setHistory] = useState<HeadlineHistory[]>();
   const [revealWords, setRevealWords] = useState(false);
 
@@ -34,7 +34,7 @@ const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, game
 
   const currentStreak = useMemo(
     () => (headline ? getCurrentStreak(Object.values(scores), headline.gameNum - 1) : undefined),
-    [headline, scores, gameState.correct]
+    [headline, scores, gameState.completedAt]
   );
 
   useEffect(() => {

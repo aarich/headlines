@@ -21,7 +21,7 @@ const Suggestions: React.FC<SuggestionsSectionProps> = ({ headline, gameState, s
   const toast = useToast();
 
   useEffect(() => {
-    if (gameState.correct) {
+    if (gameState.completedAt) {
       setIsLoading(true);
       getGameSuggestions(headline.id)
         .then(data => data.sort((a, b) => b.votes - a.votes))
@@ -29,7 +29,7 @@ const Suggestions: React.FC<SuggestionsSectionProps> = ({ headline, gameState, s
         .catch(console.error)
         .finally(() => setIsLoading(false));
     }
-  }, [gameState.correct, headline.id, toast]);
+  }, [gameState.completedAt, headline.id, toast]);
 
   const handleSuggestionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,7 +94,7 @@ const Suggestions: React.FC<SuggestionsSectionProps> = ({ headline, gameState, s
     setCurrentTopSuggestionIndex(0); // Reset index if the suggestions list changes
   }, [suggestions]);
 
-  if (!gameState.correct) {
+  if (!gameState.completedAt) {
     return null;
   }
 

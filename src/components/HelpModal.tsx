@@ -50,11 +50,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
         <div className="flex justify-center font-bold">
           <GuessDisplay
             currentGuess={GUESS}
-            gameState={{
-              correct: false,
-              wrongGuesses: [],
-              hints: { chars: 2, clue: false },
-            }}
+            gameState={{ hints: { chars: 2, clue: false } }}
             correctAnswer={'x' + GUESS.slice(1) + 'x'.repeat(4)}
             forceExpertMode
             prefix=""

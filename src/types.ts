@@ -39,8 +39,7 @@ export interface GameHints {
 export const SUGGESTION_SKIPPED = -1;
 
 export interface GameState {
-  correct: boolean;
-  wrongGuesses: WrongGuess[];
+  wrongGuesses?: WrongGuess[];
   hints?: GameHints;
   completedAt?: number;
   suggestion?: string | typeof SUGGESTION_SKIPPED;

@@ -29,7 +29,7 @@ function App() {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
-  const [gameState, setGameState] = useState<GameState>({ correct: false, wrongGuesses: [] });
+  const [gameState, setGameState] = useState<GameState>({});
 
   useEffect(() => {
     if (getStarted().size === 0) {
@@ -55,7 +55,7 @@ function App() {
 
       if (score) {
         // We already finished this game
-        setGameState(gameState ?? { correct: true, wrongGuesses: [] });
+        setGameState(gameState ?? { completedAt: new Date().getTime() });
       } else {
         if (!startedGames.has(headline.id)) {
           // only record started if we haven't already started this

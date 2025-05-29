@@ -9,13 +9,14 @@ interface Props {
 }
 
 const HintsAndGuesses: React.FC<Props> = ({ gameState, headline, isExpert }) => {
-  const { wrongGuesses } = gameState;
+  const { wrongGuesses = [] } = gameState;
   const reversed = wrongGuesses.slice().reverse();
   const hintsText = getHintsText(headline, gameState, isExpert);
   const showDot = !!(wrongGuesses.length && hintsText);
+  const showClue = gameState.hints?.clue && !gameState.completedAt;
   return (
     <>
-      {gameState.hints?.clue && (
+      {showClue && (
         <div className="mt-4 w-full max-w-md">
           <div className="text-sm text-gray-600 dark:text-gray-400 mb-2 italic">
             {headline.hint}

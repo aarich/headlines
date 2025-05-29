@@ -23,12 +23,11 @@ const MOCK_HEADLINE: Headline = {
 };
 const ANSWER_LENGTH = MOCK_HEADLINE.correctAnswer.length;
 
-// Helper to create a mock GameState
 const createMockGameState = (
   hints?: GameHints,
-  correct = false,
-  wrongGuesses: WrongGuess[] = []
-): GameState => ({ correct, wrongGuesses, hints });
+  completedAt?: number,
+  wrongGuesses?: WrongGuess[]
+): GameState => ({ completedAt, wrongGuesses, hints });
 
 describe('game.ts', () => {
   describe('checkAnswer', () => {
