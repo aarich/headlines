@@ -5,6 +5,7 @@ import {
   fetchHeadlineBasedOnQueryParameters,
   getResultText,
   shareScore,
+  formatSuggestionCasing,
 } from 'lib/ui';
 import { GameState, Headline } from 'types';
 
@@ -400,6 +401,59 @@ describe('ui.ts', () => {
       const expectedClipboardTextNotExpert = `Leek #1 found!\n\nhttp://localhost/\n\n🧅\nNo hints! 😎`;
       shareScore(MOCK_HEADLINE, mockGameState, false, mockToast, true); // isExpert = false, forceCopy true
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expectedClipboardTextNotExpert);
+    });
+  });
+
+  describe('formatSuggestionCasing', () => {
+    it('should return original text if text or correctAnswer is empty', () => {
+      expect(formatSuggestionCasing('', 'Correct')).toBe('');
+      expect(formatSuggestionCasing('suggestion', '')).toBe('suggestion');
+      expect(formatSuggestionCasing('', '')).toBe('');
+    });
+
+    it('should uppercase text if correctAnswer is all uppercase', () => {
+      expect(formatSuggestionCasing('suggestion', 'ALLCAPS')).toBe('SUGGESTION');
+      expect(formatSuggestionCasing('SuGgEsTiOn', 'ANSWER')).toBe('SUGGESTION');
+    });
+
+    it('should title case text if correctAnswer starts with an uppercase letter', () => {
+      expect(formatSuggestionCasing('suggestion', 'Titlecase')).toBe('Suggestion');
+      expect(formatSuggestionCasing('SUGGESTION', 'Correct')).toBe('Suggestion');
+      expect(formatSuggestionCasing('s', 'Word')).toBe('S');
+    });
+
+    it('should lowercase text if correctAnswer is all lowercase', () => {
+      expect(formatSuggestionCasing('Suggestion', 'lowercase')).toBe('suggestion');
+      expect(formatSuggestionCasing('SUGGESTION', 'answer')).toBe('suggestion');
+    });
+
+    it('should return text as is for mixed case correctAnswer not starting with uppercase or all lower/upper', () => {
+      expect(formatSuggestionCasing('Suggestion', 'iPod')).toBe('Suggestion');
+      expect(formatSuggestionCasing('suggestion', 'wordNUMBER')).toBe('suggestion');
+    });
+
+    it('should handle single letter inputs', () => {
+      expect(formatSuggestionCasing('a', 'BC')).toBe('A');
+      expect(formatSuggestionCasing('B', 'Correct')).toBe('B');
+      expect(formatSuggestionCasing('c', 'lowercase')).toBe('c');
+      expect(formatSuggestionCasing('D', 'iPhone')).toBe('D');
+    });
+
+    it('should handle text with numbers if correctAnswer is all caps', () => {
+      expect(formatSuggestionCasing('word1', 'ALLCAPS')).toBe('WORD1');
+    });
+
+    it('should handle text with numbers if correctAnswer is title case', () => {
+      expect(formatSuggestionCasing('word1', 'Title')).toBe('Word1');
+    });
+
+    it('should handle text with numbers if correctAnswer is all lower case', () => {
+      expect(formatSuggestionCasing('Word1', 'lower')).toBe('word1');
+    });
+
+    it('should handle correctAnswer without letters (e.g. only numbers/symbols)', () => {
+      expect(formatSuggestionCasing('Suggestion', '123')).toBe('Suggestion');
+      expect(formatSuggestionCasing('Suggestion', '!@#')).toBe('Suggestion');
     });
   });
 });

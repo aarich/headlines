@@ -37,11 +37,19 @@ try {
         }
 
         $headline_id = (int)$input['headlineId'];
-        $suggestion_text = trim($input['suggestionText']);
+        $suggestion_text = strtolower(trim($input['suggestionText']));
 
         if (empty($suggestion_text) || $headline_id <= 0) {
             http_response_code(400);
             throw new Exception('Invalid input values. headlineId must be positive, suggestionText must not be empty.');
+        }
+
+        // Minimal spam validation
+        $has_email = preg_match('/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/', $suggestion_text);
+        $has_url = preg_match('/(https?:\/\/|www\.)\S+/i', $suggestion_text) || preg_match('/\S+\.(com|org|net|gov|edu|io|co|us|uk|ca|de|fr|au|ru|cn|jp)\b/i', $suggestion_text);
+        if ($has_email || $has_url) {
+            http_response_code(400);
+            throw new Exception('Suggestion invalid.');
         }
 
         // Check for blocked words

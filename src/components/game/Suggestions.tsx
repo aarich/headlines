@@ -1,9 +1,9 @@
-import React, { Dispatch, SetStateAction, useEffect, useState, useRef } from 'react';
-import { GameState, Headline, Suggestion } from 'types';
-import { createSuggestion, getGameSuggestions, voteForSuggestion } from 'lib/api';
-import { useToast } from 'contexts/ToastContext';
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
-import { toastSuccessfulSuggestion } from 'lib/ui';
+import { useToast } from 'contexts/ToastContext';
+import { createSuggestion, getGameSuggestions, voteForSuggestion } from 'lib/api';
+import { formatSuggestionCasing, toastSuccessfulSuggestion } from 'lib/ui';
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { GameState, Headline, Suggestion, SUGGESTION_SKIPPED } from 'types';
 
 interface SuggestionsSectionProps {
   headline: Headline;
@@ -20,35 +20,16 @@ const Suggestions: React.FC<SuggestionsSectionProps> = ({ headline, gameState, s
   const [currentTopSuggestionIndex, setCurrentTopSuggestionIndex] = useState(0);
   const toast = useToast();
 
-  const suggestionsContainerRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (gameState.correct) {
       setIsLoading(true);
       getGameSuggestions(headline.id)
-        .then(data => {
-          const sorted = data.sort(
-            (a, b) =>
-              b.votes - a.votes || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-          );
-          setSuggestions(sorted);
-        })
-        .catch(error => {
-          console.error('Failed to fetch suggestions:', error);
-          toast(`Error fetching suggestions: ${(error as Error).message}`, 'error');
-        })
+        .then(data => data.sort((a, b) => b.votes - a.votes))
+        .then(sorted => setSuggestions(sorted))
+        .catch(console.error)
         .finally(() => setIsLoading(false));
     }
   }, [gameState.correct, headline.id, toast]);
-
-  useEffect(() => {
-    if (gameState.completedAt) {
-      const justCompleted = Date.now() - gameState.completedAt < 5000;
-      if (justCompleted) {
-        suggestionsContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
-  }, [gameState.completedAt]);
 
   const handleSuggestionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +47,16 @@ const Suggestions: React.FC<SuggestionsSectionProps> = ({ headline, gameState, s
       toast(`Error: ${error.message || 'Could not submit suggestion.'}`, 'error');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSkipSuggestion = () => {
+    if (
+      window.confirm(
+        "Are you sure you want to skip? You won't be able to submit a suggestion for this headline."
+      )
+    ) {
+      setGameState(prev => ({ ...prev, suggestion: SUGGESTION_SKIPPED }));
     }
   };
 
@@ -108,12 +99,11 @@ const Suggestions: React.FC<SuggestionsSectionProps> = ({ headline, gameState, s
   }
 
   return (
-    <div
-      ref={suggestionsContainerRef}
-      className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 w-full"
-    >
+    <div className="mt-4 pt-6 border-t border-gray-200 dark:border-gray-700 w-full">
       <div className="flex items-center justify-center relative mb-2">
-        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">Your Leeks</h2>
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
+          Your Leek{gameState.suggestion ? 's' : ''}
+        </h2>
         <button
           onClick={() => setShowHelpTooltip(!showHelpTooltip)}
           onMouseEnter={() => setShowHelpTooltip(true)}
@@ -157,18 +147,31 @@ const Suggestions: React.FC<SuggestionsSectionProps> = ({ headline, gameState, s
               required
             />
           </div>
-          <button
-            type="submit"
-            disabled={isSubmitting || !suggestionText.trim()}
-            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-500"
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit'}
-          </button>
+          <div className="mt-3 flex items-center space-x-2">
+            <button
+              type="submit"
+              disabled={isSubmitting || !suggestionText.trim()}
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-500"
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit'}
+            </button>
+            <button
+              type="button"
+              onClick={handleSkipSuggestion}
+              disabled={isSubmitting}
+              className="px-4 py-2 border-2 border-gray-500 text-gray-500 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/30 transition-colors disabled:opacity-50 dark:border-gray-400 dark:text-gray-400"
+            >
+              Skip
+            </button>
+          </div>
         </form>
       ) : (
-        <p className="text-center text-gray-600 dark:text-gray-400 mb-6 text-sm italic">
-          You submitted: "{gameState.suggestion}"
-        </p>
+        gameState.suggestion &&
+        gameState.suggestion !== SUGGESTION_SKIPPED && (
+          <p className="text-center text-gray-600 dark:text-gray-400 mb-6 text-sm italic">
+            You submitted: "{gameState.suggestion}"
+          </p>
+        )
       )}
 
       {/* Display suggestions only after user has submitted their own */}
@@ -186,7 +189,12 @@ const Suggestions: React.FC<SuggestionsSectionProps> = ({ headline, gameState, s
                     <p className="text-lg sm:text-xl text-gray-800 dark:text-gray-200 mb-1 min-h-[3em] flex flex-col items-center justify-center">
                       <span>
                         {headline.beforeBlank}
-                        <span className="font-bold">{currentTopSuggestion.suggestionText}</span>
+                        <span className="font-bold">
+                          {formatSuggestionCasing(
+                            currentTopSuggestion.suggestionText,
+                            headline.correctAnswer
+                          )}
+                        </span>
                         {headline.afterBlank}
                       </span>
                     </p>
@@ -227,7 +235,10 @@ const Suggestions: React.FC<SuggestionsSectionProps> = ({ headline, gameState, s
                         className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md shadow-sm flex justify-between items-center"
                       >
                         <p className="text-gray-700 dark:text-gray-300 flex-grow mr-2">
-                          {suggestion.suggestionText}
+                          {formatSuggestionCasing(
+                            suggestion.suggestionText,
+                            headline.correctAnswer
+                          )}
                         </p>
                         <button
                           onClick={() => handleVote(suggestion.id)}

@@ -23,22 +23,20 @@ interface AdminModalProps {
 type AdminView = 'previews' | 'form' | 'logs';
 const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const toast = useToast();
-  const [adminKey, setAdminKey] = useState(getAdminKey());
   const [revealWords, setRevealWords] = useState(false);
-
   const [currentView, setCurrentView] = useState<AdminView>('previews');
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [previewDataForForm, setPreviewDataForForm] = useState<
     EditablePreviewHeadlineFields & { id: number }
   >();
 
+  const adminKey = getAdminKey();
+
   useEffect(() => {
     if (!isOpen) {
       setPreviewDataForForm(undefined);
     }
   }, [isOpen, currentView]);
-
-  const handleSetKey = () => storeAdminKey(adminKey ?? '');
 
   const handleRequestEditPreview = (preview: PreviewHeadline) => {
     setPreviewDataForForm(preview as EditablePreviewHeadlineFields & { id: number });
@@ -56,6 +54,14 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
     setFormMode('create');
     setPreviewDataForForm(undefined);
     setCurrentView('previews');
+  };
+
+  const handleUpdateAdminKey = () => {
+    const newKey = window.prompt('Enter new admin key:', adminKey || '');
+    if (newKey !== null) {
+      storeAdminKey(newKey);
+      toast('Admin key set successfully!', 'success');
+    }
   };
 
   const handleDeleteAllLogs = async () => {
@@ -135,15 +141,9 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
       {currentView === 'previews' && (
         <div className="space-y-4 text-gray-700 dark:text-gray-200">
           <PreviewList revealWords={revealWords} onEditRequest={handleRequestEditPreview} />
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <input
-              value={adminKey || ''}
-              onChange={e => setAdminKey(e.target.value)}
-              placeholder="Enter Admin Key"
-              className="px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md"
-            />
-            <button onClick={handleSetKey} className="btn btn-secondary ml-2 sm:ml-4">
-              Set Key
+          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <button onClick={handleUpdateAdminKey} className="btn btn-secondary">
+              Set Admin Key
             </button>
           </div>
         </div>

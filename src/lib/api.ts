@@ -194,7 +194,7 @@ export const recordRedditClick = (id: number) => updateGameStats(id, 'reddit_cli
 
 export const recordShare = (id: number) => updateGameStats(id, 'shared');
 
-const getAdminHeaders = () => {
+export const getAdminHeaders = () => {
   const adminKey = getAdminKey();
   if (!adminKey) {
     throw new Error('Admin API key is not configured.');

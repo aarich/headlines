@@ -243,3 +243,28 @@ export const shareScore = (
     toast('Score copied to clipboard!', 'success');
   }
 };
+
+export const formatSuggestionCasing = (text: string, correctAnswer: string): string => {
+  if (!text.length || !correctAnswer.length) {
+    return text;
+  }
+
+  const hasLetter = (str: string) => /[a-zA-Z]/.test(str);
+  const isAllUpper = (str: string) => hasLetter(str) && str === str.toUpperCase();
+
+  if (isAllUpper(correctAnswer)) {
+    return text.toUpperCase();
+  }
+
+  if (/[A-Z]/.test(correctAnswer[0])) {
+    return text.charAt(0).toUpperCase() + (text.length > 1 ? text.slice(1).toLowerCase() : '');
+  }
+
+  // If correctAnswer is all lowercase, make text all lowercase.
+  const isAllLower = (str: string) => hasLetter(str) && str === str.toLowerCase();
+  if (isAllLower(correctAnswer)) {
+    return text.toLowerCase();
+  }
+
+  return text; // Return as is for other cases (e.g. "iPhone", or if correctAnswer is "word1")
+};

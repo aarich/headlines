@@ -36,12 +36,14 @@ export interface GameHints {
   clue: boolean;
 }
 
+export const SUGGESTION_SKIPPED = -1;
+
 export interface GameState {
   correct: boolean;
   wrongGuesses: WrongGuess[];
   hints?: GameHints;
   completedAt?: number;
-  suggestion?: string;
+  suggestion?: string | typeof SUGGESTION_SKIPPED;
   /** IDs of suggestions */
   votes?: number[];
 }

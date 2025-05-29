@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { clamp } from 'lib/utils';
 
 // Tuning constants
 const FADE_DISTANCE = 3; // How many items to show on each side
@@ -14,8 +15,6 @@ interface AnswerWheelProps {
   choices: string[];
   onSetGuess: (guess: string) => void;
 }
-
-const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(val, max));
 
 const AnswerWheel: React.FC<AnswerWheelProps> = ({ choices, onSetGuess }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);

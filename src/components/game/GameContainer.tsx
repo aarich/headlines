@@ -127,7 +127,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
           </div>
 
           {gameState.correct ? (
-            <div className="mt-6 w-full">
+            <div className="w-full">
               <ShareButtons gameState={gameState} headline={headline} isExpert={expertMode} />{' '}
             </div>
           ) : (
