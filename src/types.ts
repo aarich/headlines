@@ -31,25 +31,21 @@ export interface PreviewHeadline {
   updatedAt: string;
 }
 
-export interface GameHints {
-  chars: number;
-  clue: boolean;
+export enum Hint {
+  CHAR = 1,
+  CLUE = 2,
 }
+
+export type PlayAction = Hint | string;
 
 export const SUGGESTION_SKIPPED = -1;
 
 export interface GameState {
-  wrongGuesses?: WrongGuess[];
-  hints?: GameHints;
+  actions?: PlayAction[];
   completedAt?: number;
   suggestion?: string | typeof SUGGESTION_SKIPPED;
   /** IDs of suggestions */
   votes?: number[];
-}
-
-export interface WrongGuess {
-  guess: string;
-  timestamp: number;
 }
 
 export interface ScoreData {

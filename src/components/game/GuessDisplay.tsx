@@ -1,5 +1,5 @@
 import React from 'react';
-import { GameState } from 'types';
+import { GameState, Hint } from 'types';
 import { useSettings } from 'contexts/SettingsContext';
 
 interface GuessDisplayProps {
@@ -21,7 +21,7 @@ const SPACE_CHAR_CLASS = 'font-normal tracking-widest';
 
 const GuessDisplay: React.FC<GuessDisplayProps> = ({
   currentGuess,
-  gameState: { hints },
+  gameState: { actions },
   correctAnswer,
   forceExpertMode,
   prefix,
@@ -40,9 +40,10 @@ const GuessDisplay: React.FC<GuessDisplayProps> = ({
     : currentGuess.length;
 
   for (let i = 0; i < numCharsToDisplay; i++) {
+    const numCharHints = actions?.filter(a => a === Hint.CHAR).length ?? 0;
     if (i > currentGuess.length - 1) {
       // No guess yet. If the letter was revealed already, show it as a ghost. Otherwise, show a space.
-      if (hints?.chars && i < hints.chars) {
+      if (i < numCharHints) {
         chars.push({ char: correctAnswer[i], className: GHOST_CHAR_CLASS });
       } else {
         chars.push({ char: ' ' });
@@ -51,7 +52,7 @@ const GuessDisplay: React.FC<GuessDisplayProps> = ({
       // Extra guess
       const className = isExpertMode ? wrongCharClass : undefined;
       chars.push({ char: currentGuess[i], className });
-    } else if (i >= (hints?.chars ?? 0)) {
+    } else if (i >= numCharHints) {
       // No information about this character
       chars.push({ char: currentGuess[i] });
     } else if (currentGuess[i].toLowerCase() === correctAnswer[i].toLowerCase()) {

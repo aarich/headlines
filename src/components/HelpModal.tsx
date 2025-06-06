@@ -3,6 +3,7 @@ import Modal from 'components/common/Modal';
 import { LightBulbIcon } from '@heroicons/react/24/outline';
 import GuessDisplay from 'components/game/GuessDisplay';
 import { useSettings } from 'contexts/SettingsContext';
+import { Hint } from 'types';
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -50,7 +51,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
         <div className="flex justify-center font-bold">
           <GuessDisplay
             currentGuess={GUESS}
-            gameState={{ hints: { chars: 2, clue: false } }}
+            gameState={{ actions: [Hint.CHAR, Hint.CHAR] }}
             correctAnswer={'x' + GUESS.slice(1) + 'x'.repeat(4)}
             forceExpertMode
             prefix=""

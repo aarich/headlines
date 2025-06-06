@@ -1,8 +1,8 @@
 import { ToastType } from 'components/Toast';
 import { DEFAULT_TOAST_DURATION, ToastFn } from 'contexts/ToastContext';
-import { GameState, Headline } from 'types';
+import { GameState, Headline, Hint } from 'types';
 import { fetchHeadline, GetHeadlineArgs, recordShare } from 'lib/api';
-import { getNumCharsBeforeClue } from 'lib/game';
+import { hasAnyHints } from 'lib/game';
 import { getStoredScores } from 'lib/storage';
 
 export const plural = (count: number, singular: string, suffix = 's'): string =>
@@ -183,25 +183,20 @@ export const fetchHeadlineBasedOnQueryParameters = async () => {
   return await fetchHeadline(args);
 };
 
-export const getHintsText = (headline: Headline, gameState: GameState, isExpert: boolean) => {
-  const numCharsBeforeClue = getNumCharsBeforeClue(headline.correctAnswer, isExpert);
+const EMOJIS = {
+  [Hint.CHAR]: '💡',
+  [Hint.CLUE]: '🕵',
+};
 
-  let hintsText = '';
-  if (!isExpert && gameState.hints?.clue) {
-    hintsText = '🕵';
+export const getActionsText = (headline: Headline, gameState: GameState, isExpert: boolean) => {
+  let text =
+    gameState.actions
+      ?.map(action => (typeof action === 'string' ? '❌' : EMOJIS[action]))
+      .join('') || '';
+  if (gameState.completedAt) {
+    text += '🧅';
   }
-
-  if (gameState.hints?.chars) {
-    for (let i = 0; i < gameState.hints.chars; i++) {
-      hintsText += '💡';
-
-      if (i === numCharsBeforeClue - 1 && gameState.hints.clue) {
-        hintsText += '🕵';
-      }
-    }
-  }
-
-  return hintsText;
+  return text;
 };
 
 export const getResultText = (
@@ -210,16 +205,18 @@ export const getResultText = (
   isExpert: boolean,
   forSharing = true
 ) => {
-  const countText = (gameState.wrongGuesses ?? []).map(() => `❌`).join('') + '🧅';
-
-  let hintsText = getHintsText(headline, gameState, isExpert) || 'No hints! 😎';
-
-  const expertText = isExpert ? '\nExpert Mode 🤓' : '';
+  let resultsText = getActionsText(headline, gameState, isExpert);
+  if (!hasAnyHints(gameState)) {
+    resultsText += '\nNo hints! 😎';
+  }
+  if (isExpert) {
+    resultsText += '\nExpert Mode 🤓';
+  }
 
   if (forSharing) {
-    return `Leek #${headline.gameNum} found!\n\n${window.location.href}\n\n${countText}\n${hintsText}${expertText}`;
+    return `Leek #${headline.gameNum} found!\n\n${window.location.href}\n\n${resultsText}`;
   } else {
-    return `${countText}\n${hintsText}${expertText}`;
+    return resultsText;
   }
 };
 

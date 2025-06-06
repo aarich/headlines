@@ -12,7 +12,7 @@ import {
   getAdminKey,
   storeAdminKey,
 } from 'lib/storage';
-import { Headline, Score, GameState, Stats, WrongGuess } from 'types';
+import { Headline, Score, GameState, Stats, Hint } from 'types';
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -49,10 +49,7 @@ const MOCK_HEADLINE: Headline = {
   redditUrl: 'http://example.com/reddit',
 };
 
-const MOCK_GAME_STATE: GameState = {
-  wrongGuesses: [{ guess: 'test', timestamp: Date.now() } as WrongGuess],
-  hints: { chars: 1, clue: false },
-};
+const MOCK_GAME_STATE: GameState = { actions: [Hint.CHAR, 'test'] };
 
 describe('storage.ts', () => {
   beforeEach(() => {
@@ -70,29 +67,6 @@ describe('storage.ts', () => {
       };
       localStorageMock.setItem(STORAGE_KEYS.SCORES, JSON.stringify(scores));
       expect(getStoredScores()).toEqual(scores);
-    });
-
-    it('should handle schema changes (i to n)', () => {
-      const oldSchemaScores = {
-        // IDs from the hardcoded list in handleScoreSchemaChanges
-        '6': { i: 1, d: Date.now(), g: 1, e: true }, // old schema, id 6 maps to gameNum 1
-        '19': { i: 6, d: Date.now(), g: 2, e: false }, // old schema, id 19 maps to gameNum 6
-        '25': { n: 7, d: Date.now(), g: 0, e: true }, // new schema
-        '100': { i: 10, d: Date.now(), g: 0, e: false }, // old schema, id 100 not in mapping list
-      };
-      localStorageMock.setItem(STORAGE_KEYS.SCORES, JSON.stringify(oldSchemaScores));
-
-      const retrievedScores = getStoredScores();
-      expect(retrievedScores['6'].n).toBe(1);
-      expect(retrievedScores['19'].n).toBe(6);
-      expect(retrievedScores['25'].n).toBe(7);
-      expect(retrievedScores['100'].n).toBeUndefined();
-      // @ts-expect-error
-      expect(retrievedScores['6'].i).toBeUndefined();
-      // @ts-expect-error
-      expect(retrievedScores['19'].i).toBeUndefined();
-      // @ts-expect-error
-      expect(retrievedScores['100'].i).toBeUndefined();
     });
   });
 
@@ -231,11 +205,124 @@ describe('storage.ts', () => {
     it('storeGameState should overwrite an existing game state for the same ID', () => {
       const oldGameState = { ...MOCK_GAME_STATE, correct: true };
       localStorageMock.setItem(STORAGE_KEYS.GAME_STATE, JSON.stringify({ '1': oldGameState }));
-      const newGameState = { ...MOCK_GAME_STATE, hints: { chars: 2, clue: true } };
+      const newGameState = { ...MOCK_GAME_STATE, actions: [Hint.CHAR, Hint.CHAR, Hint.CLUE] };
       storeGameState(1, newGameState);
       const stored = JSON.parse(localStorageMock.getItem(STORAGE_KEYS.GAME_STATE)!);
       expect(stored['1']).toEqual(newGameState);
       expect(getStoredGameState(1)).toEqual(newGameState);
+    });
+  });
+
+  describe('GameState Schema Migration', () => {
+    // Define interfaces for old game state schemas for clarity in tests
+    interface OldGameStateHints {
+      hints: { chars?: number; clue?: boolean };
+      // no actions, no wrongGuesses
+    }
+    interface OldGameStateWrongGuesses {
+      wrongGuesses: { guess: string }[];
+      // no actions, no hints
+    }
+    interface OldGameStateCombined {
+      hints?: { chars?: number; clue?: boolean };
+      wrongGuesses?: { guess: string }[];
+      // no actions
+    }
+
+    describe('getStoredGameState with migration', () => {
+      it('should migrate old schema with only char hints', () => {
+        const oldState: OldGameStateHints = { hints: { chars: 2 } };
+        localStorageMock.setItem(STORAGE_KEYS.GAME_STATE, JSON.stringify({ '1': oldState }));
+        const migratedState = getStoredGameState(1);
+        expect(migratedState).toEqual({ actions: [Hint.CHAR, Hint.CHAR] });
+        // @ts-expect-error
+        expect(migratedState?.hints).toBeUndefined();
+        // @ts-expect-error
+        expect(migratedState?.wrongGuesses).toBeUndefined();
+      });
+
+      it('should migrate old schema with only clue hint', () => {
+        const oldState: OldGameStateHints = { hints: { clue: true } };
+        localStorageMock.setItem(STORAGE_KEYS.GAME_STATE, JSON.stringify({ '1': oldState }));
+        const migratedState = getStoredGameState(1);
+        expect(migratedState).toEqual({ actions: [Hint.CLUE] });
+      });
+
+      it('should migrate old schema with char and clue hints', () => {
+        const oldState: OldGameStateHints = { hints: { chars: 1, clue: true } };
+        localStorageMock.setItem(STORAGE_KEYS.GAME_STATE, JSON.stringify({ '1': oldState }));
+        const migratedState = getStoredGameState(1);
+        expect(migratedState).toEqual({ actions: [Hint.CHAR, Hint.CLUE] });
+      });
+
+      it('should migrate old schema with only wrong guesses', () => {
+        const oldState: OldGameStateWrongGuesses = {
+          wrongGuesses: [{ guess: 'a' }, { guess: 'b' }],
+        };
+        localStorageMock.setItem(STORAGE_KEYS.GAME_STATE, JSON.stringify({ '1': oldState }));
+        const migratedState = getStoredGameState(1);
+        expect(migratedState).toEqual({ actions: ['a', 'b'] });
+      });
+
+      it('should migrate old schema with hints and wrong guesses in correct order', () => {
+        const oldState: OldGameStateCombined = {
+          hints: { chars: 1, clue: true },
+          wrongGuesses: [{ guess: 'c' }],
+        };
+        localStorageMock.setItem(STORAGE_KEYS.GAME_STATE, JSON.stringify({ '1': oldState }));
+        const migratedState = getStoredGameState(1);
+        expect(migratedState).toEqual({ actions: [Hint.CHAR, Hint.CLUE, 'c'] });
+      });
+
+      it('should handle old schema with hints.chars = 0 and no clue', () => {
+        const oldState: OldGameStateHints = { hints: { chars: 0 } };
+        localStorageMock.setItem(STORAGE_KEYS.GAME_STATE, JSON.stringify({ '1': oldState }));
+        const migratedState = getStoredGameState(1);
+        expect(migratedState).toEqual({ actions: [] });
+      });
+
+      it('should handle old schema with empty hints object and empty wrongGuesses array', () => {
+        const oldState: OldGameStateCombined = { hints: {}, wrongGuesses: [] };
+        localStorageMock.setItem(STORAGE_KEYS.GAME_STATE, JSON.stringify({ '1': oldState }));
+        const migratedState = getStoredGameState(1);
+        expect(migratedState).toEqual({ actions: [] });
+      });
+
+      it('should return the gameState as is if no migration needed (no hints or wrongGuesses fields)', () => {
+        const modernState = { actions: ['test'], someOtherProp: true };
+        localStorageMock.setItem(STORAGE_KEYS.GAME_STATE, JSON.stringify({ '1': modernState }));
+        const retrievedState = getStoredGameState(1);
+        expect(retrievedState).toEqual(modernState);
+      });
+    });
+
+    describe('storeGameState with migration of existing states', () => {
+      it('should migrate existing old-schema states in localStorage when storing a new state', () => {
+        const oldState1: OldGameStateHints = { hints: { chars: 1 } };
+        const oldState3: OldGameStateWrongGuesses = { wrongGuesses: [{ guess: 'wg' }] };
+        const initialStorage = {
+          '1': oldState1,
+          '3': oldState3,
+        };
+        localStorageMock.setItem(STORAGE_KEYS.GAME_STATE, JSON.stringify(initialStorage));
+
+        const newStateForGame2: GameState = { actions: ['newState'] };
+        storeGameState(2, newStateForGame2);
+
+        const migratedState1 = getStoredGameState(1);
+        const storedState2 = getStoredGameState(2);
+        const migratedState3 = getStoredGameState(3);
+
+        expect(migratedState1).toEqual({ actions: [Hint.CHAR] });
+        expect(storedState2).toEqual(newStateForGame2);
+        expect(migratedState3).toEqual({ actions: ['wg'] });
+
+        // Verify raw storage to see if all are migrated
+        const rawStored = JSON.parse(localStorageMock.getItem(STORAGE_KEYS.GAME_STATE)!);
+        expect(rawStored['1']).toEqual({ actions: [Hint.CHAR] });
+        expect(rawStored['2']).toEqual(newStateForGame2);
+        expect(rawStored['3']).toEqual({ actions: ['wg'] });
+      });
     });
   });
 
@@ -261,49 +348,6 @@ describe('storage.ts', () => {
       const newKey = 'new-admin-key';
       storeAdminKey(newKey);
       expect(getAdminKey()).toBe(newKey);
-    });
-  });
-
-  describe('handleScoreSchemaChanges internal logic', () => {
-    // This is implicitly tested by getStoredScores, but direct tests can be useful
-    // for complex migrations.
-    it('should correctly map known IDs from old schema', () => {
-      const scores = {
-        '6': { i: 1, d: 123, g: 0, e: false }, // maps to n: 1
-        '8': { i: 2, d: 123, g: 0, e: false }, // maps to n: 2
-        '20': { i: 7, d: 123, g: 0, e: false }, // maps to n: 7
-      };
-      localStorageMock.setItem(STORAGE_KEYS.SCORES, JSON.stringify(scores));
-      const processed = getStoredScores();
-      expect(processed['6'].n).toBe(1);
-      // @ts-expect-error
-      expect(processed['6'].i).toBeUndefined();
-      expect(processed['8'].n).toBe(2);
-      // @ts-expect-error
-      expect(processed['8'].i).toBeUndefined();
-      expect(processed['20'].n).toBe(7);
-      // @ts-expect-error
-      expect(processed['20'].i).toBeUndefined();
-    });
-
-    it('should not add "n" if id is not in the mapping and "i" exists', () => {
-      const scores = {
-        '99': { i: 10, d: 123, g: 0, e: false }, // 99 is not in the ids list
-      };
-      localStorageMock.setItem(STORAGE_KEYS.SCORES, JSON.stringify(scores));
-      const processed = getStoredScores();
-      expect(processed['99'].n).toBeUndefined();
-      // @ts-expect-error
-      expect(processed['99'].i).toBeUndefined(); // i should still be deleted
-    });
-
-    it('should not modify scores already in new schema', () => {
-      const scores = {
-        '100': { n: 50, d: 123, g: 0, e: false },
-      };
-      localStorageMock.setItem(STORAGE_KEYS.SCORES, JSON.stringify(scores));
-      const processed = getStoredScores();
-      expect(processed['100']).toEqual(scores['100']);
     });
   });
 });

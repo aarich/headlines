@@ -6,8 +6,10 @@ export const getCurrentStreak = (scores: Score[], latestGameNum: number) => {
 
   let streak = 0;
 
-  // If the latest score is not the first score, return 0.
   if (sortedScores.length === 0 || latestGameNum > sortedScores[0].n) {
+    // If there are no scores, or if the game number for which we're checking the streak (`latestGameNum`)
+    // is greater than the game number of the most recent game won by the user,
+    // then the current streak is 0 (as they haven't won `latestGameNum` or a more recent game).
     return streak;
   }
 

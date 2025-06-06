@@ -5,7 +5,14 @@ import HeadlineDisplay from './HeadlineDisplay';
 import AnswerWheel, { PLACEHOLDER_VALUE } from './AnswerWheel';
 import ExpertInput from './ExpertInput';
 import ShareButtons from 'components/ShareButtons';
-import { checkAnswer, getNextHint, getNextHintPrompt, getNextRevealType } from 'lib/game';
+import {
+  checkAnswer,
+  countWrongGuesses,
+  getNextHint,
+  getNextHintPrompt,
+  getNextRevealType,
+  getWrongGuesses,
+} from 'lib/game';
 import { incrementStat, saveResult } from 'lib/storage';
 import { LightBulbIcon } from '@heroicons/react/24/outline';
 import { useToast } from 'contexts/ToastContext';
@@ -50,27 +57,24 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
       setCurrentGuess(headline.correctAnswer);
       setGameState(prev => ({ ...prev, correct: true, completedAt: Date.now() }));
       incrementStat('totalPlays');
-      if (!gameState.wrongGuesses?.length) {
+      if (!countWrongGuesses(gameState)) {
         incrementStat('firstGuessCorrectCount');
       }
-      saveResult(headline, new Date(), gameState.wrongGuesses?.length || 0, expertMode);
-      recordGameCompleted(
-        headline.id,
-        gameState.wrongGuesses?.map(g => g.guess)
-      );
+      saveResult(headline, new Date(), countWrongGuesses(gameState), expertMode);
+      recordGameCompleted(headline.id, getWrongGuesses(gameState));
     } else {
       expertInputRef.current?.focus();
 
-      if (gameState.wrongGuesses?.find(g => g.guess === currentGuess)) {
+      if (getWrongGuesses(gameState).find(g => g === currentGuess)) {
         toast('Already guessed!', 'warning');
         return;
       } else {
         toastWrongAnswer(toast);
       }
       incrementStat('totalIncorrectGuesses');
-      setGameState(({ wrongGuesses, ...rest }) => ({
+      setGameState(({ actions = [], ...rest }) => ({
         ...rest,
-        wrongGuesses: [...(wrongGuesses ?? []), { guess: currentGuess, timestamp: Date.now() }],
+        actions: [...actions, currentGuess],
       }));
       if (expertMode) {
         setCurrentGuess('');
@@ -87,12 +91,12 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
     }
   }, [handleGuess, gameState.completedAt]);
 
-  const nextHintType = getNextRevealType(gameState.hints, headline.correctAnswer, expertMode);
+  const nextHintType = getNextRevealType(gameState.actions, headline.correctAnswer, expertMode);
 
   const onHintClick = useCallback(() => {
     if (nextHintType) {
       if (window.confirm(getNextHintPrompt(gameState, headline.correctAnswer, expertMode))) {
-        setGameState(g => ({ ...g, hints: getNextHint(headline, g, expertMode) }));
+        setGameState(g => ({ ...g, actions: getNextHint(headline, g, expertMode) }));
         toast('Hint revealed!', 'info');
       }
     }

@@ -1,4 +1,4 @@
-import { GameState, Headline, Score, Stat, Stats } from 'types';
+import { GameState, Headline, Hint, PlayAction, Score, Stat, Stats } from 'types';
 
 export const STORAGE_KEYS = {
   SCORES: 'scores',
@@ -8,31 +8,9 @@ export const STORAGE_KEYS = {
   ADMIN_KEY: 'admin',
 } as const;
 
-const handleScoreSchemaChanges = (scores: Record<string, Score>): Record<string, Score> => {
-  // For each change that has been made to the schema, need to process the update.
-  // First: i was changed to n. Here are all the ids possible before the change
-  const ids = [6, 8, 9, 10, 16, 19, 20, 25];
-  Object.keys(scores)
-    .sort()
-    .forEach(key => {
-      const id: number = parseInt(key);
-      if (!scores[key].n) {
-        const n = ids.indexOf(id) + 1;
-        if (n !== 0) {
-          scores[id].n = n;
-        }
-
-        // @ts-expect-error
-        delete scores[id].i;
-      }
-    });
-
-  return scores;
-};
-
 export const getStoredScores = (): Record<string, Score> => {
   const scores = localStorage.getItem(STORAGE_KEYS.SCORES);
-  return handleScoreSchemaChanges(scores ? JSON.parse(scores) : {});
+  return scores ? JSON.parse(scores) : {};
 };
 
 export const saveResult = (
@@ -79,23 +57,70 @@ export const getStarted = (): Set<number> => {
   return new Set<number>(started ? JSON.parse(started).games : []);
 };
 
+/**
+ * Handles schema migration for a single GameState object.
+ * Specifically, migrates the old `hints: { chars: number, clue: boolean }`
+ * to the new `actions: PlayAction[]`.
+ */
+const handleGameStateSchemaChanges = (
+  gameStates: Record<string, any>
+): Record<string, GameState> => {
+  const ids = Object.keys(gameStates);
+  const newGameStates: Record<string, GameState> = {};
+
+  for (const id of ids) {
+    const gameState = gameStates[id];
+
+    if (gameState && (gameState.hints || gameState.wrongGuesses)) {
+      // Ensure 'actions' is an array, preserving existing actions if any (though unlikely for this specific migration path)
+      const newActions: PlayAction[] = Array.isArray(gameState.actions)
+        ? [...gameState.actions]
+        : [];
+
+      // Migrate char hints
+      if (typeof gameState.hints?.chars === 'number' && gameState.hints.chars > 0) {
+        for (let i = 0; i < gameState.hints.chars; i++) {
+          newActions.push(Hint.CHAR);
+        }
+      }
+
+      // Migrate clue hint
+      if (gameState.hints?.clue) {
+        newActions.push(Hint.CLUE);
+      }
+
+      // Migrate wrong guesses
+      if (gameState.wrongGuesses && Array.isArray(gameState.wrongGuesses)) {
+        gameState.wrongGuesses.forEach(({ guess }: { guess: string }) => newActions.push(guess));
+      }
+
+      gameState.actions = gameState.actions ?? newActions;
+      delete gameState.hints;
+      delete gameState.wrongGuesses;
+    }
+
+    newGameStates[id] = gameState;
+  }
+  return newGameStates;
+};
+
 export const getStoredGameState = (id: number): GameState | undefined => {
   const gameStates = localStorage.getItem(STORAGE_KEYS.GAME_STATE);
   if (!gameStates) return undefined;
-  const parsed = JSON.parse(gameStates);
+  const parsed = handleGameStateSchemaChanges(JSON.parse(gameStates));
   return parsed[`${id}`];
 };
 
 export const storeGameState = (id: number, gameState: GameState): void => {
-  const currentGameState = localStorage.getItem(STORAGE_KEYS.GAME_STATE);
-  if (!currentGameState) {
-    localStorage.setItem(STORAGE_KEYS.GAME_STATE, JSON.stringify({ [`${id}`]: gameState }));
-  } else {
-    const parsed = JSON.parse(currentGameState);
-    parsed[`${id}`] = gameState;
+  let allGameStates: Record<string, GameState> = {};
 
-    localStorage.setItem(STORAGE_KEYS.GAME_STATE, JSON.stringify(parsed));
+  const currentStoredGameStates = localStorage.getItem(STORAGE_KEYS.GAME_STATE);
+  if (currentStoredGameStates) {
+    allGameStates = handleGameStateSchemaChanges(JSON.parse(currentStoredGameStates));
   }
+  allGameStates[`${id}`] = gameState;
+
+  localStorage.setItem(STORAGE_KEYS.GAME_STATE, JSON.stringify(allGameStates));
 };
 
 export const getAdminKey = (): string | undefined => {

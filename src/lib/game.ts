@@ -1,4 +1,4 @@
-import { GameHints, GameState, Headline } from 'types';
+import { GameState, Headline, Hint, PlayAction } from 'types';
 
 const normalizeString = (str: string): string => {
   return str.toLowerCase().trim();
@@ -36,50 +36,60 @@ export const checkAnswer = (guess: string, correctAnswer: string, expertMode: bo
 
 export const getNextHint = (
   headline: Headline,
-  { hints }: GameState,
+  { actions = [] }: GameState,
   isExpert: boolean
-): GameHints => {
-  let oldHints = hints ?? { clue: false, chars: 0 };
-
-  const nextRevealType = getNextRevealType(hints, headline.correctAnswer, isExpert);
+): PlayAction[] => {
+  const nextRevealType = getNextRevealType(actions, headline.correctAnswer, isExpert);
 
   if (nextRevealType === 'clue') {
-    return { ...oldHints, clue: true };
+    return [...actions, Hint.CLUE];
   }
 
   if (nextRevealType === 'char') {
-    return { ...oldHints, chars: oldHints.chars + 1 };
+    return [...actions, Hint.CHAR];
   }
 
   // No next hint
-  return oldHints;
+  return actions;
 };
 
+export const getHints = (gameState: GameState): Hint[] =>
+  gameState.actions?.filter(action => typeof action !== 'string') ?? [];
+
+export const countHints = (gameState: GameState): number => getHints(gameState).length;
+
+export const getWrongGuesses = (gameState: GameState): string[] =>
+  gameState.actions?.filter(action => typeof action === 'string') ?? [];
+
+export const countWrongGuesses = (gameState: GameState): number =>
+  getWrongGuesses(gameState).length;
+
 export const hasAnyHints = (gameState: GameState): boolean =>
-  !!(gameState.hints?.chars || gameState.hints?.clue);
+  !!gameState.actions?.some(action => typeof action !== 'string');
 
 export const getNumCharsBeforeClue = (correctAnswer: string, isExpert: boolean) =>
   // Expert mode gets char reveals. Non-expert mode gets the clue right away.
   isExpert ? Math.floor(Math.min(correctAnswer.length / 2, 3)) : 0;
 
 export const getNextHintPrompt = (
-  { hints }: GameState,
+  { actions }: GameState,
   correctAnswer: string,
   isExpert: boolean
 ): string => {
-  const nextRevealType = getNextRevealType(hints, correctAnswer, isExpert);
+  const nextRevealType = getNextRevealType(actions, correctAnswer, isExpert);
 
   if (nextRevealType === 'char') {
+    const numCharsRevealed = actions?.filter(action => action === Hint.CHAR).length ?? 0;
     // Suggest using non-expert mode if the user has already revealed a character and is in expert mode
     const tip =
-      isExpert && hints?.chars
+      isExpert && numCharsRevealed === 2
         ? '\n\nTip: You can also toggle off "Expert Mode" for a different fun experience!'
         : '';
     let next = 'next';
 
-    if (!hints?.chars) {
+    if (!numCharsRevealed) {
       next = 'first';
-    } else if (hints.chars === correctAnswer.length - 1) {
+    } else if (numCharsRevealed === correctAnswer.length - 1) {
       next = 'last';
     }
 
@@ -94,23 +104,25 @@ export const getNextHintPrompt = (
 };
 
 export const getNextRevealType = (
-  hints: GameHints | undefined,
+  actions: PlayAction[] | undefined,
   correctAnswer: string,
   isExpert: boolean
 ): 'char' | 'clue' | undefined => {
   // Reveal the next character until 3 chars or half of the word is revealed. Then reveal the clue. Then continue revealing characters.
   const numCharsBeforeClue = getNumCharsBeforeClue(correctAnswer, isExpert);
-  if (!hints) {
+  if (!actions) {
     return numCharsBeforeClue === 0 ? 'clue' : 'char';
   }
 
-  if (hints.chars < numCharsBeforeClue) {
+  const chars = actions.filter(play => play === Hint.CHAR).length;
+  if (chars < numCharsBeforeClue) {
     return 'char';
   }
 
-  if (!hints.clue) {
+  const hasClue = actions.some(play => play === Hint.CLUE);
+  if (!hasClue) {
     return 'clue';
   }
 
-  return hints.chars < correctAnswer.length ? 'char' : undefined;
+  return chars < correctAnswer.length ? 'char' : undefined;
 };
