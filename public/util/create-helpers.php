@@ -1,6 +1,40 @@
 <?php
 
 require_once __DIR__ . '/../util/db.php';
+/**
+ * Extracts plain text content primarily from the <body> of an HTML string.
+ * It attempts to isolate the <body> content, then removes <script> and <style>
+ * tags and their content, followed by all other HTML tags.
+ * Whitespace is normalized. If no <body> tag is found, an empty string is returned.
+ *
+ * @param string $html The HTML string.
+ * @return string The extracted plain text from the body, or an empty string.
+ */
+function extract_text_from_html(string $html): string {
+  $body_content = '';
+  // Attempt to find and extract content within the <body> tags
+  // The 's' modifier allows '.' to match newlines, and 'i' for case-insensitivity.
+  if (preg_match('/<body[^>]*>(.*?)<\/body>/is', $html, $matches)) {
+    $body_content = $matches[1];
+  } else {
+    // If no <body> tag is found, return an empty string as per the requirement
+    // to only show items from the body.
+    return '';
+  }
+
+  // Remove <script> and <style> tags and their entire content from the extracted body
+  $body_content = preg_replace('/<script[^>]*>.*?<\/script>/is', '', $body_content);
+  $body_content = preg_replace('/<style[^>]*>.*?<\/style>/is', '', $body_content);
+
+  // Remove any remaining HTML tags from the processed body content
+  $text = strip_tags($body_content);
+
+  // Replace multiple whitespace characters (including newlines) with a single space
+  $text = preg_replace('/\s+/', ' ', $text);
+
+  // Trim leading/trailing spaces
+  return trim($text);
+}
 
 /**
  * Recursively cleans string values within an array or object.
@@ -51,7 +85,8 @@ function getTopPosts($subreddit, $user_agent) {
 
   $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
   if ($httpCode !== 200) {
-    throw new Exception('HTTP error: ' . $httpCode);
+    $responseText = extract_text_from_html($response);
+    throw new Exception('HTTP error: ' . $httpCode . ' Response: ' . $responseText);
   }
 
   curl_close($ch);
@@ -95,9 +130,8 @@ function invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key, $model_
   // Get HTTP status code
   $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
   if ($httpCode !== 200) {
-    $data = json_decode($response, true);
-    echo print_r($data, true);
-    throw new Exception('HTTP error: ' . $httpCode);
+    $responseText = extract_text_from_html($response);
+    throw new Exception('HTTP error: ' . $httpCode . ' Response: ' . $responseText);
   }
 
   curl_close($ch);

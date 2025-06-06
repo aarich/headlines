@@ -27,7 +27,7 @@
     "serve": "php -S localhost:8000 public/api/server.php",
     "dev": "npm run start & npm run serve",
     "deploy": "sh ./deploy.sh",
-    "generate-preview": "php public/api/create-games.php --skip-status --preview"
+    "generate-preview": "php public/scripts/create-games.php --skip-status --preview"
   },
   "eslintConfig": {
     "extends": [

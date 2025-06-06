@@ -11,11 +11,12 @@ $gemini_api_key = $config['google']['api_key'];
 // Parse command-line arguments
 $short_opts = "y";
 $long_opts = [
-  "model:",      // Requires a value
-  "ignore-patterns:",
+  "model:",
+  "ignore-patterns:", // Comma-separated list of strings to ignore in headlines
   "dry-run",
   "skip-status",
-  "preview"
+  "preview",
+  "interactive"
 ];
 $cli_options = getopt($short_opts, $long_opts);
 
@@ -29,6 +30,7 @@ echo "Ignore patterns: " . implode(", ", $ignore_patterns) . "\n";
 $dry_run = isset($cli_options['dry-run']);
 $skip_age_verification = isset($cli_options['skip-status']);
 $auto_confirm = isset($cli_options['y']);
+$interactive = isset($cli_options['interactive']);
 $save_to_preview = isset($cli_options['preview']);
 
 $command_name = basename(__FILE__) . ' ' . implode(' ', array_slice($argv, 1));
@@ -72,7 +74,7 @@ try {
     $title = convert_smart_quotes($post['data']['title']);
 
     // Ignore this one if it matches an already proposed headline
-    if (in_array($title, $already_proposed_headline_texts, true)) {
+    if (!$interactive && in_array($title, $already_proposed_headline_texts, true)) {
       echo "Skipping (already proposed): $title\n";
       continue;
     }
@@ -127,44 +129,67 @@ try {
     exit();
   }
 
-  // Get initial candidates
-  $prompt = getInitialPrompt($headline_titles);
-  $generationConfig = getInitialGenerationConfig($headline_titles);
-  $response = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key, $gpt_model_name);
+  $selected_headline_data = null;
+  $word_to_remove = null;
+  $possible_answers = [];
+  $hint = null;
+  $explanation = null;
 
-  $generated_text = $response['candidates'][0]['content']['parts'][0]['text'];
-  echo "Initial candidate response:\n" . $generated_text . "\n";
+  if ($interactive) {
+    echo "Available Headlines:\n";
+    foreach ($headlines_full as $index => $h) {
+      echo "[$index] " . $h['headline'] . "\n";
+    }
 
-  // Choose the best candidate
-  $prompt = getFinalPrompt($generated_text);
-  $generationConfig = getFinalGenerationConfig();
-  $response = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key, $gpt_model_name);
+    $selectedIndex = (int)getInput("Enter the index to use");
+    $selected_headline_data = $headlines_full[$selectedIndex];
+    $explanation = 'Manual Entry';
+    echo "\nSelected Headline: " . $selected_headline_data['headline'] . "\n";
 
-  $generated_text = $response['candidates'][0]['content']['parts'][0]['text'];
-  echo "Final choice response:\n" . $generated_text . "\n";
-  $final_choice_data = json_decode($generated_text, true);
+    $word_to_remove = getInput("Enter the word to remove");
+    $possible_answers_input = getInput("Enter possible answers (comma-separated)");
+    $possible_answers = array_map('trim', explode(',', $possible_answers_input));
+    $possible_answers = array_filter($possible_answers); // Remove empty strings
+    $hint = getInput("Enter a hint");
+  } else {
+    // Get initial candidates
+    $prompt = getInitialPrompt($headline_titles);
+    $generationConfig = getInitialGenerationConfig($headline_titles);
+    $response = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key, $gpt_model_name);
 
-  // Extract data from the LLM response
-  $llm_headline_text = $final_choice_data['headline'];
-  $llm_word_to_remove = $final_choice_data['word_to_remove'];
-  $possible_answers = $final_choice_data['replacements'];
-  $hint = $final_choice_data['hint'];
-  $explanation = $final_choice_data['explanation'];
+    $generated_text = $response['candidates'][0]['content']['parts'][0]['text'];
+    echo "Initial candidate response:\n" . $generated_text . "\n";
 
-  // Match LLM headline with original data from Reddit to get the definitive headline and URLs
-  $matched_reddit_data = findMostSimilarHeadline($llm_headline_text, $headlines_full);
-  if ($matched_reddit_data === null) {
-    throw new Exception(
-      "LLM's chosen headline '{$llm_headline_text}' was probably a hallucination. Not found in original list."
-    );
+    // Choose the best candidate
+    $prompt = getFinalPrompt($generated_text);
+    $generationConfig = getFinalGenerationConfig();
+    $response = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key, $gpt_model_name);
+
+    $generated_text = $response['candidates'][0]['content']['parts'][0]['text'];
+    echo "Final choice response:\n" . $generated_text . "\n";
+    $final_choice_data = json_decode($generated_text, true);
+
+    // Extract data from the LLM response
+    $headline_text = $final_choice_data['headline'];
+    $word_to_remove = $final_choice_data['word_to_remove'];
+    $possible_answers = $final_choice_data['replacements'];
+    $hint = $final_choice_data['hint'];
+    $explanation = $final_choice_data['explanation'];
+
+    // Match LLM headline with original data from Reddit to get the definitive headline and URLs
+    $selected_headline_data = findMostSimilarHeadline($headline_text, $headlines_full);
+    if ($selected_headline_data === null) {
+      throw new Exception("LLM's chosen headline '{$headline_text}' was probably a hallucination. Not found in original list.");
+    }
   }
-  $headline = $matched_reddit_data['headline']; // This is the final headline text to be used
-  $article_url = $matched_reddit_data['url'];
-  $reddit_url = $matched_reddit_data['reddit_url'];
-  $publish_time = gmdate('Y-m-d H:i:s', $matched_reddit_data['created_utc']);
+
+  $headline = $selected_headline_data['headline'];
+  $article_url = $selected_headline_data['url'];
+  $reddit_url = $selected_headline_data['reddit_url'];
+  $publish_time = gmdate('Y-m-d H:i:s', $selected_headline_data['created_utc']);
 
   try {
-    $derived_parts = derive_before_after_and_correct_answer($headline, $llm_word_to_remove);
+    $derived_parts = derive_before_after_and_correct_answer($headline, $word_to_remove);
     $before_blank = $derived_parts['before_blank'];
     $after_blank = $derived_parts['after_blank'];
     $correct_answer = $derived_parts['actual_correct_answer']; // This is the one to store
@@ -172,8 +197,7 @@ try {
     // The helper throws: "The word '{$word_to_find}' (as a whole word) could not be found in the headline '{$headline}'."
     // Add the LLM's original headline context for better debugging.
     throw new Exception(
-      "LLM's chosen word_to_remove ('{$llm_word_to_remove}') processing failed. " .
-        "Original LLM headline: '{$llm_headline_text}'. " .
+      "LLM's chosen word_to_remove ('{$word_to_remove}') processing failed. " .
         "Error with final headline ('{$headline}'): " . $e->getMessage()
     );
   }
