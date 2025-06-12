@@ -6,6 +6,7 @@ import {
   getResultText,
   shareScore,
   formatSuggestionCasing,
+  extractHeadlineParts,
 } from 'lib/ui';
 import { GameState, Headline, Hint } from 'types';
 
@@ -411,6 +412,139 @@ describe('ui.ts', () => {
     it('should handle correctAnswer without letters (e.g. only numbers/symbols)', () => {
       expect(formatSuggestionCasing('Suggestion', '123')).toBe('Suggestion');
       expect(formatSuggestionCasing('Suggestion', '!@#')).toBe('Suggestion');
+    });
+  });
+
+  describe('extractHeadlineParts', () => {
+    it('returns parts as is with no prefix or suffix', () => {
+      const { beforeBlank, afterBlank, prefix, suffix } = extractHeadlineParts(
+        'Word1 Word2',
+        'Word3 Word4'
+      );
+      expect(beforeBlank).toBe('Word1 Word2');
+      expect(prefix).toBe('');
+      expect(suffix).toBe('');
+      expect(afterBlank).toBe('Word3 Word4');
+    });
+
+    it('extracts a single character prefix', () => {
+      const { beforeBlank, prefix } = extractHeadlineParts('Some text" ', 'After');
+      expect(beforeBlank).toBe('Some text" ');
+      expect(prefix).toBe('');
+    });
+
+    it('extracts a single character suffix', () => {
+      const { afterBlank, suffix } = extractHeadlineParts('Before ', ' ?Actual text');
+      expect(afterBlank).toBe(' ?Actual text');
+      expect(suffix).toBe('');
+    });
+
+    it('extracts a multi-character prefix', () => {
+      const { beforeBlank, prefix } = extractHeadlineParts('Some text ("', 'After');
+      expect(beforeBlank).toBe('Some text');
+      expect(prefix).toBe('("');
+    });
+
+    it('extracts a multi-character suffix', () => {
+      const { afterBlank, suffix } = extractHeadlineParts('Before', '." Actual text');
+      expect(afterBlank).toBe('Actual text');
+      expect(suffix).toBe('."');
+    });
+
+    it('extracts both multi-character prefix and suffix', () => {
+      const { beforeBlank, prefix, suffix, afterBlank } = extractHeadlineParts(
+        'Quote: "',
+        '"? Follow up'
+      );
+      expect(beforeBlank).toBe('Quote:');
+      expect(prefix).toBe('"');
+      expect(suffix).toBe('"?');
+      expect(afterBlank).toBe('Follow up');
+    });
+
+    it('handles prefix with trailing spaces correctly', () => {
+      const { beforeBlank, prefix } = extractHeadlineParts('Word1   "', 'After');
+      expect(beforeBlank).toBe('Word1');
+      expect(prefix).toBe('"');
+    });
+
+    it('handles suffix with leading spaces correctly', () => {
+      const { afterBlank, suffix } = extractHeadlineParts('Before', '?   Word2');
+      expect(afterBlank).toBe('Word2');
+      expect(suffix).toBe('?');
+    });
+
+    it('handles prefix at the very beginning of beforeBlank (beforeBlank becomes empty)', () => {
+      const { beforeBlank, prefix } = extractHeadlineParts('"', 'After');
+      expect(beforeBlank).toBe('');
+      expect(prefix).toBe('"');
+    });
+
+    it('correctly handles afterBlank with trailing punctuation (no leading suffix)', () => {
+      const { afterBlank, suffix } = extractHeadlineParts('Before', 'Word1?');
+      expect(afterBlank).toBe('Word1?');
+      expect(suffix).toBe('');
+    });
+
+    it('handles empty beforeBlank with prefix-like characters (beforeBlank remains empty)', () => {
+      const { beforeBlank, prefix } = extractHeadlineParts('"', 'After');
+      expect(beforeBlank).toBe('');
+      expect(prefix).toBe('"');
+    });
+
+    it('handles empty afterBlank with suffix-like characters (afterBlank remains empty)', () => {
+      const { afterBlank, suffix } = extractHeadlineParts('Before', '?');
+      expect(afterBlank).toBe('');
+      expect(suffix).toBe('?');
+    });
+
+    it('handles example: What is "AI"? Find out now', () => {
+      const { beforeBlank, prefix, suffix, afterBlank } = extractHeadlineParts(
+        'What is "',
+        '"? Find out now'
+      );
+      expect(beforeBlank).toBe('What is');
+      expect(prefix).toBe('"');
+      expect(suffix).toBe('"?');
+      expect(afterBlank).toBe('Find out now');
+    });
+
+    it('handles example: The answer is... (drumroll)!', () => {
+      const { beforeBlank, prefix, suffix, afterBlank } = extractHeadlineParts(
+        'The answer is... (',
+        ')!'
+      );
+      expect(beforeBlank).toBe('The answer is...');
+      expect(prefix).toBe('(');
+      expect(suffix).toBe(')!');
+      expect(afterBlank).toBe(''); // afterBlank becomes empty because ')!' is all suffix
+    });
+
+    it('handles empty initialBeforeBlank correctly', () => {
+      const { beforeBlank, prefix, suffix, afterBlank } = extractHeadlineParts(
+        '',
+        '"? Find out now'
+      );
+      expect(beforeBlank).toBe('');
+      expect(prefix).toBe('');
+      expect(suffix).toBe('"?');
+      expect(afterBlank).toBe('Find out now');
+    });
+
+    it('handles empty initialAfterBlank correctly', () => {
+      const { beforeBlank, prefix, suffix, afterBlank } = extractHeadlineParts('What is "', '');
+      expect(beforeBlank).toBe('What is');
+      expect(prefix).toBe('"');
+      expect(suffix).toBe('');
+      expect(afterBlank).toBe('');
+    });
+
+    it('handles both initialBeforeBlank and initialAfterBlank being empty', () => {
+      const { beforeBlank, prefix, suffix, afterBlank } = extractHeadlineParts('', '');
+      expect(beforeBlank).toBe('');
+      expect(prefix).toBe('');
+      expect(suffix).toBe('');
+      expect(afterBlank).toBe('');
     });
   });
 });

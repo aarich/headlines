@@ -6,6 +6,8 @@ require_once 'prompts.php';
 
 $config = require __DIR__ . '/../util/config.php';
 $reddit_user_agent = $config['reddit']['user_agent'];
+$reddit_client_id = $config['reddit']['client_id'];
+$reddit_client_secret = $config['reddit']['client_secret'];
 $gemini_api_key = $config['google']['api_key'];
 
 // Parse command-line arguments
@@ -64,8 +66,7 @@ try {
     $already_posted_headline_texts[] = $headline_item['headline'];
   }
 
-  // Fetch top posts from Reddit
-  $posts = getTopPosts('nottheonion', $reddit_user_agent);
+  $posts = getTopPosts('nottheonion', $reddit_user_agent, $reddit_client_id, $reddit_client_secret);
 
   // Extract titles and URLs from the posts
   $headline_titles = [];

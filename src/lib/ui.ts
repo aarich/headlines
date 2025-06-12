@@ -265,3 +265,46 @@ export const formatSuggestionCasing = (text: string, correctAnswer: string): str
 
   return text; // Return as is for other cases (e.g. "iPhone", or if correctAnswer is "word1")
 };
+
+/**
+ * Extracts the parts of a headline that appear before and after a blank space
+ * to separate any leading/trailing punctuation as prefixes or suffixes.
+ *
+ * Example: `initialBeforeBlank` is 'What is "' and `initialAfterBlank` is '"? Find out now',
+ * will return:
+ *   beforeBlank: 'What is'
+ *   prefix: '"'
+ *   afterBlank: 'Find out now'
+ *   suffix: '"?'
+ */
+export const extractHeadlineParts = (initialBeforeBlank: string, initialAfterBlank: string) => {
+  let beforeBlank = initialBeforeBlank;
+  let afterBlank = initialAfterBlank;
+  let prefix = '';
+  let suffix = '';
+  const boundaryRegex = /[.,;:!?()'"“”‘’]/;
+
+  let prefixEndIndex = beforeBlank.length;
+  // Iterate backwards from the end of initialBeforeBlank to find the start of the prefix
+  while (prefixEndIndex > 0 && boundaryRegex.test(beforeBlank[prefixEndIndex - 1])) {
+    prefixEndIndex--;
+  }
+  // If any boundary characters were found at the end
+  if (prefixEndIndex < beforeBlank.length) {
+    prefix = beforeBlank.slice(prefixEndIndex);
+    beforeBlank = beforeBlank.slice(0, prefixEndIndex).trimEnd();
+  }
+
+  let suffixStartIndex = 0;
+  // Iterate forwards from the start of initialAfterBlank to find the end of the suffix
+  while (suffixStartIndex < afterBlank.length && boundaryRegex.test(afterBlank[suffixStartIndex])) {
+    suffixStartIndex++;
+  }
+  // If any boundary characters were found at the beginning
+  if (suffixStartIndex > 0) {
+    suffix = afterBlank.slice(0, suffixStartIndex);
+    afterBlank = afterBlank.slice(suffixStartIndex).trimStart();
+  }
+
+  return { beforeBlank, afterBlank, prefix, suffix };
+};

@@ -11,19 +11,8 @@ require_once __DIR__ . '/../util/db.php';
  * @return string The extracted plain text from the body, or an empty string.
  */
 function extract_text_from_html(string $html): string {
-  $body_content = '';
-  // Attempt to find and extract content within the <body> tags
-  // The 's' modifier allows '.' to match newlines, and 'i' for case-insensitivity.
-  if (preg_match('/<body[^>]*>(.*?)<\/body>/is', $html, $matches)) {
-    $body_content = $matches[1];
-  } else {
-    // If no <body> tag is found, return an empty string as per the requirement
-    // to only show items from the body.
-    return '';
-  }
-
   // Remove <script> and <style> tags and their entire content from the extracted body
-  $body_content = preg_replace('/<script[^>]*>.*?<\/script>/is', '', $body_content);
+  $body_content = preg_replace('/<script[^>]*>.*?<\/script>/is', '', $html);
   $body_content = preg_replace('/<style[^>]*>.*?<\/style>/is', '', $body_content);
 
   // Remove any remaining HTML tags from the processed body content
@@ -70,12 +59,34 @@ function convert_smart_quotes($string) {
   return str_replace($search, $replace, $string);
 }
 
-function getTopPosts($subreddit, $user_agent) {
-  $ch = curl_init("https://www.reddit.com/r/{$subreddit}/top.json?limit=25&t=day");
+// function getRedditToken($user_agent, $code) {
+//   $ch = curl_init('https://www.reddit.com/api/v1/access_token');
+//   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+//   curl_setopt($ch, CURLOPT_HTTPHEADER, [
+//     'User-Agent: ' . $user_agent
+//   ]);
+
+//   curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+//     'grant_type' => 'authorization_code',
+//     'code' => $code,
+//     'redirect_uri' => 'http://localhost:3000/profile'
+//   ]));
+
+//   curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+//   curl_setopt($ch, CURLOPT_USERPWD, getenv('REDDIT_CLIENT_ID') . ':' . getenv('REDDIT_CLIENT_SECRET'));
+
+
+//   $response = curl_exec($ch);
+// }
+
+function getTopPosts($subreddit, $user_agent, $client_id, $client_secret) {
+  $ch = curl_init("https://oauth.reddit.com/r/{$subreddit}/top.json?limit=25&t=day");
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($ch, CURLOPT_HTTPHEADER, [
     'User-Agent: ' . $user_agent
   ]);
+  curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+  curl_setopt($ch, CURLOPT_USERPWD, $client_id . ':' . $client_secret);
 
   $response = curl_exec($ch);
 

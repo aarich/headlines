@@ -43,7 +43,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
           Stuck? Use the <LightBulbIcon className="w-5 h-5 inline" /> button for a hint:
         </p>
         <ul className="list-disc pl-6">
-          <li>Reveal the next letter of the word.</li>
+          <li>Reveal the next letter of the word (Expert mode only).</li>
           <li>Unlock a clue about the word.</li>
         </ul>
         <h3 className="text-xl font-semibold mt-6">Guesses</h3>
