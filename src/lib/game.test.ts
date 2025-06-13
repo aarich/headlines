@@ -5,6 +5,7 @@ import {
   getNumCharsBeforeClue,
   getNextHintPrompt,
   getNextRevealType,
+  calculateScore,
 } from 'lib/game';
 import { GameState, Headline, PlayAction, Hint } from 'types';
 
@@ -319,6 +320,106 @@ describe('game.ts', () => {
       const gameStateAllHints = createMockGameState(allActions);
       expect(getNextHintPrompt(gameStateAllHints, MOCK_HEADLINE.correctAnswer, true)).toBe('');
       expect(getNextHintPrompt(gameStateAllHints, MOCK_HEADLINE.correctAnswer, false)).toBe('');
+    });
+  });
+
+  describe('calculateScore', () => {
+    const correctAnswer = 'example'; // length 7
+    const mockHeadline: Headline = {
+      ...MOCK_HEADLINE,
+      correctAnswer,
+    };
+
+    it('should return 100 for perfect score (expert, no hints, no wrong guesses)', () => {
+      const gameState: GameState = {};
+      const score = { d: 0, g: 0, e: true, n: 1 };
+      const result = calculateScore(gameState, score, mockHeadline);
+      expect(result.overall).toBe(100);
+      expect(result.charHintPenalty).toBe(0);
+      expect(result.cluePenalty).toBe(0);
+      expect(result.notExpertPenalty).toBe(0);
+      expect(result.wrongGuessPenalty).toBe(0);
+    });
+
+    it('should apply notExpertPenalty', () => {
+      const gameState: GameState = {};
+      const score = { d: 0, g: 0, e: false, n: 1 }; // Not expert
+      const result = calculateScore(gameState, score, mockHeadline);
+      expect(result.overall).toBe(90); // 100 - 10
+      expect(result.notExpertPenalty).toBe(10);
+    });
+
+    it('should apply charHintPenalty', () => {
+      const gameState: GameState = { actions: [Hint.CHAR, Hint.CHAR] }; // 2 char hints
+      const score = { d: 0, g: 0, e: true, n: 1 };
+      const result = calculateScore(gameState, score, mockHeadline);
+      // Penalty = round((2/7)*100) = round(28.57) = 29
+      expect(result.charHintPenalty).toBe(29);
+      expect(result.overall).toBe(71); // 100 - 29
+    });
+
+    it('should apply cluePenalty', () => {
+      const gameState: GameState = { actions: [Hint.CLUE] };
+      const score = { d: 0, g: 0, e: true, n: 1 };
+      const result = calculateScore(gameState, score, mockHeadline);
+      expect(result.cluePenalty).toBe(30);
+      expect(result.overall).toBe(70); // 100 - 30
+    });
+
+    it('should apply wrongGuessPenalty', () => {
+      const gameState: GameState = {};
+      const score = { d: 0, g: 3, e: true, n: 1 }; // 3 wrong guesses
+      const result = calculateScore(gameState, score, mockHeadline);
+      expect(result.wrongGuessPenalty).toBe(15); // 3 * 5
+      expect(result.overall).toBe(85); // 100 - 15
+    });
+
+    it('should cap wrongGuessPenalty at 100 (effectively, but max is based on 20 guesses)', () => {
+      const gameState: GameState = {};
+      const score = { d: 0, g: 25, e: true, n: 1 }; // 25 wrong guesses
+      const result = calculateScore(gameState, score, mockHeadline);
+      expect(result.wrongGuessPenalty).toBe(100); // 25 * 5 = 125, capped at 100
+      expect(result.overall).toBe(0); // 100 - 100
+    });
+
+    it('should combine all penalties', () => {
+      const gameState: GameState = { actions: [Hint.CHAR, Hint.CLUE] }; // 1 char, 1 clue
+      const score = { d: 0, g: 2, e: false, n: 1 }; // 2 wrong, not expert
+      const result = calculateScore(gameState, score, mockHeadline);
+
+      // charHintPenalty = round((1/7)*100) = 14
+      // cluePenalty = 30
+      // notExpertPenalty = 10
+      // wrongGuessPenalty = 2 * 5 = 10
+      // Total penalty = 14 + 30 + 10 + 10 = 64
+      // Overall = 100 - 64 = 36
+
+      expect(result.charHintPenalty).toBe(14);
+      expect(result.cluePenalty).toBe(30);
+      expect(result.notExpertPenalty).toBe(10);
+      expect(result.wrongGuessPenalty).toBe(10);
+      expect(result.overall).toBe(36);
+    });
+
+    it('should clamp overall score at 0 if penalties exceed 100', () => {
+      const gameState: GameState = {
+        actions: [Hint.CHAR, Hint.CHAR, Hint.CHAR, Hint.CHAR, Hint.CLUE],
+      }; // 4 char hints, 1 clue
+      const score = { d: 0, g: 10, e: false, n: 1 }; // 10 wrong, not expert
+      const result = calculateScore(gameState, score, mockHeadline);
+
+      // charHintPenalty = round((4/7)*100) = 57
+      // cluePenalty = 30
+      // notExpertPenalty = 10
+      // wrongGuessPenalty = 10 * 5 = 50
+      // Total penalty = 57 + 30 + 10 + 50 = 147
+      // Overall = max(100 - 147, 0) = 0
+
+      expect(result.charHintPenalty).toBe(57);
+      expect(result.cluePenalty).toBe(30);
+      expect(result.notExpertPenalty).toBe(10);
+      expect(result.wrongGuessPenalty).toBe(50);
+      expect(result.overall).toBe(0);
     });
   });
 });

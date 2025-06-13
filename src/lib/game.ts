@@ -1,4 +1,4 @@
-import { GameState, Headline, Hint, PlayAction } from 'types';
+import { GameState, Headline, Hint, PlayAction, Score } from 'types';
 
 const normalizeString = (str: string): string => {
   return str.toLowerCase().trim();
@@ -125,4 +125,26 @@ export const getNextRevealType = (
   }
 
   return chars < correctAnswer.length ? 'char' : undefined;
+};
+
+/**
+ * Return a score out of 100
+ */
+export const calculateScore = (gameState: GameState, score: Score, headline: Headline) => {
+  const { e: isExpert, g: numWrongGuesses } = score;
+  const { correctAnswer } = headline;
+  const hintsUsed = getHints(gameState);
+  const numCharHints = hintsUsed.filter(hint => hint === Hint.CHAR).length;
+  const usedClue = hintsUsed.some(hint => hint === Hint.CLUE);
+
+  const charHintPenalty = Math.round((numCharHints / correctAnswer.length) * 100);
+  const cluePenalty = usedClue ? 30 : 0;
+  const notExpertPenalty = isExpert ? 0 : 10;
+  const wrongGuessPenalty = Math.min(numWrongGuesses * 5, 100);
+
+  const overall = Math.round(
+    Math.max(100 - charHintPenalty - cluePenalty - notExpertPenalty - wrongGuessPenalty, 0)
+  );
+
+  return { overall, charHintPenalty, cluePenalty, notExpertPenalty, wrongGuessPenalty };
 };

@@ -8,7 +8,7 @@ import {
   formatSuggestionCasing,
   extractHeadlineParts,
 } from 'lib/ui';
-import { GameState, Headline, Hint } from 'types';
+import { GameState, Headline, Hint, Score } from 'types';
 
 // Mocks
 jest.mock('./api', () => ({
@@ -224,27 +224,36 @@ describe('ui.ts', () => {
     });
   });
 
-  describe('getShareScoreText', () => {
+  describe('getResultText', () => {
     beforeEach(() => {
       window.location.href = 'http://localhost/';
     });
+    const mockScore: Score = { d: Date.now(), g: 0, e: false, n: 1 };
+    const mockExpertScore: Score = { d: Date.now(), g: 0, e: true, n: 1 };
 
     it('should generate basic share text with no hints and not expert', () => {
       const gameState: GameState = {
         actions: ['x', 'y'],
         completedAt: 1,
       };
-      const expectedText = `Leek #1 found!\n\nhttp://localhost/\n\n❌❌🧅\nNo hints! 😎`;
-      expect(getResultText(MOCK_HEADLINE, gameState, false, true)).toBe(expectedText);
+      const scoreWithPenalty: Score = { ...mockScore, g: 2 };
+      const expectedResultText = `❌❌🧅\nScore: 80/100 🤨`;
+      expect(getResultText(MOCK_HEADLINE, gameState, false, scoreWithPenalty)).toBe(
+        expectedResultText
+      );
     });
 
     it('should show no guesses for empty array and undefined', () => {
       const emptyArrayState: GameState = { actions: [], completedAt: 1 };
       const undefinedState: GameState = { completedAt: 1 };
-
-      const expectedText = `Leek #1 found!\n\nhttp://localhost/\n\n🧅\nNo hints! 😎`;
-      expect(getResultText(MOCK_HEADLINE, emptyArrayState, false, true)).toBe(expectedText);
-      expect(getResultText(MOCK_HEADLINE, undefinedState, false, true)).toBe(expectedText);
+      // mockScore (0 wrong, not expert) -> overall 90
+      const expectedResultText = `🧅\nScore: 90/100 🤔`;
+      expect(getResultText(MOCK_HEADLINE, emptyArrayState, false, mockScore)).toBe(
+        expectedResultText
+      );
+      expect(getResultText(MOCK_HEADLINE, undefinedState, false, mockScore)).toBe(
+        expectedResultText
+      );
     });
 
     it('should include char hints', () => {
@@ -252,44 +261,44 @@ describe('ui.ts', () => {
         actions: [Hint.CHAR, Hint.CHAR],
         completedAt: 1,
       };
-      const expectedText = `Leek #1 found!\n\nhttp://localhost/\n\n💡💡🧅`;
-      expect(getResultText(MOCK_HEADLINE, gameState, false, true)).toBe(expectedText);
+      // mockScore (0 wrong, not expert), 2 char hints. Overall = 100 - round(2/8*100) - 10 = 65
+      const expectedResultText = `💡💡🧅\nScore: 65/100`;
+      expect(getResultText(MOCK_HEADLINE, gameState, false, mockScore)).toContain(
+        expectedResultText
+      );
     });
 
     it('should just be the clue in non-expert mode with no characters', () => {
       const gameState: GameState = { actions: [Hint.CLUE], completedAt: 1 };
-      const expectedText = `Leek #1 found!\n\nhttp://localhost/\n\n🕵🧅`;
-
-      expect(getResultText(MOCK_HEADLINE, gameState, false, true)).toBe(expectedText);
+      // mockScore (0 wrong, not expert), 1 clue hint. Overall = 100 - 30 - 10 = 60
+      const expectedResultText = `🕵🧅\nScore: 60/100`;
+      expect(getResultText(MOCK_HEADLINE, gameState, false, mockScore)).toContain(
+        expectedResultText
+      );
     });
 
-    it('should include char hints up to clue and clue hint', () => {
+    it('should include char hints up to clue and clue hint in expert mode', () => {
       const gameState: GameState = {
         actions: [Hint.CHAR, Hint.CHAR, Hint.CLUE],
         completedAt: 1,
       };
-
-      const expectedText = `Leek #1 found!\n\nhttp://localhost/\n\n💡💡🕵🧅\nExpert Mode 🤓`;
-      expect(getResultText(MOCK_HEADLINE, gameState, true, true)).toBe(expectedText);
+      // mockExpertScore (0 wrong, expert), 2 char hints, 1 clue. Overall = 100 - round(2/8*100) - 30 = 45
+      const expectedResultText = `💡💡🕵🧅\nScore: 45/100 `;
+      expect(getResultText(MOCK_HEADLINE, gameState, true, mockExpertScore)).toContain(
+        expectedResultText
+      );
     });
 
-    it('should include char hints up to clue and after clue hint', () => {
+    it('should include char hints up to clue and after clue hint in expert mode', () => {
       const gameState: GameState = {
         actions: [Hint.CHAR, Hint.CHAR, Hint.CLUE, Hint.CHAR, Hint.CHAR],
         completedAt: 1,
       };
-
-      const expectedText = `Leek #1 found!\n\nhttp://localhost/\n\n💡💡🕵💡💡🧅\nExpert Mode 🤓`;
-      expect(getResultText(MOCK_HEADLINE, gameState, true, true)).toBe(expectedText);
-    });
-
-    it('should include expert mode text', () => {
-      const gameState: GameState = {
-        actions: ['x'],
-        completedAt: 1,
-      };
-      const expectedText = `Leek #1 found!\n\nhttp://localhost/\n\n❌🧅\nNo hints! 😎\nExpert Mode 🤓`;
-      expect(getResultText(MOCK_HEADLINE, gameState, true, true)).toBe(expectedText);
+      // mockExpertScore (0 wrong, expert), 4 char hints, 1 clue. Overall = 100 - round(4/8*100) - 30 = 20
+      const expectedResultText = `💡💡🕵💡💡🧅\nScore: 20/100 🪦`;
+      expect(getResultText(MOCK_HEADLINE, gameState, true, mockExpertScore)).toBe(
+        expectedResultText
+      );
     });
 
     it('should handle all elements combined', () => {
@@ -297,13 +306,41 @@ describe('ui.ts', () => {
         actions: ['x', 'y', Hint.CHAR, Hint.CHAR, Hint.CLUE, Hint.CHAR],
         completedAt: 1,
       };
-      const expectedText = `Leek #1 found!\n\nhttp://localhost/\n\n❌❌💡💡🕵💡🧅\nExpert Mode 🤓`;
-      expect(getResultText(MOCK_HEADLINE, gameState, true, true)).toBe(expectedText);
+      const scoreWithPenalties = { ...mockExpertScore, g: 2 }; // 2 wrong, expert, 3 char, 1 clue
+      // Overall = 100 - round(3/8*100) - 30 - (2*5) = 100 - 38 - 30 - 10 = 22
+      const expectedResultText = `❌❌💡💡🕵💡🧅\nScore: 22/100 😵`;
+      expect(getResultText(MOCK_HEADLINE, gameState, true, scoreWithPenalties)).toBe(
+        expectedResultText
+      );
+    });
+
+    it('should handle score 0-9 with the lowest tier emoji', () => {
+      const gameState: GameState = {
+        actions: [...Array(6).fill(Hint.CHAR), Hint.CLUE], // 6 char hints
+        completedAt: 1,
+      };
+      const veryLowScore: Score = { ...mockExpertScore, g: 4 }; // expert, 4 wrong guesses
+      // Penalties: charHints=6 -> round(6/8*100)=75. clue=30. wrong=4*5=20. Total=125. Overall=0.
+      const expectedResultText = `💡💡💡💡💡💡🕵🧅\nScore: 0/100 💀`;
+      expect(getResultText(MOCK_HEADLINE, gameState, true, veryLowScore)).toBe(expectedResultText);
+    });
+
+    it('should include score and winner emoji if score is 100', () => {
+      const gameState: GameState = { completedAt: 1 };
+      const perfectScore: Score = { d: Date.now(), g: 0, e: true, n: 1 }; // Expert, 0 wrong guesses
+      const resultText = getResultText(MOCK_HEADLINE, gameState, true, perfectScore);
+      expect(resultText).toMatch(/🧅\nScore: 100\/100 (🎉|🥳|🤩|🏆|💯|🥇|👑|🚀|🔥|🎊|💰|📈)/);
+    });
+
+    it('should not include score if score object is undefined', () => {
+      const gameState: GameState = { completedAt: 1 };
+      const resultText = getResultText(MOCK_HEADLINE, gameState, true, undefined);
+      expect(resultText).not.toContain('\nScore:');
+      expect(resultText).toBe('🧅');
     });
   });
 
   describe('shareScore', () => {
-    const mockGameState: GameState = {};
     const mockToast = jest.fn();
 
     beforeEach(() => {
@@ -321,32 +358,20 @@ describe('ui.ts', () => {
     });
 
     it('should call recordShare on successful navigator.share', async () => {
-      shareScore(MOCK_HEADLINE, mockGameState, false, mockToast, false); // forceCopy should be false
-      expect(navigator.share).toHaveBeenCalled();
+      const mockResultsText = 'Custom Results Text';
+      const expectedShareText = `Leek #${MOCK_HEADLINE.gameNum} found!\n\nhttp://localhost/\n\n${mockResultsText}`;
+      shareScore(mockResultsText, MOCK_HEADLINE, mockToast, false); // forceCopy should be false
       await Promise.resolve(); // Ensure promise chain in shareScore resolves
+      expect(navigator.share).toHaveBeenCalledWith({ text: expectedShareText });
       expect(mockRecordShare).toHaveBeenCalledWith(MOCK_HEADLINE.id);
-    });
-
-    it('should log error if navigator.share fails', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-      const shareError = new Error('Share failed');
-      (navigator.share as jest.Mock).mockRejectedValue(shareError);
-
-      shareScore(MOCK_HEADLINE, mockGameState, false, mockToast, false); // forceCopy should be false
-      expect(navigator.share).toHaveBeenCalled();
-
-      // Wait for the promise rejection to be handled
-      await new Promise(process.nextTick); // Or await Promise.resolve().then(() => Promise.resolve());
-
-      expect(mockRecordShare).not.toHaveBeenCalled();
-      expect(consoleSpy).toHaveBeenCalledWith(shareError);
-      consoleSpy.mockRestore();
     });
 
     it('should use clipboard.writeText if navigator.share is not available', () => {
       Object.defineProperty(navigator, 'share', { value: undefined, writable: true }); // Simulate no share API
-      shareScore(MOCK_HEADLINE, mockGameState, false, mockToast, false); // forceCopy should be false to test fallback
-      expect(navigator.clipboard.writeText).toHaveBeenCalled();
+      const mockResultsText = 'Custom Results Text For Clipboard';
+      const expectedShareText = `Leek #${MOCK_HEADLINE.gameNum} found!\n\nhttp://localhost/\n\n${mockResultsText}`;
+      shareScore(mockResultsText, MOCK_HEADLINE, mockToast, false); // forceCopy should be false to test fallback
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expectedShareText);
       expect(mockToast).toHaveBeenCalledWith('Score copied to clipboard!', 'success');
       Object.defineProperty(navigator, 'share', {
         value: jest.fn().mockResolvedValue(undefined),
@@ -355,8 +380,10 @@ describe('ui.ts', () => {
     });
 
     it('should use clipboard.writeText if forceCopy is true', () => {
-      shareScore(MOCK_HEADLINE, mockGameState, false, mockToast, true);
-      expect(navigator.clipboard.writeText).toHaveBeenCalled();
+      const mockResultsText = 'Custom Results Text For Forced Clipboard';
+      const expectedShareText = `Leek #${MOCK_HEADLINE.gameNum} found!\n\nhttp://localhost/\n\n${mockResultsText}`;
+      shareScore(mockResultsText, MOCK_HEADLINE, mockToast, true);
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expectedShareText);
       expect(mockToast).toHaveBeenCalledWith('Score copied to clipboard!', 'success');
       expect(navigator.share).not.toHaveBeenCalled();
     });

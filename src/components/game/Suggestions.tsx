@@ -145,6 +145,9 @@ const Suggestions: React.FC<SuggestionsSectionProps> = ({ headline, gameState, s
               className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-200"
               maxLength={250}
               required
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="off"
             />
           </div>
           <div className="mt-3 flex items-center space-x-2">

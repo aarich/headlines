@@ -1,9 +1,8 @@
 import { ToastType } from 'components/Toast';
 import { DEFAULT_TOAST_DURATION, ToastFn } from 'contexts/ToastContext';
-import { GameState, Headline, Hint } from 'types';
+import { GameState, Headline, Hint, Score } from 'types';
 import { fetchHeadline, GetHeadlineArgs, recordShare } from 'lib/api';
-import { hasAnyHints } from 'lib/game';
-import { getStoredScores } from 'lib/storage';
+import { calculateScore } from 'lib/game';
 
 export const plural = (count: number, singular: string, suffix = 's'): string =>
   `${singular}${count === 1 ? '' : suffix}`;
@@ -44,13 +43,14 @@ export const timeSince = (
   return fmt(seconds, 'second');
 };
 
+const randomElement = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
 const toastRandomMessage = (
   toast: ToastFn,
   toastType: ToastType,
   possibleMessages: (string | [string, string])[]
 ) => {
-  const randomIndex = Math.floor(Math.random() * possibleMessages.length);
-  const randomMessage = possibleMessages[randomIndex];
+  const randomMessage = randomElement(possibleMessages);
   let text = randomMessage;
   let messageClass = undefined;
   if (Array.isArray(randomMessage)) {
@@ -199,36 +199,37 @@ export const getActionsText = (headline: Headline, gameState: GameState, isExper
   return text;
 };
 
+const WINNER_EMOJIS = ['🎉', '🥳', '🤩', '🏆', '💯', '🥇', '👑', '🚀', '🔥', '🎊', '💰', '📈'];
+const LEVEL_EMOJIS = ['😊', '🤔', '🤨', '🙄', '😟', '😫', '🙈', '😵', '🪦', '💩', '💀'];
+
 export const getResultText = (
   headline: Headline,
   gameState: GameState,
   isExpert: boolean,
-  forSharing = true
+  score: Score | undefined // Score could be undefined if something went wrong with storage
 ) => {
   let resultsText = getActionsText(headline, gameState, isExpert);
-  if (!hasAnyHints(gameState)) {
-    resultsText += '\nNo hints! 😎';
-  }
-  if (isExpert) {
-    resultsText += '\nExpert Mode 🤓';
+
+  if (score) {
+    const scores = calculateScore(gameState, score, headline);
+    const emoji =
+      scores.overall === 100
+        ? randomElement(WINNER_EMOJIS)
+        : LEVEL_EMOJIS[Math.floor((100 - scores.overall) / 10)];
+
+    resultsText += `\nScore: ${scores.overall}/100 ${emoji}`;
   }
 
-  if (forSharing) {
-    return `Leek #${headline.gameNum} found!\n\n${window.location.href}\n\n${resultsText}`;
-  } else {
-    return resultsText;
-  }
+  return resultsText;
 };
 
 export const shareScore = (
+  resultsText: string,
   headline: Headline,
-  gameState: GameState,
-  isExpert: boolean,
   toast: ToastFn,
   forceCopy: boolean = false
 ): void => {
-  const score = getStoredScores()[`${headline.id}`];
-  const shareText = getResultText(headline, gameState, score?.e || isExpert);
+  const shareText = `Leek #${headline.gameNum} found!\n\n${window.location.href}\n\n${resultsText}`;
 
   if (navigator.share && !forceCopy) {
     navigator

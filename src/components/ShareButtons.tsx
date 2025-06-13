@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { GameState, Headline } from 'types';
 import { getResultText, shareScore } from 'lib/ui';
 import { useToast } from 'contexts/ToastContext';
+import { getStoredScores } from 'lib/storage';
 
 interface ShareButtonsProps {
   gameState: GameState;
@@ -12,7 +13,10 @@ interface ShareButtonsProps {
 const ShareButtons: React.FC<ShareButtonsProps> = ({ gameState, headline, isExpert }) => {
   const hasShareAPI = 'share' in (navigator || {});
 
-  const resultText = getResultText(headline, gameState, isExpert, false);
+  const resultText = useMemo(
+    () => getResultText(headline, gameState, isExpert, getStoredScores()[`${headline.id}`]),
+    [gameState, headline, isExpert]
+  );
   const toast = useToast();
 
   const hasWrongGuesses = gameState.actions?.filter(x => typeof x === 'string').length;
@@ -27,7 +31,7 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({ gameState, headline, isExpe
         {hasShareAPI && (
           <button
             className="mt-4 px-4 py-2 border-2 border-green-500 bg-green-500 rounded-md hover:bg-green-600 transition-colors"
-            onClick={() => shareScore(headline, gameState, isExpert, toast)}
+            onClick={() => shareScore(resultText, headline, toast)}
           >
             Share Results
           </button>
@@ -38,7 +42,7 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({ gameState, headline, isExpe
               ? 'border-2 border-green-500 text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20'
               : 'bg-green-500 text-white hover:bg-green-600'
           }`}
-          onClick={() => shareScore(headline, gameState, isExpert, toast, true)}
+          onClick={() => shareScore(resultText, headline, toast, true)}
         >
           Copy Results
         </button>
