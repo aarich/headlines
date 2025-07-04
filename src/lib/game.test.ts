@@ -91,25 +91,25 @@ describe('game.ts', () => {
     const headline = MOCK_HEADLINE;
     it('should return true if CHAR hint is available (fewer than answer length)', () => {
       const gameState = createMockGameState([Hint.CHAR, Hint.CHAR]);
-      expect(isHintAvailable(false, gameState, headline, Hint.CHAR)).toBe(true);
+      expect(isHintAvailable(true, gameState, headline, Hint.CHAR)).toBe(true);
     });
     it('should return false if CHAR hint is not available (equal to answer length)', () => {
       const actions = Array(headline.correctAnswer.length).fill(Hint.CHAR);
       const gameState = createMockGameState(actions);
-      expect(isHintAvailable(false, gameState, headline, Hint.CHAR)).toBe(false);
+      expect(isHintAvailable(true, gameState, headline, Hint.CHAR)).toBe(false);
     });
     it('should return false if CLUE hint is present', () => {
       const gameState = createMockGameState([Hint.CLUE]);
-      expect(isHintAvailable(false, gameState, headline, Hint.CLUE)).toBe(false);
+      expect(isHintAvailable(true, gameState, headline, Hint.CLUE)).toBe(false);
     });
     it('should return true if CLUE hint is not present', () => {
       const gameState = createMockGameState([Hint.CHAR]);
-      expect(isHintAvailable(false, gameState, headline, Hint.CLUE)).toBe(true);
+      expect(isHintAvailable(true, gameState, headline, Hint.CLUE)).toBe(true);
     });
 
-    it('should return false if expert mode and requesting a char', () => {
+    it('should return false if not expert mode and requesting a char', () => {
       const gameState = createMockGameState([]);
-      expect(isHintAvailable(true, gameState, headline, Hint.CHAR)).toBe(false);
+      expect(isHintAvailable(false, gameState, headline, Hint.CHAR)).toBe(false);
     });
     it('should throw error for invalid hint type', () => {
       const gameState = createMockGameState();
