@@ -1,5 +1,5 @@
 import React, { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
-import { Headline, GameState } from 'types';
+import { Headline, GameState, Hint } from 'types';
 import { useSettings } from 'contexts/SettingsContext';
 import HeadlineDisplay from './HeadlineDisplay';
 import AnswerWheel, { PLACEHOLDER_VALUE } from './AnswerWheel';
@@ -8,13 +8,13 @@ import ShareButtons from 'components/ShareButtons';
 import {
   checkAnswer,
   countWrongGuesses,
-  getNextHint,
-  getNextHintPrompt,
-  getNextRevealType,
+  getHintPenalty,
+  getHintPrompt,
   getWrongGuesses,
+  isHintAvailable,
 } from 'lib/game';
 import { incrementStat, saveResult } from 'lib/storage';
-import { LightBulbIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, LightBulbIcon } from '@heroicons/react/24/outline';
 import { useToast } from 'contexts/ToastContext';
 import { recordGameCompleted } from 'lib/api';
 import { toastWrongAnswer } from 'lib/ui';
@@ -91,16 +91,15 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
     }
   }, [handleGuess, gameState.completedAt]);
 
-  const nextHintType = getNextRevealType(gameState.actions, headline.correctAnswer, expertMode);
-
-  const onHintClick = useCallback(() => {
-    if (nextHintType) {
-      if (window.confirm(getNextHintPrompt(gameState, headline.correctAnswer, expertMode))) {
-        setGameState(g => ({ ...g, actions: getNextHint(headline, g, expertMode) }));
+  const onHintClick = useCallback(
+    (hintType: Hint) => {
+      if (window.confirm(getHintPrompt(gameState, headline.correctAnswer, hintType))) {
+        setGameState(g => ({ ...g, actions: [...(g.actions || []), hintType] }));
         toast('Hint revealed!', 'info');
       }
-    }
-  }, [nextHintType, gameState, headline, setGameState, expertMode, toast]);
+    },
+    [gameState, headline.correctAnswer, setGameState, toast]
+  );
 
   useEffect(() => {
     if (expertMode) {
@@ -136,7 +135,24 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
             </div>
           ) : (
             <div className={'grid grid-cols-3 items-center gap-4 mt-4 w-full'}>
-              <div />
+              {expertMode ? (
+                <div className="flex flex-col items-center">
+                  <button
+                    className={`mb-1 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+                    title={'Reveal a letter'}
+                    onClick={() => onHintClick(Hint.CHAR)}
+                    disabled={!isHintAvailable(expertMode, gameState, headline, Hint.CHAR)}
+                  >
+                    <EyeIcon className="w-5 h-5" />
+                  </button>
+                  <span className="text-xs text-gray-500">
+                    -{getHintPenalty(headline, Hint.CHAR)} pts
+                  </span>
+                </div>
+              ) : (
+                <div />
+              )}
+
               <button
                 className="justify-self-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                 onClick={handleGuess}
@@ -144,17 +160,20 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
               >
                 Submit
               </button>
-              {nextHintType ? (
+
+              <div className="flex flex-col items-center">
                 <button
-                  className="justify-self-start  text-gray-700 dark:text-gray-200"
+                  className="mb-1 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   title={'Get a hint'}
-                  onClick={onHintClick}
+                  onClick={() => onHintClick(Hint.CLUE)}
+                  disabled={!isHintAvailable(expertMode, gameState, headline, Hint.CLUE)}
                 >
                   <LightBulbIcon className="w-5 h-5" />
                 </button>
-              ) : (
-                <div />
-              )}
+                <span className="text-xs text-gray-500">
+                  -{getHintPenalty(headline, Hint.CLUE)} pts
+                </span>
+              </div>
             </div>
           )}
 

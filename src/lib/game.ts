@@ -1,4 +1,4 @@
-import { GameState, Headline, Hint, PlayAction, Score } from 'types';
+import { GameState, Headline, Hint, Score } from 'types';
 
 const normalizeString = (str: string): string => {
   return str.toLowerCase().trim();
@@ -34,25 +34,6 @@ export const checkAnswer = (guess: string, correctAnswer: string, expertMode: bo
   return guess === correctAnswer;
 };
 
-export const getNextHint = (
-  headline: Headline,
-  { actions = [] }: GameState,
-  isExpert: boolean
-): PlayAction[] => {
-  const nextRevealType = getNextRevealType(actions, headline.correctAnswer, isExpert);
-
-  if (nextRevealType === 'clue') {
-    return [...actions, Hint.CLUE];
-  }
-
-  if (nextRevealType === 'char') {
-    return [...actions, Hint.CHAR];
-  }
-
-  // No next hint
-  return actions;
-};
-
 export const getHints = (gameState: GameState): Hint[] =>
   gameState.actions?.filter(action => typeof action !== 'string') ?? [];
 
@@ -67,24 +48,14 @@ export const countWrongGuesses = (gameState: GameState): number =>
 export const hasAnyHints = (gameState: GameState): boolean =>
   !!gameState.actions?.some(action => typeof action !== 'string');
 
-export const getNumCharsBeforeClue = (correctAnswer: string, isExpert: boolean) =>
-  // Expert mode gets char reveals. Non-expert mode gets the clue right away.
-  isExpert ? Math.floor(Math.min(correctAnswer.length / 2, 3)) : 0;
-
-export const getNextHintPrompt = (
+export const getHintPrompt = (
   { actions }: GameState,
   correctAnswer: string,
-  isExpert: boolean
+  nextRevealType: Hint
 ): string => {
-  const nextRevealType = getNextRevealType(actions, correctAnswer, isExpert);
-
-  if (nextRevealType === 'char') {
+  if (nextRevealType === Hint.CHAR) {
     const numCharsRevealed = actions?.filter(action => action === Hint.CHAR).length ?? 0;
-    // Suggest using non-expert mode if the user has already revealed a character and is in expert mode
-    const tip =
-      isExpert && numCharsRevealed === 2
-        ? '\n\nTip: You can also toggle off "Expert Mode" for a different fun experience!'
-        : '';
+
     let next = 'next';
 
     if (!numCharsRevealed) {
@@ -93,52 +64,50 @@ export const getNextHintPrompt = (
       next = 'last';
     }
 
-    return `Reveal the ${next} letter of the missing word?${tip}`;
+    return `Reveal the ${next} letter of the missing word?`;
   }
 
-  if (nextRevealType === 'clue') {
+  if (nextRevealType === Hint.CLUE) {
     return 'Reveal a clue about the missing word?';
   }
 
   return '';
 };
 
-export const getNextRevealType = (
-  actions: PlayAction[] | undefined,
-  correctAnswer: string,
-  isExpert: boolean
-): 'char' | 'clue' | undefined => {
-  // Reveal the next character until 3 chars or half of the word is revealed. Then reveal the clue. Then continue revealing characters.
-  const numCharsBeforeClue = getNumCharsBeforeClue(correctAnswer, isExpert);
-  if (!actions) {
-    return numCharsBeforeClue === 0 ? 'clue' : 'char';
+export const isHintAvailable = (
+  isExpert: boolean,
+  gameState: GameState,
+  headline: Headline,
+  hintType: Hint
+) => {
+  const hints = getHints(gameState);
+
+  if (hintType === Hint.CHAR) {
+    return (
+      isExpert && hints.filter(hint => hint === Hint.CHAR).length < headline.correctAnswer.length
+    );
+  }
+  if (hintType === Hint.CLUE) {
+    return !hints.find(hint => hint === Hint.CLUE);
   }
 
-  const chars = actions.filter(play => play === Hint.CHAR).length;
-  if (chars < numCharsBeforeClue) {
-    return 'char';
-  }
-
-  const hasClue = actions.some(play => play === Hint.CLUE);
-  if (!hasClue) {
-    return 'clue';
-  }
-
-  return chars < correctAnswer.length ? 'char' : undefined;
+  throw new Error('Invalid hint type.');
 };
+
+export const getHintPenalty = ({ correctAnswer }: Headline, hintType: Hint) =>
+  Math.round(hintType === Hint.CHAR ? 100 / correctAnswer.length : 30);
 
 /**
  * Return a score out of 100
  */
 export const calculateScore = (gameState: GameState, score: Score, headline: Headline) => {
   const { e: isExpert, g: numWrongGuesses } = score;
-  const { correctAnswer } = headline;
   const hintsUsed = getHints(gameState);
   const numCharHints = hintsUsed.filter(hint => hint === Hint.CHAR).length;
   const usedClue = hintsUsed.some(hint => hint === Hint.CLUE);
 
-  const charHintPenalty = Math.round((numCharHints / correctAnswer.length) * 100);
-  const cluePenalty = usedClue ? 30 : 0;
+  const charHintPenalty = numCharHints * getHintPenalty(headline, Hint.CHAR);
+  const cluePenalty = usedClue ? getHintPenalty(headline, Hint.CLUE) : 0;
   const notExpertPenalty = isExpert ? 0 : 10;
   const wrongGuessPenalty = Math.min(numWrongGuesses * 5, 100);
 
