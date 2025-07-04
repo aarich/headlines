@@ -34,7 +34,7 @@ CREATE TABLE headline (
     correct_answer VARCHAR(255) NOT NULL,
     possible_answers JSON NOT NULL,
     publish_time DATETIME NOT NULL,
-    status ENUM('selected', 'final_selection', 'rejected') DEFAULT NULL,
+    status ENUM('selected', 'final_selection', 'rejected', 'archived') DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_publish_time (publish_time),
@@ -269,7 +269,10 @@ function handleGameAction($headlineId, $action, $data = []) {
     return updateHeadlineStats($headlineId, $updates);
 }
 
-function insertHeadline(string $headline, string $before_blank, string $after_blank, string $hint, string $article_url, string $reddit_url, string $correct_answer, array $possible_answers, string $publish_time, string $explanation, bool $save_to_preview) {
+/**
+ * @param string $created_at may be null to use current time
+ */
+function insertHeadline(string $headline, string $before_blank, string $after_blank, string $hint, string $article_url, string $reddit_url, string $correct_answer, array $possible_answers, string $publish_time, string $explanation, bool $save_to_preview, ?string $created_at) {
     $possible_answers = array_map('trim', $possible_answers);
     $possible_answers = array_filter($possible_answers); // Remove empty values
     $possible_answers = ['answers' => $possible_answers];
@@ -289,6 +292,11 @@ function insertHeadline(string $headline, string $before_blank, string $after_bl
         $params[] = $max_game_num + 1;
     }
 
+    if ($created_at !== null) {
+        $db_cols[] = 'created_at';
+        $params[] = $created_at;
+    }
+
     $db_cols_str = implode(', ', $db_cols);
     $params_str = implode(', ', array_fill(0, count($db_cols), '?'));
 
@@ -304,10 +312,21 @@ function insertHeadline(string $headline, string $before_blank, string $after_bl
         $stmt->execute([$headlineId]);
         echo "Inserted headline stats\n";
 
+        // Add all answers as initial suggestions
+        if (!empty($possible_answers['answers'])) {
+            $suggestion_values_placeholder = array_fill(0, count($possible_answers['answers']), '(?, ?)');
+            $suggestion_params = [];
+            foreach ($possible_answers['answers'] as $answer) {
+                $suggestion_params[] = $headlineId;
+                $suggestion_params[] = $answer;
+            }
+            $stmt = $db->prepare('INSERT INTO suggestion (headline_id, suggestion_text) VALUES ' . implode(', ', $suggestion_values_placeholder));
+            $stmt->execute($suggestion_params);
+            echo "Inserted " . count($possible_answers['answers']) . " suggestions\n";
+        }
+
         // Since we just added a headline into the non-preview table, delete anything in the preview table
-        $stmt = $db->prepare('DELETE FROM headline_preview');
-        $stmt->execute();
-        $rows_deleted = $stmt->rowCount();
+        $rows_deleted = $db->exec("DELETE FROM headline_preview WHERE status NOT IN ('archived', 'rejected') OR created_at < NOW() - INTERVAL 7 DAY");
         echo "Deleted $rows_deleted preview headlines\n";
     }
 
@@ -342,7 +361,7 @@ function getStatus() {
 }
 
 // $previewData - record from headline_preview
-function promotePreview($previewData) {
+function promotePreview($previewData, bool $override_created_at) {
     $db = getDbConnection();
 
     // Prepare data for insertHeadline function
@@ -355,6 +374,12 @@ function promotePreview($previewData) {
     $correctAnswer = $previewData['correct_answer'];
     $explanation = $previewData['explanation'] ?? '';
     $publishTime = $previewData['publish_time'];
+    $created_at_to_insert = null;
+
+    if ($override_created_at) {
+        // Set to today at 00:01:00 UTC
+        $created_at_to_insert = (new DateTime("today 00:01:00", new DateTimeZone("UTC")))->format('Y-m-d H:i:s');
+    }
 
     $possibleAnswersDecoded = json_decode($previewData['possible_answers'], true);
     $possibleAnswersArray = [];
@@ -374,14 +399,13 @@ function promotePreview($previewData) {
         $possibleAnswersArray,
         $publishTime,
         $explanation,
-        false // save_to_preview = false
+        false, // save_to_preview = false
+        $created_at_to_insert
     );
 
     if ($newHeadlineId) {
         // If insert was successful, delete all records from headline_preview
-        $deleteStmt = $db->prepare('DELETE FROM headline_preview');
-        $deleteStmt->execute();
-        $deletedRowCount = $deleteStmt->rowCount();
+        $deletedRowCount = $db->exec("DELETE FROM headline_preview WHERE status NOT IN ('archived', 'rejected') OR created_at < NOW() - INTERVAL 7 DAY");
 
         return [
             'newHeadlineId' => $newHeadlineId,

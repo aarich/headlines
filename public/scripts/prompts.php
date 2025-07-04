@@ -1,7 +1,7 @@
 
 <?php
 
-$DEFAULT_CANDIDATE_COUNT = 5;
+$DEFAULT_CANDIDATE_COUNT = 6;
 
 $guidelines = "
 - The headline subject should be SFW but is welcome to be irreverent or absurd
@@ -45,11 +45,13 @@ Choose at least $candidates_to_provide headlines from this list of candidates:
  $json_str";
 }
 
-function getInitialGenerationConfig($headlines_brief) {
+function getInitialGenerationCandidatesToProvide($headline_titles) {
     global $DEFAULT_CANDIDATE_COUNT;
-    $num_headlines = count($headlines_brief);
-    $candidates_to_provide = min($DEFAULT_CANDIDATE_COUNT, $num_headlines);
+    $num_headlines = count($headline_titles);
+    return min($DEFAULT_CANDIDATE_COUNT, $num_headlines);
+}
 
+function getInitialGenerationConfig(int $candidates_to_provide) {
     return [
         "responseMimeType" => "application/json",
         "responseSchema" => [
@@ -91,25 +93,23 @@ function getInitialGenerationConfig($headlines_brief) {
     ];
 }
 
-function getFinalPrompt($initial_candidates_str) {
+function getFinalPrompt(int $num_final_results, string $initial_candidates_str) {
     global $guidelines;
     return  "
 Below are some options for a fun guessing game. Each headline below was chosen since they seem like they could be written by The Onion, but they are truly real headlines. 
-The game involves guessing a missing word from an absurd-but-real headline. So choose a headline that would be fun for that game. 
+The game involves guessing a missing word from an absurd-but-real headline. So choose $num_final_results headline(s) that would be fun for that game. 
 Here are the guidelines to help you choose. None of them are strict rules since it might be impossible to find a headline to meet all of them. If any option blatantly violates the guidelines, you can ignore it and choose one that better suits the guidelines.
 
 $guidelines
 
-You are to select the best option and provide the following information:
-
-Format your response by including
+You are to select the best $num_final_results options and provide the following information for each:
 - the original headline as it was published.
 - the specific word to remove from the headline that meets the above criteria
 - an explanation for why this choice was made. What makes the headline and word to remove meet these preferences?
 - a list of possible word choices that would be funny to suggest as alternatives. Feel free to edit or add to the list as needed to adhere to the guidelines.
 - a brief hint for the answer that is esoteric and not obvious, akin to a crossword clue in that it requires some thought to guess. 
 - The hint should not be a pun. It can be creative or funny or just a short simple clue that doesn't give away the answer right away.
-- The hint should focus on the word itself rather than the context of the headline
+- The hint should focus on the word itself more than the context of the headline
 
 Here is the list of potential choices:
 
@@ -117,24 +117,33 @@ $initial_candidates_str
 ";
 }
 
-function getFinalGenerationConfig($include_explanation = true) {
+function getFinalGenerationConfig($min_items, $include_explanation = true) {
     $schema = [
         "responseMimeType" => "application/json",
         "responseSchema" => [
             "type" => "object",
-            "required" => [
-                "headline",
-                "word_to_remove",
-                "replacements",
-                "hint"
-            ],
             "properties" => [
-                "headline" => ["type" => "string"],
-                "word_to_remove" => ["type" => "string"],
-                "hint" => ["type" => "string"],
-                "replacements" => [
+                "choices" => [
                     "type" => "array",
-                    "items" => ["type" => "string"]
+                    "minItems" => $min_items,
+                    "items" => [
+                        "type" => "object",
+                        "required" => [
+                            "headline",
+                            "word_to_remove",
+                            "replacements",
+                            "hint"
+                        ],
+                        "properties" => [
+                            "headline" => ["type" => "string"],
+                            "word_to_remove" => ["type" => "string"],
+                            "hint" => ["type" => "string"],
+                            "replacements" => [
+                                "type" => "array",
+                                "items" => ["type" => "string"]
+                            ]
+                        ]
+                    ]
                 ]
             ]
         ]

@@ -50,9 +50,9 @@ function validateAndProcessPreviewInput(array $input, array $allowedFields, bool
                 throw new Exception("Field '$camelCaseField' must be an array.");
             }
         } elseif ($dbField === 'status') {
-            if ($value !== null && !in_array($value, ['selected', 'final_selection', 'rejected'])) {
+            if ($value !== null && !in_array($value, ['selected', 'final_selection', 'rejected', 'archived'])) {
                 http_response_code(400);
-                throw new Exception("Invalid status value for '$camelCaseField'. Must be 'selected', 'final_selection', or null.");
+                throw new Exception("Invalid status value for '$camelCaseField'. Must be 'selected', 'final_selection', 'rejected', 'archived', or null.");
             }
             $statusValue = $value;
         } elseif ($dbField === 'publish_time') {
@@ -260,9 +260,9 @@ try {
 
         $db->beginTransaction();
         try {
-            // Handle status update logic (ensuring only one has a status)
-            if ($statusUpdateValue && $statusUpdateValue !== 'rejected') {
-                $stmtClear = $db->prepare("UPDATE headline_preview SET status = NULL WHERE status IS NOT NULL AND status != 'rejected' AND id != ?");
+            // Handle status update logic (ensuring only one has accepted status)
+            if ($statusUpdateValue && !in_array($statusUpdateValue, ['rejected', 'archived'])) {
+                $stmtClear = $db->prepare("UPDATE headline_preview SET status = NULL WHERE status IS NOT NULL AND status NOT IN ('rejected', 'archived') AND id != ?");
                 $stmtClear->execute([$previewId]);
             }
 

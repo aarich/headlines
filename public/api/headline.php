@@ -51,7 +51,7 @@ try {
             throw new Exception('No preview headline found in headline_preview table.');
         }
 
-        $result = promotePreview($previewData);
+        $result = promotePreview($previewData, false);
 
         if ($result) {
             $result['message'] = 'Selected preview headline published successfully to the main headline table and all previews cleared.';

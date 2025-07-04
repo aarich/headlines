@@ -42,7 +42,7 @@ try {
   if (count($previews) === 1) {
     echo "Only one preview found. Promoting it\n";
     echo json_decode($previews[0], JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE);
-    $result = promotePreview($previews[0]);
+    $result = promotePreview($previews[0], true);
     $log_message = "Only one preview found. Promoted. Result: " . ($result ? json_encode($result) : "Failed");
     echo $log_message . "\n";
     log_script_execution($command_name, $result ? 'success' : 'failed', $log_message);
@@ -56,7 +56,7 @@ try {
 
       echo "Found a selected preview! Promoting it\n";
       echo json_encode($previewData, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE);
-      $result = promotePreview($previewData);
+      $result = promotePreview($previewData, true);
       $log_message = "Found a selected preview. Promoted. Result: " . ($result ? json_encode($result) : "Failed");
       echo $log_message . "\n";
       log_script_execution($command_name, $result ? 'success' : 'failed', $log_message);
@@ -85,12 +85,12 @@ try {
 
   // Choose the best candidate
   $prompt = getChooseFromPreviewsPrompt(json_encode($previews_simplified, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE));
-  $generationConfig = getFinalGenerationConfig(false);
+  $generationConfig = getFinalGenerationConfig(1, false);
   $response = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key, $gpt_model_name);
 
   $generated_text = $response['candidates'][0]['content']['parts'][0]['text'];
   echo "Final choice response:\n" . $generated_text . "\n";
-  $final_choice_data = json_decode($generated_text, true);
+  $final_choice_data = json_decode($generated_text, true)['choices'][0];
 
   // Extract data from the LLM response
   $headline = $final_choice_data['headline'];
@@ -131,7 +131,7 @@ try {
     echo $log_message . "\n";
     log_script_execution($command_name, 'success', $log_message);
   } else {
-    $result = promotePreview($matched_preview);
+    $result = promotePreview($matched_preview, true);
     $log_message = "Headline " . ($result ? "inserted into the database. Result: " . json_encode($result) : "insertion failed.");
     echo $log_message . "\n";
     log_script_execution($command_name, $result ? 'success' : 'failed', $log_message);
