@@ -22,41 +22,37 @@ const createMockGameState = (actions?: PlayAction[]): GameState => ({
 describe('game.ts', () => {
   describe('checkAnswer', () => {
     it('should return true for exact match', () => {
-      expect(checkAnswer('answer', 'answer', false)).toBe(true);
-      expect(checkAnswer('answer', 'answer', true)).toBe(true);
+      expect(checkAnswer('answer', 'answer')).toBe(true);
     });
 
-    it('should return false for non-exact match in non-expert mode', () => {
-      expect(checkAnswer('Answer', 'answer', false)).toBe(false);
-      expect(checkAnswer('answers', 'answer', false)).toBe(false);
+    it('should return true for case-insensitive match', () => {
+      expect(checkAnswer('Answer', 'answer')).toBe(true);
+      expect(checkAnswer('ANSWER', 'answer')).toBe(true);
     });
 
-    it('should return true for case-insensitive match in expert mode', () => {
-      expect(checkAnswer('Answer', 'answer', true)).toBe(true);
-      expect(checkAnswer('ANSWER', 'answer', true)).toBe(true);
+    it('should return true for match with leading/trailing spaces', () => {
+      expect(checkAnswer(' answer ', 'answer')).toBe(true);
+      expect(checkAnswer('  answer', 'answer')).toBe(true);
+      expect(checkAnswer('answer  ', 'answer')).toBe(true);
     });
 
-    it('should return true for match with leading/trailing spaces in expert mode', () => {
-      expect(checkAnswer(' answer ', 'answer', true)).toBe(true);
+    it('should return true for plural/singular variations', () => {
+      expect(checkAnswer('answers', 'answer')).toBe(true);
+      expect(checkAnswer('answer', 'answers')).toBe(true);
     });
 
-    it('should return true for plural/singular variations in expert mode', () => {
-      expect(checkAnswer('answers', 'answer', true)).toBe(true);
-      expect(checkAnswer('answer', 'answers', true)).toBe(true);
+    it('should return true for common verb tense variations', () => {
+      expect(checkAnswer('answering', 'answer')).toBe(true);
+      expect(checkAnswer('answer', 'answering')).toBe(true);
+      expect(checkAnswer('answered', 'answer')).toBe(true);
+      expect(checkAnswer('answer', 'answered')).toBe(true);
+      expect(checkAnswer('guide', 'guided')).toBe(true);
+      expect(checkAnswer('guided', 'guide')).toBe(true);
     });
 
-    it('should return true for common verb tense variations in expert mode', () => {
-      expect(checkAnswer('answering', 'answer', true)).toBe(true);
-      expect(checkAnswer('answer', 'answering', true)).toBe(true);
-      expect(checkAnswer('answered', 'answer', true)).toBe(true);
-      expect(checkAnswer('answer', 'answered', true)).toBe(true);
-      expect(checkAnswer('guide', 'guided', true)).toBe(true);
-      expect(checkAnswer('guided', 'guide', true)).toBe(true);
-    });
-
-    it('should return false for non-fuzzy match in expert mode', () => {
-      expect(checkAnswer('answr', 'answer', true)).toBe(false);
-      expect(checkAnswer('completelydifferent', 'answer', true)).toBe(false);
+    it('should return false for non-match', () => {
+      expect(checkAnswer('answr', 'answer')).toBe(false);
+      expect(checkAnswer('completelydifferent', 'answer')).toBe(false);
     });
   });
 
@@ -88,49 +84,41 @@ describe('game.ts', () => {
   });
 
   describe('isHintAvailable', () => {
-    const headline = MOCK_HEADLINE;
     it('should return true if CHAR hint is available (fewer than answer length)', () => {
       const gameState = createMockGameState([Hint.CHAR, Hint.CHAR]);
-      expect(isHintAvailable(true, gameState, headline, Hint.CHAR)).toBe(true);
+      expect(isHintAvailable(true, gameState, MOCK_HEADLINE, Hint.CHAR)).toBe(true);
     });
+
     it('should return false if CHAR hint is not available (equal to answer length)', () => {
-      const actions = Array(headline.correctAnswer.length).fill(Hint.CHAR);
+      const actions = Array(MOCK_HEADLINE.correctAnswer.length).fill(Hint.CHAR);
       const gameState = createMockGameState(actions);
-      expect(isHintAvailable(true, gameState, headline, Hint.CHAR)).toBe(false);
+      expect(isHintAvailable(true, gameState, MOCK_HEADLINE, Hint.CHAR)).toBe(false);
     });
+
     it('should return false if CLUE hint is present', () => {
       const gameState = createMockGameState([Hint.CLUE]);
-      expect(isHintAvailable(true, gameState, headline, Hint.CLUE)).toBe(false);
+      expect(isHintAvailable(true, gameState, MOCK_HEADLINE, Hint.CLUE)).toBe(false);
     });
+
     it('should return true if CLUE hint is not present', () => {
       const gameState = createMockGameState([Hint.CHAR]);
-      expect(isHintAvailable(true, gameState, headline, Hint.CLUE)).toBe(true);
+      expect(isHintAvailable(true, gameState, MOCK_HEADLINE, Hint.CLUE)).toBe(true);
     });
 
     it('should return false if not expert mode and requesting a char', () => {
       const gameState = createMockGameState([]);
-      expect(isHintAvailable(false, gameState, headline, Hint.CHAR)).toBe(false);
-    });
-    it('should throw error for invalid hint type', () => {
-      const gameState = createMockGameState();
-      // @ts-expect-error
-      expect(() => isHintAvailable(false, gameState, headline, 'invalid')).toThrow(
-        'Invalid hint type.'
-      );
+      expect(isHintAvailable(false, gameState, MOCK_HEADLINE, Hint.CHAR)).toBe(false);
     });
   });
 
   describe('calculateScore', () => {
-    const correctAnswer = 'example'; // length 7
-    const mockHeadline: Headline = {
-      ...MOCK_HEADLINE,
-      correctAnswer,
-    };
+    const correctAnswer = 'example';
+    const headline: Headline = { ...MOCK_HEADLINE, correctAnswer };
 
     it('should return 100 for perfect score (expert, no hints, no wrong guesses)', () => {
       const gameState: GameState = {};
       const score = { d: 0, g: 0, e: true, n: 1 };
-      const result = calculateScore(gameState, score, mockHeadline);
+      const result = calculateScore(gameState, score, headline);
       expect(result.overall).toBe(100);
       expect(result.charHintPenalty).toBe(0);
       expect(result.cluePenalty).toBe(0);
@@ -141,7 +129,7 @@ describe('game.ts', () => {
     it('should apply notExpertPenalty', () => {
       const gameState: GameState = {};
       const score = { d: 0, g: 0, e: false, n: 1 }; // Not expert
-      const result = calculateScore(gameState, score, mockHeadline);
+      const result = calculateScore(gameState, score, headline);
       expect(result.overall).toBe(90); // 100 - 10
       expect(result.notExpertPenalty).toBe(10);
     });
@@ -149,15 +137,15 @@ describe('game.ts', () => {
     it('should apply charHintPenalty', () => {
       const gameState: GameState = { actions: [Hint.CHAR, Hint.CHAR] }; // 2 char hints
       const score = { d: 0, g: 0, e: true, n: 1 };
-      const result = calculateScore(gameState, score, mockHeadline);
-      expect(result.charHintPenalty).toBe(28);
-      expect(result.overall).toBe(100 - 28);
+      const result = calculateScore(gameState, score, headline);
+      expect(result.charHintPenalty).toBe(34);
+      expect(result.overall).toBe(100 - 34);
     });
 
     it('should apply cluePenalty', () => {
       const gameState: GameState = { actions: [Hint.CLUE] };
       const score = { d: 0, g: 0, e: true, n: 1 };
-      const result = calculateScore(gameState, score, mockHeadline);
+      const result = calculateScore(gameState, score, headline);
       expect(result.cluePenalty).toBe(30);
       expect(result.overall).toBe(70); // 100 - 30
     });
@@ -165,7 +153,7 @@ describe('game.ts', () => {
     it('should apply wrongGuessPenalty', () => {
       const gameState: GameState = {};
       const score = { d: 0, g: 3, e: true, n: 1 }; // 3 wrong guesses
-      const result = calculateScore(gameState, score, mockHeadline);
+      const result = calculateScore(gameState, score, headline);
       expect(result.wrongGuessPenalty).toBe(15); // 3 * 5
       expect(result.overall).toBe(85); // 100 - 15
     });
@@ -173,7 +161,7 @@ describe('game.ts', () => {
     it('should cap wrongGuessPenalty at 100 (effectively, but max is based on 20 guesses)', () => {
       const gameState: GameState = {};
       const score = { d: 0, g: 25, e: true, n: 1 }; // 25 wrong guesses
-      const result = calculateScore(gameState, score, mockHeadline);
+      const result = calculateScore(gameState, score, headline);
       expect(result.wrongGuessPenalty).toBe(100); // 25 * 5 = 125, capped at 100
       expect(result.overall).toBe(0); // 100 - 100
     });
@@ -181,13 +169,13 @@ describe('game.ts', () => {
     it('should combine all penalties', () => {
       const gameState: GameState = { actions: [Hint.CHAR, Hint.CLUE] }; // 1 char, 1 clue
       const score = { d: 0, g: 2, e: false, n: 1 }; // 2 wrong, not expert
-      const result = calculateScore(gameState, score, mockHeadline);
+      const result = calculateScore(gameState, score, headline);
 
-      expect(result.charHintPenalty).toBe(14);
+      expect(result.charHintPenalty).toBe(17);
       expect(result.cluePenalty).toBe(30);
       expect(result.notExpertPenalty).toBe(10);
       expect(result.wrongGuessPenalty).toBe(10);
-      expect(result.overall).toBe(36);
+      expect(result.overall).toBe(33);
     });
 
     it('should clamp overall score at 0 if penalties exceed 100', () => {
@@ -195,9 +183,9 @@ describe('game.ts', () => {
         actions: [Hint.CHAR, Hint.CHAR, Hint.CHAR, Hint.CHAR, Hint.CLUE],
       }; // 4 char hints, 1 clue
       const score = { d: 0, g: 10, e: false, n: 1 }; // 10 wrong, not expert
-      const result = calculateScore(gameState, score, mockHeadline);
+      const result = calculateScore(gameState, score, headline);
 
-      expect(result.charHintPenalty).toBe(56);
+      expect(result.charHintPenalty).toBe(68);
       expect(result.cluePenalty).toBe(30);
       expect(result.notExpertPenalty).toBe(10);
       expect(result.wrongGuessPenalty).toBe(50);

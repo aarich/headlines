@@ -58,23 +58,24 @@ const HeadlineDisplay: React.FC<HeadlineDisplayProps> = ({
                 style={{ whiteSpace: 'nowrap' }}
                 role="tooltip"
               >
-                <div className="relative flex items-center animate-fade-in">
-                  {/* Arrow on the left, flush with rectangle */}
-                  <svg
-                    width="12"
-                    height="32"
-                    viewBox="0 0 12 32"
-                    className="block"
-                    style={{ flexShrink: 0 }}
-                  >
-                    <polygon points="0,16 12,0 12,32" fill="#1f2937" />
+                <div className="relative animate-fade-in">
+                  <svg height="32" width="100">
+                    <path
+                      d="M 0 16 L 12 1 L 99 1 L 99 31 L 12 31 Z"
+                      fill="#1f2937"
+                      stroke="#4b5563"
+                      strokeWidth="1"
+                    />
+                    <text
+                      x="55.5"
+                      y="21"
+                      fill="white"
+                      textAnchor="middle"
+                      className="text-sm font-medium"
+                    >
+                      {headline.correctAnswer.length} letters
+                    </text>
                   </svg>
-                  <div
-                    className="pl-2 pr-3 py-1 bg-gray-800 text-white text-sm rounded shadow-lg flex items-center relative"
-                    style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}
-                  >
-                    <span className="mr-2">{headline.correctAnswer.length} letters</span>
-                  </div>
                 </div>
               </div>
             )}

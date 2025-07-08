@@ -51,7 +51,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
 
   const handleGuess = useCallback(() => {
     if (!currentGuess) return;
-    const isCorrect = checkAnswer(currentGuess, headline.correctAnswer, expertMode);
+    const isCorrect = checkAnswer(currentGuess, headline.correctAnswer);
 
     if (isCorrect) {
       setCurrentGuess(headline.correctAnswer);
@@ -107,6 +107,28 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
     }
   }, [expertMode]);
 
+  const renderHintButton = (hintType: Hint) => {
+    return (
+      <div className="flex flex-col items-center">
+        {/* To center the button vertically */}
+        <span className="text-xs">&nbsp;</span>
+        <button
+          className="mb-1 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          title={hintType === Hint.CHAR ? 'Reveal a letter' : 'Get a hint'}
+          onClick={() => onHintClick(hintType)}
+          disabled={!isHintAvailable(expertMode, gameState, headline, hintType)}
+        >
+          {hintType === Hint.CHAR ? (
+            <EyeIcon className="w-5 h-5" />
+          ) : (
+            <LightBulbIcon className="w-5 h-5" />
+          )}
+        </button>
+        <span className="text-xs text-gray-500">-{getHintPenalty(headline, hintType)} pts</span>
+      </div>
+    );
+  };
+
   return (
     <>
       <section className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-4 sm:p-8 w-full max-w-4xl mx-auto">
@@ -131,27 +153,11 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
 
           {gameState.completedAt ? (
             <div className="w-full">
-              <ShareButtons gameState={gameState} headline={headline} isExpert={expertMode} />{' '}
+              <ShareButtons gameState={gameState} headline={headline} isExpert={expertMode} />
             </div>
           ) : (
-            <div className={'grid grid-cols-3 items-center gap-4 mt-4 w-full'}>
-              {expertMode ? (
-                <div className="flex flex-col items-center">
-                  <button
-                    className={`mb-1 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed`}
-                    title={'Reveal a letter'}
-                    onClick={() => onHintClick(Hint.CHAR)}
-                    disabled={!isHintAvailable(expertMode, gameState, headline, Hint.CHAR)}
-                  >
-                    <EyeIcon className="w-5 h-5" />
-                  </button>
-                  <span className="text-xs text-gray-500">
-                    -{getHintPenalty(headline, Hint.CHAR)} pts
-                  </span>
-                </div>
-              ) : (
-                <div />
-              )}
+            <div className="grid grid-cols-3 items-center gap-4 mt-4 w-full">
+              {expertMode ? renderHintButton(Hint.CHAR) : <div />}
 
               <button
                 className="justify-self-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
@@ -161,19 +167,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
                 Submit
               </button>
 
-              <div className="flex flex-col items-center">
-                <button
-                  className="mb-1 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  title={'Get a hint'}
-                  onClick={() => onHintClick(Hint.CLUE)}
-                  disabled={!isHintAvailable(expertMode, gameState, headline, Hint.CLUE)}
-                >
-                  <LightBulbIcon className="w-5 h-5" />
-                </button>
-                <span className="text-xs text-gray-500">
-                  -{getHintPenalty(headline, Hint.CLUE)} pts
-                </span>
-              </div>
+              {renderHintButton(Hint.CLUE)}
             </div>
           )}
 

@@ -261,8 +261,7 @@ describe('ui.ts', () => {
         actions: [Hint.CHAR, Hint.CHAR],
         completedAt: 1,
       };
-      // mockScore (0 wrong, not expert), 2 char hints. Overall = 100 - round(2/8*100) - 10 = 65
-      const expectedResultText = `💡💡🧅\nScore: 64/100`;
+      const expectedResultText = `💡💡🧅\nScore: 56/100`;
       expect(getResultText(MOCK_HEADLINE, gameState, false, mockScore)).toContain(
         expectedResultText
       );
@@ -282,8 +281,7 @@ describe('ui.ts', () => {
         actions: [Hint.CHAR, Hint.CHAR, Hint.CLUE],
         completedAt: 1,
       };
-      // mockExpertScore (0 wrong, expert), 2 char hints, 1 clue. Overall = 100 - round(2/8*100) - 30 = 45
-      const expectedResultText = `💡💡🕵🧅\nScore: 44/100 `;
+      const expectedResultText = `💡💡🕵🧅\nScore: 36/100 `;
       expect(getResultText(MOCK_HEADLINE, gameState, true, mockExpertScore)).toContain(
         expectedResultText
       );
@@ -294,7 +292,7 @@ describe('ui.ts', () => {
         actions: [Hint.CHAR, Hint.CHAR, Hint.CLUE, Hint.CHAR, Hint.CHAR],
         completedAt: 1,
       };
-      const expectedResultText = `💡💡🕵💡💡🧅\nScore: 18/100 🪦`;
+      const expectedResultText = `💡💡🕵💡💡🧅\nScore: 2/100 💩`;
       expect(getResultText(MOCK_HEADLINE, gameState, true, mockExpertScore)).toBe(
         expectedResultText
       );
@@ -306,7 +304,7 @@ describe('ui.ts', () => {
         completedAt: 1,
       };
       const scoreWithPenalties = { ...mockExpertScore, g: 2 }; // 2 wrong, expert, 3 char, 1 clue
-      const expectedResultText = `❌❌💡💡🕵💡🧅\nScore: 21/100 😵`;
+      const expectedResultText = `❌❌💡💡🕵💡🧅\nScore: 9/100 💩`;
       expect(getResultText(MOCK_HEADLINE, gameState, true, scoreWithPenalties)).toBe(
         expectedResultText
       );

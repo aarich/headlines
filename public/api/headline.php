@@ -24,7 +24,7 @@ try {
         $previewStatus = $input['previewStatus'] ?? null;
         $previewId = $input['previewId'] ?? null;
 
-        if ($previewStatus === null && $previewData === null) {
+        if ($previewStatus === null && $previewId === null) {
             http_response_code(400);
             throw new Exception('The "previewStatus" or a preview ID must be provided');
         }

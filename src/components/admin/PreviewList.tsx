@@ -103,7 +103,7 @@ const PreviewList: React.FC<PreviewListProps> = ({ revealWords, onEditRequest })
         <ul className="space-y-3 pr-2">
           {sortedPreviews.map(preview => (
             <PreviewListItem
-              key={preview.id}
+              key={`${preview.id}-${preview.status}`}
               preview={preview}
               revealWords={revealWords}
               onEdit={() => onEditRequest(preview)}

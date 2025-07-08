@@ -4,7 +4,7 @@ const normalizeString = (str: string): string => {
   return str.toLowerCase().trim();
 };
 
-const isFuzzyMatch = (guess: string, correct: string): boolean => {
+export const checkAnswer = (guess: string, correct: string): boolean => {
   const normalizedGuess = normalizeString(guess);
   const normalizedCorrect = normalizeString(correct);
 
@@ -27,15 +27,10 @@ const isFuzzyMatch = (guess: string, correct: string): boolean => {
   return areEqualIgnoringCommonEndings !== undefined;
 };
 
-export const checkAnswer = (guess: string, correctAnswer: string, expertMode: boolean): boolean => {
-  if (expertMode) {
-    return isFuzzyMatch(guess, correctAnswer);
-  }
-  return guess === correctAnswer;
-};
-
-export const getHints = (gameState: GameState): Hint[] =>
-  gameState.actions?.filter(action => typeof action !== 'string') ?? [];
+export const getHints = (gameState: GameState, hintType?: Hint): Hint[] =>
+  (gameState.actions ?? [])
+    .filter(action => typeof action !== 'string')
+    .filter(hint => hintType === undefined || hint === hintType);
 
 export const countHints = (gameState: GameState): number => getHints(gameState).length;
 
@@ -80,22 +75,24 @@ export const isHintAvailable = (
   headline: Headline,
   hintType: Hint
 ) => {
-  const hints = getHints(gameState);
-
-  if (hintType === Hint.CHAR) {
-    return (
-      isExpert && hints.filter(hint => hint === Hint.CHAR).length < headline.correctAnswer.length
-    );
+  switch (hintType) {
+    case Hint.CHAR:
+      // CHAR hint is available if there are fewer char hints than the length of the answer
+      return isExpert && getHints(gameState, Hint.CHAR).length < headline.correctAnswer.length;
+    case Hint.CLUE:
+      // CLUE hint is available if it hasn't been given yet
+      return !getHints(gameState, Hint.CLUE).length;
+    default:
+      throw new Error('Invalid hint type: ' + hintType);
   }
-  if (hintType === Hint.CLUE) {
-    return !hints.find(hint => hint === Hint.CLUE);
-  }
-
-  throw new Error('Invalid hint type.');
 };
 
+/**
+ * CLUE: 30
+ * CHAR: 100/min(answer length, 6)
+ */
 export const getHintPenalty = ({ correctAnswer }: Headline, hintType: Hint) =>
-  Math.round(hintType === Hint.CHAR ? 100 / correctAnswer.length : 30);
+  Math.round(hintType === Hint.CHAR ? 100 / Math.min(correctAnswer.length, 6) : 30);
 
 /**
  * Return a score out of 100

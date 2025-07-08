@@ -2,7 +2,7 @@
 
 # [Find the Leek](https://leeks.mrarich.com) 🧅
 
-A web application where you can guess the missing word in a newspaper headline. The game updates daily with new headlines chosen by an LLM.
+A web application where you can guess the missing word in a newspaper headline. The game updates daily with new headlines recommended by an LLM.
 
 ## Development
 
@@ -21,7 +21,7 @@ php -S localhost:8000 public/api/server.php
 - Daily updated headlines with missing words
 - Multiple choice guessing interface
 - Score tracking using localStorage
-- LLM-generated daily challenge
+- LLM-initiated daily challenge, refined by an editor
 - Simple PHP REST API
 
 ## Technologies
