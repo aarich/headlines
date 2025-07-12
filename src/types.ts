@@ -1,6 +1,7 @@
 export interface Headline {
   id: number;
   gameNum: number;
+  createdAt: string;
   headline: string;
   correctAnswer: string;
   possibleAnswers: string[];
@@ -87,6 +88,7 @@ export type Stats = Record<Stat, number>;
 export interface HeadlineHistory {
   id: number;
   gameNum: number;
+  createdAt: string;
   headline: string;
   beforeBlank: string;
   afterBlank: string;

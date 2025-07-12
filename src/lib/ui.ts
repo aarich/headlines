@@ -309,3 +309,30 @@ export const extractHeadlineParts = (initialBeforeBlank: string, initialAfterBla
 
   return { beforeBlank, afterBlank, prefix, suffix };
 };
+
+/**
+ * The date is only shown if it's from a day before today.
+ * @param createdAt The date string in "YYYY-MM-DD HH:MM:SS" format.
+ * @returns A formatted date string (e.g., "July 10, 2025") or null.
+ */
+export const formatGameDateForHeader = (createdAt?: string): string | null => {
+  if (!createdAt) {
+    return null;
+  }
+  // Handles "YYYY-MM-DD HH:MM:SS" format, assuming it's in local time.
+  const gameDate = new Date(createdAt.replace(' ', 'T'));
+
+  const today = new Date();
+  // Set today to the beginning of the day in local time.
+  today.setHours(0, 0, 0, 0);
+
+  // We only want to show the date if the game date is before the start of today.
+  if (gameDate.getTime() < today.getTime()) {
+    return gameDate.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }
+  return null;
+};

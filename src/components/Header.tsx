@@ -7,6 +7,7 @@ import {
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import { Headline } from 'types';
+import { formatGameDateForHeader } from 'lib/ui';
 
 interface HeaderProps {
   onSettings: () => void;
@@ -26,6 +27,7 @@ const Header: React.FC<HeaderProps> = ({
   headline,
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const gameDate = formatGameDateForHeader(headline?.createdAt);
 
   // Close menu on navigation or outside click
   useEffect(() => {
@@ -136,7 +138,10 @@ const Header: React.FC<HeaderProps> = ({
           <a href="/">Find the Leek</a>
         </h1>
         {headline && (
-          <p className="text-sm @text-gray-600 dark:text-gray-400">Game #{headline.gameNum}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Game #{headline.gameNum}
+            {gameDate && ` - ${gameDate}`}
+          </p>
         )}
       </div>
     </header>

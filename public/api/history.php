@@ -13,6 +13,7 @@ try {
         SELECT 
             h.id,
             h.game_num,
+            h.created_at,
             h.headline,
             h.before_blank,
             h.after_blank,

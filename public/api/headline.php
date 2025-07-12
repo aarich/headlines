@@ -82,7 +82,8 @@ try {
             reddit_url,
             correct_answer,
             possible_answers,
-            publish_time
+            publish_time,
+            created_at
         FROM headline
     ';
 

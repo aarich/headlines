@@ -47,6 +47,7 @@ const MOCK_HEADLINE: Headline = {
   hint: 'A hint',
   articleUrl: 'http://example.com',
   redditUrl: 'http://example.com/reddit',
+  createdAt: '2025-07-11 00:01:00',
 };
 
 const MOCK_GAME_STATE: GameState = { actions: [Hint.CHAR, 'test'] };

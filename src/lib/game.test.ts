@@ -13,6 +13,7 @@ const MOCK_HEADLINE: Headline = {
   hint: 'A clue for the word.',
   articleUrl: 'http://example.com/article',
   redditUrl: 'http://example.com/reddit',
+  createdAt: '2025-07-11 00:01:00',
 };
 
 const createMockGameState = (actions?: PlayAction[]): GameState => ({

@@ -15,7 +15,7 @@ const TickerItem: React.FC<TickerItemProps> = ({
   headline: {
     beforeBlank,
     afterBlank,
-    publishTime: publishTimeStr,
+    createdAt,
     totalCorrectGuesses,
     totalPlays,
     firstGuessCorrectCount,
@@ -34,7 +34,7 @@ const TickerItem: React.FC<TickerItemProps> = ({
 
   const percentSolved = (100 * totalCorrectGuesses) / (totalPlays || 1);
   const percentFirstTry = (100 * firstGuessCorrectCount) / (totalPlays || 1);
-  const publishTime = new Date(publishTimeStr.replace(' ', 'T') + 'Z');
+  const publishTime = new Date(createdAt.replace(' ', 'T') + 'Z');
   return (
     <div className="relative mb-5 p-2 rounded bg-gray-100 dark:bg-gray-700">
       {(isLatest || isCurrent) && (

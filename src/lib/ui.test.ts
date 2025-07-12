@@ -7,6 +7,7 @@ import {
   shareScore,
   formatSuggestionCasing,
   extractHeadlineParts,
+  formatGameDateForHeader,
 } from 'lib/ui';
 import { GameState, Headline, Hint, Score } from 'types';
 
@@ -60,6 +61,7 @@ const MOCK_HEADLINE: Headline = {
   gameNum: 1,
   hint: "i'ts an example",
   publishTime: '2020',
+  createdAt: '2025-07-11 00:01:00',
 };
 
 beforeEach(() => {
@@ -568,6 +570,52 @@ describe('ui.ts', () => {
       expect(prefix).toBe('');
       expect(suffix).toBe('');
       expect(afterBlank).toBe('');
+    });
+  });
+
+  describe('formatGameDateForHeader', () => {
+    const MOCKED_NOW_DATE = new Date('2025-07-11T12:00:00');
+
+    const toDateTimeString = (date: Date) => {
+      return date.toISOString().slice(0, 19).replace('T', ' ');
+    };
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+      jest.setSystemTime(MOCKED_NOW_DATE);
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it("should return null for today's date", () => {
+      const today = new Date(MOCKED_NOW_DATE);
+      expect(formatGameDateForHeader(toDateTimeString(today))).toBeNull();
+    });
+
+    it('should return formatted date for yesterday', () => {
+      const yesterday = new Date(MOCKED_NOW_DATE);
+      yesterday.setDate(yesterday.getDate() - 1);
+      expect(formatGameDateForHeader(toDateTimeString(yesterday))).toBe('July 10, 2025');
+    });
+
+    it('should return null for a future date', () => {
+      const tomorrow = new Date(MOCKED_NOW_DATE);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      expect(formatGameDateForHeader(toDateTimeString(tomorrow))).toBeNull();
+    });
+
+    it('should return null for an undefined date', () => {
+      expect(formatGameDateForHeader(undefined)).toBeNull();
+    });
+
+    it('should return formatted date for a date in a different month and year', () => {
+      const lastYear = new Date(MOCKED_NOW_DATE);
+      lastYear.setFullYear(lastYear.getFullYear() - 1);
+      lastYear.setMonth(5); // June
+      lastYear.setDate(15);
+      expect(formatGameDateForHeader(toDateTimeString(lastYear))).toBe('June 15, 2024');
     });
   });
 });
