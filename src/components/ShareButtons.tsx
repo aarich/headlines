@@ -1,16 +1,16 @@
 import React, { useMemo } from 'react';
-import { GameState, Headline } from 'types';
 import { getResultText, shareScore } from 'lib/ui';
 import { useToast } from 'contexts/ToastContext';
 import { getStoredScores } from 'lib/storage';
+import { useGameState, useHeadline } from 'contexts/HeadlineContext';
 
 interface ShareButtonsProps {
-  gameState: GameState;
-  headline: Headline;
   isExpert: boolean;
 }
 
-const ShareButtons: React.FC<ShareButtonsProps> = ({ gameState, headline, isExpert }) => {
+const ShareButtons: React.FC<ShareButtonsProps> = ({ isExpert }) => {
+  const [gameState] = useGameState();
+  const headline = useHeadline();
   const hasShareAPI = 'share' in (navigator || {});
 
   const resultText = useMemo(

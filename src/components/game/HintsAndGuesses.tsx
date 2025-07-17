@@ -1,14 +1,11 @@
 import { getWrongGuesses } from 'lib/game';
 import React from 'react';
-import { GameState, Headline, Hint } from 'types';
+import { Hint } from 'types';
+import { useGameState, useHeadline } from '../../contexts/HeadlineContext';
 
-interface Props {
-  gameState: GameState;
-  headline: Headline;
-  isExpert: boolean;
-}
-
-const HintsAndGuesses: React.FC<Props> = ({ gameState, headline, isExpert }) => {
+const HintsAndGuesses: React.FC = () => {
+  const [gameState] = useGameState();
+  const headline = useHeadline();
   const wrongGuesses = getWrongGuesses(gameState);
   const reversed = wrongGuesses.slice().reverse();
   const showClue = gameState.actions?.find(a => a === Hint.CLUE) && !gameState.completedAt;

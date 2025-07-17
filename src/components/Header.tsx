@@ -6,8 +6,8 @@ import {
   ChartPieIcon,
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
-import { Headline } from 'types';
 import { formatGameDateForHeader } from 'lib/ui';
+import { useMaybeHeadline } from 'contexts/HeadlineContext';
 
 interface HeaderProps {
   onSettings: () => void;
@@ -15,7 +15,6 @@ interface HeaderProps {
   onStats: () => void;
   onAdmin: () => void;
   showAdminButton: boolean;
-  headline: Headline | undefined;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -24,8 +23,8 @@ const Header: React.FC<HeaderProps> = ({
   onStats,
   onAdmin,
   showAdminButton,
-  headline,
 }) => {
+  const headline = useMaybeHeadline();
   const [menuOpen, setMenuOpen] = useState(false);
   const gameDate = formatGameDateForHeader(headline?.createdAt);
 

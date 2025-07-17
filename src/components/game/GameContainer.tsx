@@ -1,5 +1,5 @@
-import React, { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
-import { Headline, GameState, Hint } from 'types';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Hint } from 'types';
 import { useSettings } from 'contexts/SettingsContext';
 import HeadlineDisplay from './HeadlineDisplay';
 import AnswerWheel, { PLACEHOLDER_VALUE } from './AnswerWheel';
@@ -20,14 +20,11 @@ import { recordGameCompleted } from 'lib/api';
 import { toastWrongAnswer } from 'lib/ui';
 import HintsAndGuesses from './HintsAndGuesses';
 import Suggestions from './Suggestions';
+import { useGameState, useHeadline } from 'contexts/HeadlineContext';
 
-interface GameContainerProps {
-  headline: Headline;
-  gameState: GameState;
-  setGameState: Dispatch<SetStateAction<GameState>>;
-}
-
-const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setGameState }) => {
+const GameContainer: React.FC = () => {
+  const [gameState, setGameState] = useGameState();
+  const headline = useHeadline();
   const { expertMode } = useSettings().settings;
   const [currentGuess, setCurrentGuess] = useState('');
   const expertInputRef = useRef<HTMLInputElement>(null);
@@ -132,12 +129,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
   return (
     <>
       <section className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-4 sm:p-8 w-full max-w-4xl mx-auto">
-        <HeadlineDisplay
-          headline={headline}
-          currentGuess={currentGuess}
-          isGameOver={!!gameState.completedAt}
-          gameState={gameState}
-        />
+        <HeadlineDisplay currentGuess={currentGuess} isGameOver={!!gameState.completedAt} />
         <div className="flex flex-col items-center w-full">
           <div className="w-full flex justify-center">
             {gameState.completedAt ? null : expertMode ? (
@@ -153,7 +145,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
 
           {gameState.completedAt ? (
             <div className="w-full">
-              <ShareButtons gameState={gameState} headline={headline} isExpert={expertMode} />
+              <ShareButtons isExpert={expertMode} />
             </div>
           ) : (
             <div className="grid grid-cols-3 items-center gap-4 mt-4 w-full">
@@ -171,9 +163,9 @@ const GameContainer: React.FC<GameContainerProps> = ({ headline, gameState, setG
             </div>
           )}
 
-          <HintsAndGuesses headline={headline} gameState={gameState} isExpert={expertMode} />
+          <HintsAndGuesses />
 
-          <Suggestions headline={headline} gameState={gameState} setGameState={setGameState} />
+          <Suggestions />
         </div>
       </section>
     </>

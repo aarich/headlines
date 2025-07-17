@@ -1,10 +1,10 @@
 import React from 'react';
-import { GameState, Hint } from 'types';
+import { Hint } from 'types';
 import { useSettings } from 'contexts/SettingsContext';
+import { useGameState } from 'contexts/HeadlineContext';
 
 interface GuessDisplayProps {
   currentGuess: string;
-  gameState: GameState;
   correctAnswer: string;
   forceExpertMode?: boolean;
   /** prefix and suffix are in case the removed word is quoted or otherwise surrounded by punction */
@@ -21,12 +21,12 @@ const SPACE_CHAR_CLASS = 'font-normal tracking-widest';
 
 const GuessDisplay: React.FC<GuessDisplayProps> = ({
   currentGuess,
-  gameState: { actions },
   correctAnswer,
   forceExpertMode,
   prefix,
   suffix,
 }) => {
+  const [{ actions = [] }] = useGameState();
   const { expertMode: expertModeSetting, colorBlindMode } = useSettings().settings;
 
   const isExpertMode = forceExpertMode || expertModeSetting;

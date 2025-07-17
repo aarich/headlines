@@ -1,24 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { GameState, Headline } from 'types';
 import GuessDisplay from './GuessDisplay';
 import SolvedHeadlineDisplay from './SolvedHeadlineDisplay';
 import { PLACEHOLDER_VALUE } from './AnswerWheel';
 import { extractHeadlineParts } from 'lib/ui';
 import { useSettings } from 'contexts/SettingsContext';
+import { useHeadline } from 'contexts/HeadlineContext';
 
 interface HeadlineDisplayProps {
-  headline: Headline;
   currentGuess: string;
   isGameOver: boolean;
-  gameState: GameState;
 }
 
-const HeadlineDisplay: React.FC<HeadlineDisplayProps> = ({
-  headline,
-  currentGuess,
-  isGameOver,
-  gameState,
-}) => {
+const HeadlineDisplay: React.FC<HeadlineDisplayProps> = ({ currentGuess, isGameOver }) => {
+  const headline = useHeadline();
   const { expertMode } = useSettings().settings;
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -38,7 +32,7 @@ const HeadlineDisplay: React.FC<HeadlineDisplayProps> = ({
       className={`${isGameOver ? 'mb-3' : 'mb-6'} text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-center text-gray-800 dark:text-gray-100 leading-relaxed px-2`}
     >
       {isGameOver ? (
-        <SolvedHeadlineDisplay headline={headline} />
+        <SolvedHeadlineDisplay />
       ) : (
         <div className="mb-6">
           <div>{beforeBlank}</div>
@@ -47,7 +41,6 @@ const HeadlineDisplay: React.FC<HeadlineDisplayProps> = ({
             {/* In that case, display underscores. Otherwise, display the actual currentGuess. */}
             <GuessDisplay
               currentGuess={currentGuess === PLACEHOLDER_VALUE ? '__________' : currentGuess}
-              gameState={gameState}
               correctAnswer={headline.correctAnswer}
               prefix={prefix}
               suffix={suffix}
@@ -59,21 +52,21 @@ const HeadlineDisplay: React.FC<HeadlineDisplayProps> = ({
                 role="tooltip"
               >
                 <div className="relative animate-fade-in">
-                  <svg height="32" width="100">
+                  <svg height="32" width="105">
                     <path
-                      d="M 0 16 L 12 1 L 99 1 L 99 31 L 12 31 Z"
+                      d="M 0 16 L 12 1 L 104 1 L 104 31 L 12 31 Z"
                       fill="#1f2937"
                       stroke="#4b5563"
                       strokeWidth="1"
                     />
                     <text
-                      x="55.5"
+                      x="55"
                       y="21"
                       fill="white"
                       textAnchor="middle"
                       className="text-sm font-medium"
                     >
-                      {headline.correctAnswer.length} letters
+                      {headline.correctAnswer.length} characters
                     </text>
                   </svg>
                 </div>

@@ -3,22 +3,23 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Modal from 'components/common/Modal';
 import { getStoredScores, getStoredStats, saveStats } from 'lib/storage';
 import { getCurrentStreak } from 'lib/scoring';
-import { GameState, Headline, HeadlineHistory } from 'types';
+import { HeadlineHistory } from 'types';
 import { fetchHistory } from 'lib/api';
 import { plural } from 'lib/ui';
 import TickerItem from 'components/TickerItem';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { useGameState, useMaybeHeadline } from 'contexts/HeadlineContext';
 
 interface StatsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  headline?: Headline;
-  gameState: GameState;
 }
 
-const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, gameState }) => {
-  const scores = useMemo(() => getStoredScores(), [gameState.completedAt]);
-  const stats = useMemo(() => getStoredStats(), [gameState.completedAt]);
+const StatsModal: React.FC<StatsModalProps> = ({ isOpen, onClose }) => {
+  const [{ completedAt }] = useGameState();
+  const headline = useMaybeHeadline();
+  const scores = useMemo(() => getStoredScores(), [completedAt]);
+  const stats = useMemo(() => getStoredStats(), [completedAt]);
   const [history, setHistory] = useState<HeadlineHistory[]>();
   const [revealWords, setRevealWords] = useState(false);
 
@@ -34,7 +35,7 @@ const StatsModal: React.FC<StatsModalProps> = ({ headline, isOpen, onClose, game
 
   const currentStreak = useMemo(
     () => (headline ? getCurrentStreak(Object.values(scores), headline.gameNum - 1) : undefined),
-    [headline, scores, gameState.completedAt]
+    [headline, scores, completedAt]
   );
 
   useEffect(() => {

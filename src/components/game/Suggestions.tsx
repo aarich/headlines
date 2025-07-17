@@ -2,16 +2,13 @@ import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 import { useToast } from 'contexts/ToastContext';
 import { createSuggestion, getGameSuggestions, voteForSuggestion } from 'lib/api';
 import { formatSuggestionCasing, toastSuccessfulSuggestion } from 'lib/ui';
-import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
-import { GameState, Headline, Suggestion, SUGGESTION_SKIPPED } from 'types';
+import React, { useEffect, useState } from 'react';
+import { Suggestion, SUGGESTION_SKIPPED } from 'types';
+import { useGameState, useHeadline } from '../../contexts/HeadlineContext';
 
-interface SuggestionsSectionProps {
-  headline: Headline;
-  gameState: GameState;
-  setGameState: Dispatch<SetStateAction<GameState>>;
-}
-
-const Suggestions: React.FC<SuggestionsSectionProps> = ({ headline, gameState, setGameState }) => {
+const Suggestions: React.FC = () => {
+  const [gameState, setGameState] = useGameState();
+  const headline = useHeadline();
   const [suggestionText, setSuggestionText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);

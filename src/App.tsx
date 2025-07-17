@@ -20,6 +20,7 @@ import {
 import { ToastProvider } from 'contexts/ToastContext';
 import Loading from 'components/common/Loading';
 import { fetchHeadlineBasedOnQueryParameters } from 'lib/ui';
+import { HeadlineProvider } from 'contexts/HeadlineContext';
 
 function App() {
   const [headline, setHeadline] = useState<Headline>();
@@ -92,47 +93,39 @@ function App() {
   return (
     <SettingsProvider>
       <ToastProvider>
-        <div className="min-h-screen flex flex-col items-center justify-start pb-6 sm:pb-12 px-2 sm:px-4 relative">
-          <AnimatedBackground />
-          <div className="relative w-full z-10 flex flex-col flex-1">
-            <Header
-              onSettings={() => setIsSettingsOpen(true)}
-              onHelp={() => setIsHelpOpen(true)}
-              onStats={() => setIsStatsOpen(true)}
-              onAdmin={() => setIsAdminOpen(true)}
-              showAdminButton={showAdminButton}
-              headline={headline}
-            />
-            <main className="w-full flex flex-col items-center flex-1">
-              {isLoading ? (
-                <Loading />
-              ) : error ? (
-                <div className="text-center text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900 rounded-lg px-6 py-4 my-8">
-                  {error}
-                </div>
-              ) : headline ? (
-                <GameContainer
-                  headline={headline}
-                  gameState={gameState}
-                  setGameState={setGameStateWrapper}
-                />
-              ) : null}
-            </main>
-            <footer className="mt-8 text-gray-500 dark:text-gray-400 text-center">
-              <p>New headline every day!</p>
-              <p>© 2025 Alex Rich</p>
-            </footer>
+        <HeadlineProvider state={{ headline, game: [gameState, setGameStateWrapper] }}>
+          <div className="min-h-screen flex flex-col items-center justify-start pb-6 sm:pb-12 px-2 sm:px-4 relative">
+            <AnimatedBackground />
+            <div className="relative w-full z-10 flex flex-col flex-1">
+              <Header
+                onSettings={() => setIsSettingsOpen(true)}
+                onHelp={() => setIsHelpOpen(true)}
+                onStats={() => setIsStatsOpen(true)}
+                onAdmin={() => setIsAdminOpen(true)}
+                showAdminButton={showAdminButton}
+              />
+              <main className="w-full flex flex-col items-center flex-1">
+                {isLoading ? (
+                  <Loading />
+                ) : error ? (
+                  <div className="text-center text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900 rounded-lg px-6 py-4 my-8">
+                    {error}
+                  </div>
+                ) : headline ? (
+                  <GameContainer />
+                ) : null}
+              </main>
+              <footer className="mt-8 text-gray-500 dark:text-gray-400 text-center">
+                <p>New headline every day!</p>
+                <p>© 2025 Alex Rich</p>
+              </footer>
+            </div>
+            <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+            <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+            <StatsModal isOpen={isStatsOpen} onClose={() => setIsStatsOpen(false)} />
+            <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
           </div>
-          <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-          <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
-          <StatsModal
-            isOpen={isStatsOpen}
-            onClose={() => setIsStatsOpen(false)}
-            headline={headline}
-            gameState={gameState}
-          />
-          <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
-        </div>
+        </HeadlineProvider>
       </ToastProvider>
     </SettingsProvider>
   );

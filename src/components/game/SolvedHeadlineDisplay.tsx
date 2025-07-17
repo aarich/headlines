@@ -1,14 +1,12 @@
 import React from 'react';
-import { Headline } from 'types';
 import { GlobeAltIcon } from '@heroicons/react/24/outline';
 import { recordArticleClick, recordRedditClick } from 'lib/api';
 import { getDomainFromUrl } from 'lib/utils';
+import { useHeadline } from 'contexts/HeadlineContext';
 
-interface SolvedHeadlineDisplayProps {
-  headline: Headline;
-}
+const SolvedHeadlineDisplay: React.FC = () => {
+  const headline = useHeadline();
 
-const SolvedHeadlineDisplay: React.FC<SolvedHeadlineDisplayProps> = ({ headline }) => {
   const onArticleClick = () => recordArticleClick(headline.id);
   const onRedditClick = () => recordRedditClick(headline.id);
   return (
