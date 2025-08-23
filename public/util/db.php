@@ -404,9 +404,10 @@ function promotePreview($previewData, bool $override_created_at) {
     );
 
     if ($newHeadlineId) {
-        // If insert was successful, delete all records from headline_preview
-        $deletedRowCount = $db->exec("DELETE FROM headline_preview WHERE status NOT IN ('archived', 'rejected') OR created_at < NOW() - INTERVAL 7 DAY");
-
+        // If insert was successful, delete records from headline_preview based on age or if it was the one that was promoted
+        $stmt = $db->prepare("DELETE FROM headline_preview WHERE created_at < NOW() - INTERVAL 7 DAY OR id = ?");
+        $stmt->execute([$previewData['id']]);
+        $deletedRowCount = $stmt->rowCount();
         return [
             'newHeadlineId' => $newHeadlineId,
             'deletedPreviewCount' => $deletedRowCount

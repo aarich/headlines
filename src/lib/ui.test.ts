@@ -232,6 +232,19 @@ describe('ui.ts', () => {
     });
     const mockScore: Score = { d: Date.now(), g: 0, e: false, n: 1 };
     const mockExpertScore: Score = { d: Date.now(), g: 0, e: true, n: 1 };
+    const MOCK_LEVELS: (string[] | string)[] = [
+      ['🎉'], // 100
+      ['🤩'], // 90-99
+      ['🙂'], // 80-89
+      ['🙃'], // 70-79
+      ['🤔'], // 60-69
+      ['😫'], // 50-59
+      '🙈', // 40-49
+      '😵', // 30-39
+      '🪦', // 20-29
+      '💩', // 10-19
+      '💀', // 0-9
+    ];
 
     it('should generate basic share text with no hints and not expert', () => {
       const gameState: GameState = {
@@ -239,8 +252,8 @@ describe('ui.ts', () => {
         completedAt: 1,
       };
       const scoreWithPenalty: Score = { ...mockScore, g: 2 };
-      const expectedResultText = `❌❌🧅\nScore: 80/100 🤨`;
-      expect(getResultText(MOCK_HEADLINE, gameState, false, scoreWithPenalty)).toBe(
+      const expectedResultText = `❌❌🧅\nScore: 84/100 🙂`;
+      expect(getResultText(MOCK_HEADLINE, gameState, false, scoreWithPenalty, MOCK_LEVELS)).toBe(
         expectedResultText
       );
     });
@@ -249,11 +262,11 @@ describe('ui.ts', () => {
       const emptyArrayState: GameState = { actions: [], completedAt: 1 };
       const undefinedState: GameState = { completedAt: 1 };
       // mockScore (0 wrong, not expert) -> overall 90
-      const expectedResultText = `🧅\nScore: 90/100 🤔`;
-      expect(getResultText(MOCK_HEADLINE, emptyArrayState, false, mockScore)).toBe(
+      const expectedResultText = `🧅\nScore: 90/100 🤩`;
+      expect(getResultText(MOCK_HEADLINE, emptyArrayState, false, mockScore, MOCK_LEVELS)).toBe(
         expectedResultText
       );
-      expect(getResultText(MOCK_HEADLINE, undefinedState, false, mockScore)).toBe(
+      expect(getResultText(MOCK_HEADLINE, undefinedState, false, mockScore, MOCK_LEVELS)).toBe(
         expectedResultText
       );
     });
@@ -263,8 +276,8 @@ describe('ui.ts', () => {
         actions: [Hint.CHAR, Hint.CHAR],
         completedAt: 1,
       };
-      const expectedResultText = `💡💡🧅\nScore: 56/100`;
-      expect(getResultText(MOCK_HEADLINE, gameState, false, mockScore)).toContain(
+      const expectedResultText = `💡💡🧅\nScore: 56/100 🤔`;
+      expect(getResultText(MOCK_HEADLINE, gameState, false, mockScore, MOCK_LEVELS)).toBe(
         expectedResultText
       );
     });
@@ -272,8 +285,8 @@ describe('ui.ts', () => {
     it('should just be the clue in non-expert mode with no characters', () => {
       const gameState: GameState = { actions: [Hint.CLUE], completedAt: 1 };
       // mockScore (0 wrong, not expert), 1 clue hint. Overall = 100 - 30 - 10 = 60
-      const expectedResultText = `🕵🧅\nScore: 60/100`;
-      expect(getResultText(MOCK_HEADLINE, gameState, false, mockScore)).toContain(
+      const expectedResultText = `🕵🧅\nScore: 80/100 🙂`;
+      expect(getResultText(MOCK_HEADLINE, gameState, false, mockScore, MOCK_LEVELS)).toBe(
         expectedResultText
       );
     });
@@ -283,8 +296,8 @@ describe('ui.ts', () => {
         actions: [Hint.CHAR, Hint.CHAR, Hint.CLUE],
         completedAt: 1,
       };
-      const expectedResultText = `💡💡🕵🧅\nScore: 36/100 `;
-      expect(getResultText(MOCK_HEADLINE, gameState, true, mockExpertScore)).toContain(
+      const expectedResultText = `💡💡🕵🧅\nScore: 56/100 🤔`;
+      expect(getResultText(MOCK_HEADLINE, gameState, true, mockExpertScore, MOCK_LEVELS)).toBe(
         expectedResultText
       );
     });
@@ -294,8 +307,8 @@ describe('ui.ts', () => {
         actions: [Hint.CHAR, Hint.CHAR, Hint.CLUE, Hint.CHAR, Hint.CHAR],
         completedAt: 1,
       };
-      const expectedResultText = `💡💡🕵💡💡🧅\nScore: 2/100 💩`;
-      expect(getResultText(MOCK_HEADLINE, gameState, true, mockExpertScore)).toBe(
+      const expectedResultText = `💡💡🕵💡💡🧅`;
+      expect(getResultText(MOCK_HEADLINE, gameState, true, mockExpertScore, MOCK_LEVELS)).toContain(
         expectedResultText
       );
     });
@@ -305,9 +318,9 @@ describe('ui.ts', () => {
         actions: ['x', 'y', Hint.CHAR, Hint.CHAR, Hint.CLUE, Hint.CHAR],
         completedAt: 1,
       };
-      const scoreWithPenalties = { ...mockExpertScore, g: 2 }; // 2 wrong, expert, 3 char, 1 clue
+      const scoreWithPenalties = { ...mockExpertScore, g: 10 }; // 10 wrong, expert, 3 char, 1 clue
       const expectedResultText = `❌❌💡💡🕵💡🧅\nScore: 9/100 💩`;
-      expect(getResultText(MOCK_HEADLINE, gameState, true, scoreWithPenalties)).toBe(
+      expect(getResultText(MOCK_HEADLINE, gameState, true, scoreWithPenalties, MOCK_LEVELS)).toBe(
         expectedResultText
       );
     });
@@ -320,20 +333,22 @@ describe('ui.ts', () => {
       const veryLowScore: Score = { ...mockExpertScore, g: 4 }; // expert, 4 wrong guesses
       // Penalties: charHints=6 -> round(6/8*100)=75. clue=30. wrong=4*5=20. Total=125. Overall=0.
       const expectedResultText = `💡💡💡💡💡💡🕵🧅\nScore: 0/100 💀`;
-      expect(getResultText(MOCK_HEADLINE, gameState, true, veryLowScore)).toBe(expectedResultText);
+      expect(getResultText(MOCK_HEADLINE, gameState, true, veryLowScore, MOCK_LEVELS)).toBe(
+        expectedResultText
+      );
     });
 
     it('should include score and winner emoji if score is 100', () => {
       const gameState: GameState = { completedAt: 1 };
       const perfectScore: Score = { d: Date.now(), g: 0, e: true, n: 1 }; // Expert, 0 wrong guesses
-      const resultText = getResultText(MOCK_HEADLINE, gameState, true, perfectScore);
-      expect(resultText).toMatch(/🧅\nScore: 100\/100 (🎉|🥳|🤩|🏆|💯|🥇|👑|🚀|🔥|🎊|💰|📈)/);
+      const resultText = getResultText(MOCK_HEADLINE, gameState, true, perfectScore, MOCK_LEVELS);
+      expect(resultText).toBe('🧅\nScore: 100/100 🎉');
     });
 
     it('should not include score if score object is undefined', () => {
       const gameState: GameState = { completedAt: 1 };
-      const resultText = getResultText(MOCK_HEADLINE, gameState, true, undefined);
-      expect(resultText).not.toContain('\nScore:');
+      const resultText = getResultText(MOCK_HEADLINE, gameState, true, undefined, MOCK_LEVELS);
+      expect(resultText).not.toContain('Score:');
       expect(resultText).toBe('🧅');
     });
   });

@@ -108,9 +108,8 @@ You are to select the best $num_final_results options and provide the following 
 - the specific word to remove from the headline that meets the above criteria
 - an explanation for why this choice was made. What makes the headline and word to remove meet these preferences?
 - a list of possible word choices that would be funny to suggest as alternatives. Feel free to edit or add to the list as needed to adhere to the guidelines.
-- a brief hint for the answer that is esoteric and not obvious, akin to a crossword clue in that it requires some thought to guess. 
+- a brief hint for the answer that is not obvious and require some thought to guess the word.
 - The hint should not be a pun. It can be creative or funny or just a short simple clue that doesn't give away the answer right away.
-- The hint should focus on the word itself more than the context of the headline
 
 Here is the list of potential choices:
 

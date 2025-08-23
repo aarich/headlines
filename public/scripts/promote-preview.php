@@ -83,33 +83,48 @@ try {
     exit();
   }
 
-  // Choose the best candidate
-  $prompt = getChooseFromPreviewsPrompt(json_encode($previews_simplified, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE));
-  $generationConfig = getFinalGenerationConfig(1, false);
-  $response = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key, $gpt_model_name);
+  // Check if any are archived. If so, choose the oldest one
+  $archived_previews = array_filter($previews, function ($preview) {
+    return $preview['status'] === 'archived';
+  });
 
-  $generated_text = $response['candidates'][0]['content']['parts'][0]['text'];
-  echo "Final choice response:\n" . $generated_text . "\n";
-  $final_choice_data = json_decode($generated_text, true)['choices'][0];
+  if (!empty($archived_previews)) {
+    // sort archived preview by created date, oldest first
+    usort($archived_previews, function ($a, $b) {
+      return $a['created_at'] <=> $b['created_at'];
+    });
 
-  // Extract data from the LLM response
-  $headline = $final_choice_data['headline'];
-  $correct_answer = $final_choice_data['word_to_remove'];
-  $possible_answers = ['answers' => $final_choice_data['replacements']];
-  $hint = $final_choice_data['hint'];
+    echo "Found " . count($archived_previews) . " archived previews. Choosing the oldest to promote.\n";
+    $matched_preview = $archived_previews[0];
+  } else {
+    // Choose the best candidate
+    $prompt = getChooseFromPreviewsPrompt(json_encode($previews_simplified, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE));
+    $generationConfig = getFinalGenerationConfig(1, false);
+    $response = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key, $gpt_model_name);
 
-  // Match with original preview data and extract additional info. There could be multiple for the same headline, but we will overwrite the generated values anyway.
-  $matched_preview = findMostSimilarHeadline($headline, $previews);
+    $generated_text = $response['candidates'][0]['content']['parts'][0]['text'];
+    echo "Final choice response:\n" . $generated_text . "\n";
+    $final_choice_data = json_decode($generated_text, true)['choices'][0];
 
-  if ($matched_preview === null) {
-    // The LLM likely hallucinated an answer... Just choose the first preview.
-    $matched_preview = $previews[0];
+    // Extract data from the LLM response
+    $headline = $final_choice_data['headline'];
+    $correct_answer = $final_choice_data['word_to_remove'];
+    $possible_answers = ['answers' => $final_choice_data['replacements']];
+    $hint = $final_choice_data['hint'];
+
+    // Match with original preview data and extract additional info. There could be multiple for the same headline, but we will overwrite the generated values anyway.
+    $matched_preview = findMostSimilarHeadline($headline, $previews);
+
+    if ($matched_preview === null) {
+      // The LLM likely hallucinated an answer... Just choose the first preview.
+      $matched_preview = $previews[0];
+    }
+
+    // Overwrite with any edits made
+    $matched_preview['correct_answer'] = $correct_answer;
+    $matched_preview['possible_answers'] = json_encode($possible_answers);
+    $matched_preview['hint'] = $hint;
   }
-
-  // Overwrite with any edits made
-  $matched_preview['correct_answer'] = $correct_answer;
-  $matched_preview['possible_answers'] = json_encode($possible_answers);
-  $matched_preview['hint'] = $hint;
 
   echo "Final headline about to be inserted:\n";
   echo json_encode($matched_preview, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE);

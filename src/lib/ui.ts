@@ -199,23 +199,34 @@ export const getActionsText = (headline: Headline, gameState: GameState, isExper
   return text;
 };
 
-const WINNER_EMOJIS = ['🎉', '🥳', '🤩', '🏆', '💯', '🥇', '👑', '🚀', '🔥', '🎊', '💰', '📈'];
-const LEVEL_EMOJIS = ['😊', '🤔', '🤨', '🙄', '😟', '😫', '🙈', '😵', '🪦', '💩', '💀'];
+const LEVEL_EMOJIS = [
+  ['🎉', '🥳', '🏆', '💯', '🥇', '👑', '🚀', '🔥', '🎊', '💰', '📈'],
+  ['🤩', '🤓', '😇', '😊'],
+  ['🙂'],
+  ['🙃', '🫠'],
+  ['🤔', '🤨', '😒', '🙄'],
+  ['😫', '🥴'],
+  '🙈',
+  '😵',
+  '🪦',
+  '💩',
+  '💀',
+];
 
 export const getResultText = (
   headline: Headline,
   gameState: GameState,
   isExpert: boolean,
-  score: Score | undefined // Score could be undefined if something went wrong with storage
+  score: Score | undefined, // Score could be undefined if something went wrong with storage
+  levels = LEVEL_EMOJIS // for testing
 ) => {
   let resultsText = getActionsText(headline, gameState, isExpert);
 
   if (score) {
     const scores = calculateScore(gameState, score, headline);
-    const emoji =
-      scores.overall === 100
-        ? randomElement(WINNER_EMOJIS)
-        : LEVEL_EMOJIS[Math.floor((100 - scores.overall) / 10)];
+    const level = Math.ceil((100 - scores.overall) / levels.length);
+    const emojis = levels[level];
+    const emoji = Array.isArray(emojis) ? randomElement(emojis) : emojis;
 
     resultsText += `\nScore: ${scores.overall}/100 ${emoji}`;
   }

@@ -22,7 +22,7 @@ $long_opts = [
 ];
 $cli_options = getopt($short_opts, $long_opts);
 
-$gpt_model_name = $cli_options['model'] ?? 'gemini-2.5-pro-preview-03-25'; // gemini-2.5-flash-preview-04-17 gemini-2.5-pro-preview-03-25 gemini-2.5-pro-exp-03-25
+$gpt_model_name = $cli_options['model'] ?? 'gemini-2.5-flash'; // gemini-2.5-flash-preview-04-17 gemini-2.5-pro-preview-03-25 gemini-2.5-pro-exp-03-25
 $ignore_patterns = [];
 if (isset($cli_options['ignore-patterns'])) {
   $ignore_patterns =  explode(',', $cli_options['ignore-patterns']);
@@ -189,6 +189,10 @@ try {
     $initial_candidates_to_provide = getInitialGenerationCandidatesToProvide($headline_titles);
     $generationConfig = getInitialGenerationConfig($initial_candidates_to_provide);
     $response = invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key, $gpt_model_name);
+
+    // Print out the response
+    echo json_encode($response, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE);
+
     $generated_text = $response['candidates'][0]['content']['parts'][0]['text'];
     echo "Initial candidate response:\n" . $generated_text . "\n";
 

@@ -1,5 +1,9 @@
 import { GameState, Headline, Hint, Score } from 'types';
 
+export const CLUE_PENALTY = 10;
+export const WRONG_GUESS_PENALTY = 3;
+export const NON_EXPERT_PENALTY = 10;
+
 const normalizeString = (str: string): string => {
   return str.toLowerCase().trim();
 };
@@ -88,11 +92,11 @@ export const isHintAvailable = (
 };
 
 /**
- * CLUE: 30
+ * CLUE: CLUE_PENALTY
  * CHAR: 100/min(answer length, 6)
  */
 export const getHintPenalty = ({ correctAnswer }: Headline, hintType: Hint) =>
-  Math.round(hintType === Hint.CHAR ? 100 / Math.min(correctAnswer.length, 6) : 30);
+  hintType === Hint.CHAR ? Math.round(100 / Math.min(correctAnswer.length, 6)) : CLUE_PENALTY;
 
 /**
  * Return a score out of 100
@@ -105,8 +109,8 @@ export const calculateScore = (gameState: GameState, score: Score, headline: Hea
 
   const charHintPenalty = numCharHints * getHintPenalty(headline, Hint.CHAR);
   const cluePenalty = usedClue ? getHintPenalty(headline, Hint.CLUE) : 0;
-  const notExpertPenalty = isExpert ? 0 : 10;
-  const wrongGuessPenalty = Math.min(numWrongGuesses * 5, 100);
+  const notExpertPenalty = isExpert ? 0 : NON_EXPERT_PENALTY;
+  const wrongGuessPenalty = Math.min(numWrongGuesses * WRONG_GUESS_PENALTY, 100);
 
   const overall = Math.round(
     Math.max(100 - charHintPenalty - cluePenalty - notExpertPenalty - wrongGuessPenalty, 0)
