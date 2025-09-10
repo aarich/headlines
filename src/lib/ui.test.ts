@@ -55,11 +55,11 @@ const MOCK_HEADLINE: Headline = {
   correctAnswer: 'Headline',
   possibleAnswers: ['Rabbit', 'Paper'],
   afterBlank: ' Here',
-  beforeBlank: ' Mock ',
+  beforeBlank: 'Mock ',
   articleUrl: 'https://example.com',
   redditUrl: 'https://example.com/reddit',
   gameNum: 1,
-  hint: "i'ts an example",
+  hint: "it's an example",
   publishTime: '2020',
   createdAt: '2025-07-11 00:01:00',
 };
@@ -372,7 +372,7 @@ describe('ui.ts', () => {
 
     it('should call recordShare on successful navigator.share', async () => {
       const mockResultsText = 'Custom Results Text';
-      const expectedShareText = `Leek #${MOCK_HEADLINE.gameNum} found!\n\nhttp://localhost/\n\n${mockResultsText}`;
+      const expectedShareText = `Leek #${MOCK_HEADLINE.gameNum} found: Mock [???] Here\n\nhttp://localhost/\n\n${mockResultsText}`;
       shareScore(mockResultsText, MOCK_HEADLINE, mockToast, false); // forceCopy should be false
       await Promise.resolve(); // Ensure promise chain in shareScore resolves
       expect(navigator.share).toHaveBeenCalledWith({ text: expectedShareText });
@@ -382,7 +382,7 @@ describe('ui.ts', () => {
     it('should use clipboard.writeText if navigator.share is not available', () => {
       Object.defineProperty(navigator, 'share', { value: undefined, writable: true }); // Simulate no share API
       const mockResultsText = 'Custom Results Text For Clipboard';
-      const expectedShareText = `Leek #${MOCK_HEADLINE.gameNum} found!\n\nhttp://localhost/\n\n${mockResultsText}`;
+      const expectedShareText = `Leek #${MOCK_HEADLINE.gameNum} found: Mock [???] Here\n\nhttp://localhost/\n\n${mockResultsText}`;
       shareScore(mockResultsText, MOCK_HEADLINE, mockToast, false); // forceCopy should be false to test fallback
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expectedShareText);
       expect(mockToast).toHaveBeenCalledWith('Score copied to clipboard!', 'success');
@@ -394,7 +394,7 @@ describe('ui.ts', () => {
 
     it('should use clipboard.writeText if forceCopy is true', () => {
       const mockResultsText = 'Custom Results Text For Forced Clipboard';
-      const expectedShareText = `Leek #${MOCK_HEADLINE.gameNum} found!\n\nhttp://localhost/\n\n${mockResultsText}`;
+      const expectedShareText = `Leek #${MOCK_HEADLINE.gameNum} found: Mock [???] Here\n\nhttp://localhost/\n\n${mockResultsText}`;
       shareScore(mockResultsText, MOCK_HEADLINE, mockToast, true);
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expectedShareText);
       expect(mockToast).toHaveBeenCalledWith('Score copied to clipboard!', 'success');

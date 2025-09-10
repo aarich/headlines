@@ -240,7 +240,8 @@ export const shareScore = (
   toast: ToastFn,
   forceCopy: boolean = false
 ): void => {
-  const shareText = `Leek #${headline.gameNum} found!\n\n${window.location.href}\n\n${resultsText}`;
+  const blankedHeadline = headline.beforeBlank + '[???]' + headline.afterBlank;
+  const shareText = `Leek #${headline.gameNum} found: ${blankedHeadline}\n\n${window.location.href}\n\n${resultsText}`;
 
   if (navigator.share && !forceCopy) {
     navigator
