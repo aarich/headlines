@@ -295,29 +295,24 @@ export const extractHeadlineParts = (initialBeforeBlank: string, initialAfterBla
   let afterBlank = initialAfterBlank;
   let prefix = '';
   let suffix = '';
-  const boundaryRegex = /[.,;:!?()'"“”‘’]/;
+  const boundaryRegex = /\S/;
 
-  let prefixEndIndex = beforeBlank.length;
   // Iterate backwards from the end of initialBeforeBlank to find the start of the prefix
-  while (prefixEndIndex > 0 && boundaryRegex.test(beforeBlank[prefixEndIndex - 1])) {
+  let prefixEndIndex = beforeBlank.length - 1;
+  while (prefixEndIndex > 0 && boundaryRegex.test(beforeBlank[prefixEndIndex])) {
     prefixEndIndex--;
   }
-  // If any boundary characters were found at the end
-  if (prefixEndIndex < beforeBlank.length) {
-    prefix = beforeBlank.slice(prefixEndIndex);
-    beforeBlank = beforeBlank.slice(0, prefixEndIndex).trimEnd();
-  }
 
-  let suffixStartIndex = 0;
   // Iterate forwards from the start of initialAfterBlank to find the end of the suffix
+  let suffixStartIndex = 0;
   while (suffixStartIndex < afterBlank.length && boundaryRegex.test(afterBlank[suffixStartIndex])) {
     suffixStartIndex++;
   }
-  // If any boundary characters were found at the beginning
-  if (suffixStartIndex > 0) {
-    suffix = afterBlank.slice(0, suffixStartIndex);
-    afterBlank = afterBlank.slice(suffixStartIndex).trimStart();
-  }
+
+  prefix = beforeBlank.slice(prefixEndIndex).trim();
+  beforeBlank = beforeBlank.slice(0, prefixEndIndex).trim();
+  suffix = afterBlank.slice(0, suffixStartIndex).trim();
+  afterBlank = afterBlank.slice(suffixStartIndex).trim();
 
   return { beforeBlank, afterBlank, prefix, suffix };
 };

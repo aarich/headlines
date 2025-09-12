@@ -17,7 +17,7 @@ type CharDisplay = { char: string; className?: string };
 const WRONG_CHAR_CLASS = 'text-red-500';
 const CORRECT_CHAR_CLASS = 'text-green-500';
 const GHOST_CHAR_CLASS = 'text-gray-500';
-const SPACE_CHAR_CLASS = 'font-normal tracking-widest';
+const SPACE_CHAR_CLASS = 'font-normal tracking-[0.25em]';
 
 const GuessDisplay: React.FC<GuessDisplayProps> = ({
   currentGuess,

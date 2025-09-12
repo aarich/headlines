@@ -458,8 +458,8 @@ describe('ui.ts', () => {
   describe('extractHeadlineParts', () => {
     it('returns parts as is with no prefix or suffix', () => {
       const { beforeBlank, afterBlank, prefix, suffix } = extractHeadlineParts(
-        'Word1 Word2',
-        'Word3 Word4'
+        'Word1 Word2 ',
+        ' Word3 Word4'
       );
       expect(beforeBlank).toBe('Word1 Word2');
       expect(prefix).toBe('');
@@ -468,15 +468,15 @@ describe('ui.ts', () => {
     });
 
     it('extracts a single character prefix', () => {
-      const { beforeBlank, prefix } = extractHeadlineParts('Some text" ', 'After');
-      expect(beforeBlank).toBe('Some text" ');
-      expect(prefix).toBe('');
+      const { beforeBlank, prefix } = extractHeadlineParts('Some text "', 'After');
+      expect(beforeBlank).toBe('Some text');
+      expect(prefix).toBe('"');
     });
 
     it('extracts a single character suffix', () => {
-      const { afterBlank, suffix } = extractHeadlineParts('Before ', ' ?Actual text');
-      expect(afterBlank).toBe(' ?Actual text');
-      expect(suffix).toBe('');
+      const { afterBlank, suffix } = extractHeadlineParts('Before ', '? Actual text');
+      expect(afterBlank).toBe('Actual text');
+      expect(suffix).toBe('?');
     });
 
     it('extracts a multi-character prefix', () => {
@@ -489,6 +489,71 @@ describe('ui.ts', () => {
       const { afterBlank, suffix } = extractHeadlineParts('Before', '." Actual text');
       expect(afterBlank).toBe('Actual text');
       expect(suffix).toBe('."');
+    });
+
+    it('extracts mdash on both sides', () => {
+      const { beforeBlank, afterBlank, prefix, suffix } = extractHeadlineParts(
+        'word1 --',
+        '-- word2'
+      );
+      expect(beforeBlank).toBe('word1');
+      expect(prefix).toBe('--');
+      expect(suffix).toBe('--');
+      expect(afterBlank).toBe('word2');
+    });
+
+    it('ignores spaced mdash on both sides', () => {
+      const { beforeBlank, afterBlank, prefix, suffix } = extractHeadlineParts(
+        'word1-- ',
+        ' --word2'
+      );
+      expect(beforeBlank).toBe('word1--');
+      expect(prefix).toBe('');
+      expect(suffix).toBe('');
+      expect(afterBlank).toBe('--word2');
+    });
+
+    it('extracts hyphened word', () => {
+      const { beforeBlank, afterBlank, prefix, suffix } = extractHeadlineParts(
+        'word1 word2-',
+        ' word3'
+      );
+      expect(beforeBlank).toBe('word1');
+      expect(prefix).toBe('word2-');
+      expect(suffix).toBe('');
+      expect(afterBlank).toBe('word3');
+    });
+
+    describe('extracts word suffixes', () => {
+      test('ing', () => {
+        let { beforeBlank, afterBlank, prefix, suffix } = extractHeadlineParts(
+          'He was caught ',
+          'ing cars'
+        );
+        expect(beforeBlank).toBe('He was caught');
+        expect(prefix).toBe('');
+        expect(suffix).toBe('ing');
+        expect(afterBlank).toBe('cars');
+      });
+
+      test('ed', () => {
+        let { beforeBlank, afterBlank, prefix, suffix } = extractHeadlineParts(
+          'He ',
+          'ed the papers'
+        );
+        expect(beforeBlank).toBe('He');
+        expect(prefix).toBe('');
+        expect(suffix).toBe('ed');
+        expect(afterBlank).toBe('the papers');
+      });
+
+      test('plural (s)', () => {
+        let { beforeBlank, afterBlank, prefix, suffix } = extractHeadlineParts('He made ', 's');
+        expect(beforeBlank).toBe('He made');
+        expect(prefix).toBe('');
+        expect(suffix).toBe('s');
+        expect(afterBlank).toBe('');
+      });
     });
 
     it('extracts both multi-character prefix and suffix', () => {
@@ -521,7 +586,7 @@ describe('ui.ts', () => {
     });
 
     it('correctly handles afterBlank with trailing punctuation (no leading suffix)', () => {
-      const { afterBlank, suffix } = extractHeadlineParts('Before', 'Word1?');
+      const { afterBlank, suffix } = extractHeadlineParts('Before ', ' Word1?');
       expect(afterBlank).toBe('Word1?');
       expect(suffix).toBe('');
     });
