@@ -274,10 +274,14 @@ function checkIfHeadlineIsNeeded(bool $ignore_failure, string $command_to_log_on
  * @return array An associative array with 'before_blank', 'after_blank', and 'actual_correct_answer'.
  * @throws Exception If the word is not found as a whole word in the headline.
  */
-function derive_before_after_and_correct_answer(string $headline, string $word_to_find): array {
-  // The pattern uses \b for word boundaries. preg_quote escapes special regex characters in the word itself.
-  // Case-insensitive match.
-  $pattern = '/\b' . preg_quote($word_to_find, '/') . '\b/i';
+function derive_before_after_and_correct_answer(string $headline, string $word_to_find, bool $must_be_whole_word): array {
+  if (!$must_be_whole_word) {
+    $pattern = '/' . preg_quote($word_to_find, '/') . '/i';
+  } else {
+    // The pattern uses \b for word boundaries. preg_quote escapes special regex characters in the word itself.
+    // Case-insensitive match.
+    $pattern = '/\b' . preg_quote($word_to_find, '/') . '\b/i';
+  }
 
   if (preg_match($pattern, $headline, $matches, PREG_OFFSET_CAPTURE)) {
     $matched_segment_in_headline = $matches[0][0];

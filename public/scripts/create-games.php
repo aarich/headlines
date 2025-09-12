@@ -153,7 +153,7 @@ try {
     $publish_time = gmdate('Y-m-d H:i:s', $selected_headline_data['created_utc']);
 
     try {
-      $derived_parts = derive_before_after_and_correct_answer($headline, $word_to_remove);
+      $derived_parts = derive_before_after_and_correct_answer($headline, $word_to_remove, true);
       $before_blank = $derived_parts['before_blank'];
       $after_blank = $derived_parts['after_blank'];
       $correct_answer = $derived_parts['actual_correct_answer'];
@@ -233,7 +233,7 @@ try {
         $reddit_url = $selected_headline_data['reddit_url'];
         $publish_time = gmdate('Y-m-d H:i:s', $selected_headline_data['created_utc']);
 
-        $derived_parts = derive_before_after_and_correct_answer($headline, $word_to_remove);
+        $derived_parts = derive_before_after_and_correct_answer($headline, $word_to_remove, true);
         $before_blank = $derived_parts['before_blank'];
         $after_blank = $derived_parts['after_blank'];
         $correct_answer = $derived_parts['actual_correct_answer'];

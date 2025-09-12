@@ -5,7 +5,7 @@ const MOCK_HEADLINE: Headline = {
   id: 1,
   headline: 'He was caught "stealing" cars',
   correctAnswer: 'steal',
-  possibleAnswers: ['Rabbit', 'Paper'],
+  possibleAnswers: ['eat', 'paint'],
   afterBlank: 'ing" cars',
   beforeBlank: 'He was caught "',
   articleUrl: 'https://example.com',

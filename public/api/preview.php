@@ -121,7 +121,8 @@ try {
         try {
             $blankFields = derive_before_after_and_correct_answer(
                 $processedInput['headline'],
-                $processedInput['correct_answer']
+                $processedInput['correct_answer'],
+                false
             );
             $processedInput['correct_answer'] = $blankFields['actual_correct_answer'];
         } catch (Exception $e) {
@@ -220,7 +221,8 @@ try {
         try {
             $blankFields = derive_before_after_and_correct_answer(
                 $processedInput['headline'],
-                $processedInput['correct_answer'] // This is the $word_to_find
+                $processedInput['correct_answer'], // This is the $word_to_find
+                false
             );
 
             $processedInput['correct_answer'] = $blankFields['actual_correct_answer'];
