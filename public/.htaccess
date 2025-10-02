@@ -20,6 +20,11 @@ RewriteCond %{REQUEST_URI} !\.php[\?#]?.*$
 # Rewrite /api/X to /api/X.php
 RewriteRule ^api/([^/]+)$ api/$1.php [L]
 
+# Rewrite /### to / (where ### is a number)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([0-9]+)$ / [L,QSA]
+
 # Set headers responses
 <IfModule mod_headers.c>
     SetEnvIf Request_URI "^/api/" CORS_REQUEST

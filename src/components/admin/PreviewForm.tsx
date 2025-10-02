@@ -4,15 +4,18 @@ import {
   CreatePreviewHeadlinePayload,
   createPreviewHeadline,
   updatePreviewHeadline,
+  updateHeadline,
+  EditableHeadlineFields,
 } from 'lib/api';
 import { useToast } from 'contexts/ToastContext';
 
-interface PreviewFormProps {
-  initialDataForEdit?: EditablePreviewHeadlineFields & { id: number }; // For edit mode
+type PreviewFormProps = {
+  initialDataForEdit?: (EditablePreviewHeadlineFields & { id: number }) | EditableHeadlineFields;
   formMode: 'create' | 'edit';
-  onSuccess: () => void; // Callback for successful submission
+  onSuccess: () => void;
   onCancel: () => void;
-}
+  editing?: 'preview' | 'headline';
+};
 
 const defaultFormData: CreatePreviewHeadlinePayload = {
   headline: '',
@@ -32,6 +35,7 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
   formMode,
   onSuccess,
   onCancel,
+  editing,
 }) => {
   const isEditMode = formMode === 'edit';
   const [formData, setFormData] = useState<
@@ -87,11 +91,19 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
 
     try {
       if (isEditMode && initialDataForEdit?.id) {
-        const result = await updatePreviewHeadline(
-          initialDataForEdit.id,
-          dataToSubmitWithParsedAnswers as EditablePreviewHeadlineFields
-        );
-        toast(result.message || 'Preview updated!', 'success');
+        let result;
+        if (editing === 'headline') {
+          result = await updateHeadline({
+            id: initialDataForEdit.id,
+            ...dataToSubmitWithParsedAnswers,
+          });
+        } else {
+          result = await updatePreviewHeadline(
+            initialDataForEdit.id,
+            dataToSubmitWithParsedAnswers as EditablePreviewHeadlineFields
+          );
+        }
+        toast(result.message || 'Updated!', 'success');
       } else if (formMode === 'create') {
         const result = await createPreviewHeadline(
           dataToSubmitWithParsedAnswers as CreatePreviewHeadlinePayload
@@ -103,7 +115,7 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
       onSuccess(); // Call the success callback
     } catch (err: any) {
       const defaultMessage =
-        formMode === 'create' ? 'Failed to create preview.' : 'Failed to save preview.';
+        formMode === 'create' ? 'Failed to create preview.' : 'Failed to save.';
       setError(err.message || defaultMessage);
       toast(err.message || defaultMessage, 'error');
     } finally {

@@ -120,9 +120,67 @@ try {
         $camelCaseHeadline = convertToCamelCase($headlineData);
 
         echo json_encode($camelCaseHeadline);
+    } elseif ($method === 'PATCH') {
+        requireAdminAuth($config);
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            http_response_code(400);
+            throw new Exception('Invalid JSON input: ' . json_last_error_msg());
+        }
+
+        $headlineId = $input['id'] ?? null;
+        if (!$headlineId) {
+            http_response_code(400);
+            throw new Exception('Headline ID is required.');
+        }
+
+        $db = getDbConnection();
+
+        // Allowed fields to update and their mapping to DB columns
+        $allowedFields = [
+            'headline' => 'headline',
+            'hint' => 'hint',
+            'articleUrl' => 'article_url',
+            'redditUrl' => 'reddit_url',
+            'correctAnswer' => 'correct_answer',
+            'publishTime' => 'publish_time',
+            'possibleAnswers' => 'possible_answers'
+        ];
+
+        $setClauses = [];
+        $params = [];
+
+        foreach ($allowedFields as $jsonKey => $dbColumn) {
+            if (isset($input[$jsonKey])) {
+                $setClauses[] = "$dbColumn = ?";
+                $value = $input[$jsonKey];
+                if ($jsonKey === 'possibleAnswers') {
+                    $params[] = json_encode(['answers' => $value]);
+                } else {
+                    $params[] = $value;
+                }
+            }
+        }
+
+        if (empty($setClauses)) {
+            http_response_code(400);
+            throw new Exception('No valid fields provided for update.');
+        }
+
+        $params[] = $headlineId;
+        $sql = "UPDATE headline SET " . implode(', ', $setClauses) . " WHERE id = ?";
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+
+        if ($stmt->rowCount() > 0) {
+            echo json_encode(['message' => 'Headline updated successfully.']);
+        } else {
+            echo json_encode(['message' => 'No changes were made to the headline.']);
+        }
     } else {
         http_response_code(405); // Method Not Allowed
-        throw new Exception('Unsupported request method. Only GET and POST are allowed.');
+        throw new Exception('Unsupported request method. Only GET, POST and PATCH are allowed.');
     }
 } catch (Exception $e) {
     if (http_response_code() === 200) {

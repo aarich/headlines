@@ -164,6 +164,16 @@ const validateNumParameter = <T extends string>(
 };
 
 export const fetchHeadlineBasedOnQueryParameters = async () => {
+  // First check if the url is like xxx.com/###
+  const url = new URL(window.location.href);
+  if (url.pathname.length > 1) {
+    const game = Number(url.pathname.slice(1));
+    if (!isNaN(game)) {
+      return await fetchHeadline({ game });
+    }
+  }
+
+  // Second: check the query params
   const urlParams = new URLSearchParams(window.location.search);
 
   const hasId = urlParams.has('id');

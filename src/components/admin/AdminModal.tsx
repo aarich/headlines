@@ -3,13 +3,19 @@ import {
   DocumentMagnifyingGlassIcon,
   EyeIcon,
   EyeSlashIcon,
+  PencilIcon,
   PencilSquareIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import PreviewForm from 'components/admin/PreviewForm';
 import Modal from 'components/common/Modal';
+import { useMaybeHeadline } from 'contexts/HeadlineContext';
 import { useToast } from 'contexts/ToastContext';
-import { EditablePreviewHeadlineFields, deleteScriptExecutionLogs } from 'lib/api';
+import {
+  EditableHeadlineFields,
+  EditablePreviewHeadlineFields,
+  deleteScriptExecutionLogs,
+} from 'lib/api';
 import { getAdminKey, storeAdminKey } from 'lib/storage';
 import React, { useEffect, useState } from 'react';
 import { PreviewHeadline } from 'types';
@@ -21,13 +27,17 @@ interface AdminModalProps {
   onClose: () => void;
 }
 type AdminView = 'previews' | 'form' | 'logs';
+type EditingTarget = 'preview' | 'headline';
+
 const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const toast = useToast();
+  const headline = useMaybeHeadline();
   const [revealWords, setRevealWords] = useState(false);
   const [currentView, setCurrentView] = useState<AdminView>('previews');
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
+  const [editing, setEditing] = useState<EditingTarget>();
   const [previewDataForForm, setPreviewDataForForm] = useState<
-    EditablePreviewHeadlineFields & { id: number }
+    (EditablePreviewHeadlineFields & { id: number }) | EditableHeadlineFields
   >();
 
   const adminKey = getAdminKey();
@@ -42,12 +52,22 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
     setPreviewDataForForm(preview as EditablePreviewHeadlineFields & { id: number });
     setFormMode('edit');
     setCurrentView('form');
+    setEditing('preview');
+  };
+
+  const handleRequestEditHeadline = () => {
+    if (!headline) return;
+    setPreviewDataForForm(headline as EditableHeadlineFields);
+    setFormMode('edit');
+    setCurrentView('form');
+    setEditing('headline');
   };
 
   const handleRequestCreatePreview = () => {
     setPreviewDataForForm(undefined);
     setFormMode('create');
     setCurrentView('form');
+    setEditing('preview');
   };
 
   const handleFormSuccessOrCancel = () => {
@@ -80,6 +100,12 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
   switch (currentView) {
     case 'previews':
+      if (headline) {
+        actions.push({
+          Icon: PencilIcon,
+          onClick: handleRequestEditHeadline,
+        });
+      }
       actions.push(
         {
           Icon: revealWords ? EyeIcon : EyeSlashIcon,
@@ -120,8 +146,8 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
       title={
         <>
           Admin &nbsp;
-          {actions.map(({ Icon, onClick }) => (
-            <button className="mx-2" onClick={onClick} key={`${onClick}`}>
+          {actions.map(({ Icon, onClick }, index) => (
+            <button className="mx-2" onClick={onClick} key={index}>
               <Icon className="w-5 h-5" />
             </button>
           ))}
@@ -135,6 +161,7 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
           initialDataForEdit={formMode === 'edit' ? previewDataForForm : undefined}
           onSuccess={handleFormSuccessOrCancel}
           onCancel={handleFormSuccessOrCancel}
+          editing={editing}
         />
       )}
       {currentView === 'logs' && <Logs />}

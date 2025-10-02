@@ -45,7 +45,7 @@ const TickerItem: React.FC<TickerItemProps> = ({
       {/* HEADLINE */}
       <span className="italic text-gray-500">
         {`#${gameNum} `}
-        <a className="italic underline text-blue-500" href={isLatest ? '/' : `/?game=${gameNum}`}>
+        <a className="italic underline text-blue-500" href={isLatest ? '/' : `/${gameNum}`}>
           {revealWord ? headline : `${beforeBlank}[???]${afterBlank}`}
         </a>
       </span>

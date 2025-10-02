@@ -183,6 +183,18 @@ describe('ui.ts', () => {
       expect(mockFetchHeadline).toHaveBeenCalledWith({ game: 456 });
     });
 
+    it('should call fetchHeadline with game if url path is valid', async () => {
+      window.location.href = 'https://example.com/456';
+      await fetchHeadlineBasedOnQueryParameters();
+      expect(mockFetchHeadline).toHaveBeenCalledWith({ game: 456 });
+    });
+
+    it('should not call fetchHeadline with game if url path is invalid', async () => {
+      window.location.href = 'https://example.com/asdf';
+      await fetchHeadlineBasedOnQueryParameters();
+      expect(mockFetchHeadline).toHaveBeenCalledWith({});
+    });
+
     it('should call fetchHeadline with empty args if no relevant params', async () => {
       window.location.search = '?other=789';
       await fetchHeadlineBasedOnQueryParameters();

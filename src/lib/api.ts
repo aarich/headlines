@@ -13,7 +13,8 @@ export interface PublishPreviewResult {
   newHeadlineId: number;
   details: string;
 }
-export interface EditablePreviewHeadlineFields {
+
+export interface EditableHeadlineFields {
   headline: string;
   hint: string;
   articleUrl: string;
@@ -21,9 +22,18 @@ export interface EditablePreviewHeadlineFields {
   correctAnswer: string;
   publishTime: string;
   possibleAnswers: string[];
+  id: number;
+}
+
+export interface EditablePreviewHeadlineFields extends Omit<EditableHeadlineFields, 'id'> {
   status: PreviewHeadlineStatus;
 }
+
 export interface UpdatePreviewResult {
+  message: string;
+}
+
+export interface UpdateHeadlineResult {
   message: string;
 }
 
@@ -62,6 +72,21 @@ export const fetchHeadline = async (args: GetHeadlineArgs): Promise<Headline> =>
       throw new Error("This game doesn't exist. Try a different one.");
     }
     throw new Error('Failed to fetch headline');
+  }
+  return response.json();
+};
+
+export const updateHeadline = async (
+  data: EditableHeadlineFields
+): Promise<UpdateHeadlineResult> => {
+  const response = await fetch(`${config.apiUrl}/api/headline`, {
+    method: 'PATCH',
+    headers: getAdminHeaders(),
+    body: JSON.stringify({ ...data }),
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Failed to update headline' }));
+    throw new Error(errorData.error || `Failed to update headline: ${response.statusText}`);
   }
   return response.json();
 };
