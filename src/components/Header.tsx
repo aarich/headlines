@@ -139,7 +139,7 @@ const Header: React.FC<HeaderProps> = ({
         {headline && (
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Game #{headline.gameNum}
-            {gameDate && ` - ${gameDate}`}
+            {gameDate && ` • ${gameDate}`} • Edited by Alex Rich
           </p>
         )}
       </div>

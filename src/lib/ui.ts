@@ -346,7 +346,7 @@ export const formatGameDateForHeader = (createdAt?: string): string | null => {
   // We only want to show the date if the game date is before the start of today.
   if (gameDate.getTime() < today.getTime()) {
     return gameDate.toLocaleDateString('en-US', {
-      month: 'long',
+      month: 'short',
       day: 'numeric',
       year: 'numeric',
     });
