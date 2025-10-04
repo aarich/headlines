@@ -689,7 +689,7 @@ describe('ui.ts', () => {
     it('should return formatted date for yesterday', () => {
       const yesterday = new Date(MOCKED_NOW_DATE);
       yesterday.setDate(yesterday.getDate() - 1);
-      expect(formatGameDateForHeader(toDateTimeString(yesterday))).toBe('July 10, 2025');
+      expect(formatGameDateForHeader(toDateTimeString(yesterday))).toBe('Jul 10, 2025');
     });
 
     it('should return null for a future date', () => {
@@ -707,7 +707,7 @@ describe('ui.ts', () => {
       lastYear.setFullYear(lastYear.getFullYear() - 1);
       lastYear.setMonth(5); // June
       lastYear.setDate(15);
-      expect(formatGameDateForHeader(toDateTimeString(lastYear))).toBe('June 15, 2024');
+      expect(formatGameDateForHeader(toDateTimeString(lastYear))).toBe('Jun 15, 2024');
     });
   });
 });
