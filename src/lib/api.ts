@@ -171,8 +171,8 @@ export const fetchScriptExecutionLogs = async (count: number): Promise<ScriptLog
   return response.json();
 };
 
-export const fetchHistory = async (page = 1): Promise<HeadlineHistoryPage> => {
-  const response = await fetch(`${config.apiUrl}/api/history?page=${page}`);
+export const fetchHistory = async (page = 1, pageSize = 30): Promise<HeadlineHistoryPage> => {
+  const response = await fetch(`${config.apiUrl}/api/history?page=${page}&count=${pageSize}`);
   if (!response.ok) {
     if (response.status === 404) {
       return { page, headlines: [] };

@@ -20,6 +20,7 @@ const PreviewList: React.FC<PreviewListProps> = ({ revealWords, onEditRequest })
   const [previews, setPreviews] = useState<PreviewHeadline[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
+  const [searchTerm, setSearchTerm] = useState('');
   const toast = useToast();
 
   const loadPreviews = useCallback(async (showLoading = true) => {
@@ -60,6 +61,14 @@ const PreviewList: React.FC<PreviewListProps> = ({ revealWords, onEditRequest })
       });
   }, [previews]);
 
+  const filteredPreviews = useMemo(
+    () =>
+      sortedPreviews.filter(preview =>
+        preview.headline.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    [sortedPreviews, searchTerm]
+  );
+
   const handleSetStatus = async (preview: PreviewHeadline, status: PreviewHeadlineStatus) => {
     const newStatus = preview.status === status ? null : status;
     const { id } = preview;
@@ -92,26 +101,43 @@ const PreviewList: React.FC<PreviewListProps> = ({ revealWords, onEditRequest })
 
   return (
     <>
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Search..."
+          className="w-full p-2 text-sm border rounded border-neutral-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+          value={searchTerm}
+          onTouchCancel={() => setSearchTerm('')}
+          onChange={e => setSearchTerm(e.target.value)}
+        />
+      </div>
       {isLoading && <Loading />}
       {error && (
         <p className="text-red-500 bg-red-100 dark:bg-red-900 dark:text-red-300 p-2 rounded">
           {error}
         </p>
       )}
-      {!isLoading && !error && previews.length === 0 && <p>No preview headlines found.</p>}
-      {!isLoading && !error && sortedPreviews.length > 0 && (
-        <ul className="space-y-3 pr-2">
-          {sortedPreviews.map(preview => (
-            <PreviewListItem
-              key={`${preview.id}-${preview.status}`}
-              preview={preview}
-              revealWords={revealWords}
-              onEdit={() => onEditRequest(preview)}
-              onSetStatus={handleSetStatus}
-              onPublish={handlePublish}
-            />
-          ))}
-        </ul>
+      {!isLoading && !error && (
+        <>
+          {previews.length === 0 && <p>No preview headlines found.</p>}
+          {previews.length > 0 && filteredPreviews.length === 0 && (
+            <p>No headlines match your search.</p>
+          )}
+          {
+            <ul className="space-y-3 pr-2">
+              {filteredPreviews.map(preview => (
+                <PreviewListItem
+                  key={`${preview.id}-${preview.status}`}
+                  preview={preview}
+                  revealWords={revealWords}
+                  onEdit={() => onEditRequest(preview)}
+                  onSetStatus={handleSetStatus}
+                  onPublish={handlePublish}
+                />
+              ))}
+            </ul>
+          }
+        </>
       )}
     </>
   );

@@ -7,7 +7,7 @@ import {
   updateHeadline,
   updatePreviewHeadline,
 } from 'lib/api';
-import { ChangeEventHandler, FC, FormEventHandler, useCallback, useEffect, useState } from 'react';
+import { FormEventHandler, useCallback, useEffect, useState } from 'react';
 
 type PreviewFormProps = {
   initialDataForEdit?: (EditablePreviewHeadlineFields & { id: number }) | EditableHeadlineFields;
@@ -45,7 +45,7 @@ const calculateBeforeAfterBlanks = (headline: string, correctAnswer: string) => 
 /**
  * Create or edit a preview headline. Note that status is not managed here. It has a default on create and isn't editable via the form.
  */
-const PreviewForm: FC<PreviewFormProps> = ({
+const PreviewForm: React.FC<PreviewFormProps> = ({
   initialDataForEdit,
   formMode,
   onSuccess,
@@ -142,11 +142,11 @@ const PreviewForm: FC<PreviewFormProps> = ({
     }
   };
 
-  const onChangeDefaultBeforeAfter: ChangeEventHandler<HTMLInputElement> = useCallback(e => {
-    setUseDefaultBeforeAfter(e.target.checked);
+  const onChangeDefaultBeforeAfter = useCallback((useDefault: boolean) => {
+    setUseDefaultBeforeAfter(useDefault);
     setFormData(prev => {
       const newFormData = { ...prev };
-      if (e.target.checked) {
+      if (useDefault) {
         delete newFormData.beforeBlank;
         delete newFormData.afterBlank;
       }
@@ -270,20 +270,41 @@ const PreviewForm: FC<PreviewFormProps> = ({
         />
       </div>
 
-      {!useDefaultBeforeAfter && (
+      {useDefaultBeforeAfter ? (
+        <>
+          <button
+            className="btn btn-secondary text-xs"
+            onClick={e => {
+              e.preventDefault();
+              onChangeDefaultBeforeAfter(false);
+            }}
+            type="button"
+          >
+            Override Before/After
+          </button>
+        </>
+      ) : (
         <>
           <div>
-            <button
-              className="btn btn-secondary text-xs"
-              onClick={onRecalculateBeforeAfter}
-              type="button"
-            >
-              Recalculate Before/After
-            </button>
-          </div>
-          <div>
             <label htmlFor="beforeBlank" className="block text-sm font-medium">
-              Before Blank
+              Before / After Blank
+              <button
+                className="btn btn-secondary text-xs px-2 py-1 mx-1"
+                onClick={onRecalculateBeforeAfter}
+                type="button"
+              >
+                Recalculate
+              </button>
+              <button
+                className="btn btn-secondary text-xs px-2 py-1"
+                onClick={e => {
+                  e.preventDefault();
+                  onChangeDefaultBeforeAfter(true);
+                }}
+                type="button"
+              >
+                Use Default
+              </button>
             </label>
             <input
               type="text"
@@ -295,9 +316,6 @@ const PreviewForm: FC<PreviewFormProps> = ({
             />
           </div>
           <div>
-            <label htmlFor="afterBlank" className="block text-sm font-medium">
-              After Blank
-            </label>
             <input
               type="text"
               id="afterBlank"
@@ -309,18 +327,6 @@ const PreviewForm: FC<PreviewFormProps> = ({
           </div>
         </>
       )}
-      <div>
-        <label htmlFor="useDefaultBeforeAfter" className="block text-sm font-medium">
-          Use Default Before/After
-        </label>
-        <input
-          type="checkbox"
-          id="useDefaultBeforeAfter"
-          checked={useDefaultBeforeAfter}
-          onChange={onChangeDefaultBeforeAfter}
-          className="mt-1"
-        />
-      </div>
       <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
         <button
           type="submit"

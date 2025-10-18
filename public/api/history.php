@@ -9,7 +9,7 @@ $set_response_code = false;
 
 try {
     $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-    $page_size = isset($_GET['page_size']) ? (int)$_GET['page_size'] : 15;
+    $page_size = isset($_GET['count']) ? (int)$_GET['count'] : 15;
     $offset = ($page - 1) * $page_size;
 
     // Prepare the base query. It loads the last 15 headlines and the stats for each one

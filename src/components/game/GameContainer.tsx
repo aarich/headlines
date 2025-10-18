@@ -34,7 +34,9 @@ const GameContainer: React.FC = () => {
     if (gameState.completedAt) {
       const hasParam =
         window.location.search.includes('id=') || window.location.search.includes('game=');
-      if (hasParam) {
+      // If it's like domain.com/[game]
+      const hasUrlSegment = window.location.pathname.split('/').length > 1;
+      if (hasParam || hasUrlSegment) {
         toast('Great job!', 'success');
       } else {
         // We are on today's game. If it was completed in the last ~5 seconds, it means we just completed it
