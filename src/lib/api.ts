@@ -27,6 +27,8 @@ export interface EditableHeadlineFields {
 
 export interface EditablePreviewHeadlineFields extends Omit<EditableHeadlineFields, 'id'> {
   status: PreviewHeadlineStatus;
+  beforeBlank?: string;
+  afterBlank?: string;
 }
 
 export interface UpdatePreviewResult {
@@ -252,6 +254,20 @@ export const updatePreviewHeadline = async (
   id: number,
   data: EditablePreviewHeadlineFields
 ): Promise<UpdatePreviewResult> => {
+  const { beforeBlank, afterBlank, correctAnswer, headline } = data;
+  // Validate that beforeBlank/afterBlank are either both set or neither set
+  if ((beforeBlank === undefined) !== (afterBlank === undefined)) {
+    throw new Error("'beforeBlank' and 'afterBlank' must be set together.");
+  }
+
+  // Validate beforeBlank + answer + afterBlank are correct
+  if (beforeBlank !== undefined) {
+    const computedHeadline = beforeBlank + correctAnswer + afterBlank;
+    if (computedHeadline !== headline) {
+      throw new Error(`The computed headline doesn't match:\n${computedHeadline}\n${headline}`);
+    }
+  }
+
   const response = await fetch(`${config.apiUrl}/api/preview`, {
     method: 'PATCH',
     headers: getAdminHeaders(),

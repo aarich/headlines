@@ -218,14 +218,23 @@ try {
 
         $processedInput = validateAndProcessPreviewInput($input, $allowedFields, false);
 
-        try {
-            $blankFields = derive_before_after_and_correct_answer(
-                $processedInput['headline'],
-                $processedInput['correct_answer'], // This is the $word_to_find
-                false
-            );
+        // Check for manual override of beforeBlank and afterBlank
+        $beforeBlank = $input['beforeBlank'] ?? null;
+        $afterBlank = $input['afterBlank'] ?? null;
 
-            $processedInput['correct_answer'] = $blankFields['actual_correct_answer'];
+        try {
+            // If beforeBlank or afterBlank are not provided, compute them
+            if ($beforeBlank === null || $afterBlank === null) {
+                $blankFields = derive_before_after_and_correct_answer(
+                    $processedInput['headline'],
+                    $processedInput['correct_answer'], // This is the $word_to_find
+                    false
+                );
+                $beforeBlank = $blankFields['before_blank'];
+                $afterBlank = $blankFields['after_blank'];
+                $processedInput['correct_answer'] = $blankFields['actual_correct_answer'];
+            }
+            // If they are provided, we trust them and the correctAnswer from the input
         } catch (Exception $e) {
             http_response_code(400);
             throw $e;
@@ -254,8 +263,8 @@ try {
             ':correct_answer' => $processedInput['correct_answer'],
             ':possible_answers' => $processedInput['possible_answers'],
             ':status' => ($statusUpdateValue === null) ? null : $statusUpdateValue,
-            ':before_blank' => $blankFields['before_blank'],
-            ':after_blank' => $blankFields['after_blank'],
+            ':before_blank' => $beforeBlank,
+            ':after_blank' => $afterBlank,
             ':id' => $previewId,
             ':publish_time' => str_replace('T', ' ', $processedInput['publish_time'])
         ];

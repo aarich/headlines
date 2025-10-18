@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import {
-  EditablePreviewHeadlineFields,
-  CreatePreviewHeadlinePayload,
-  createPreviewHeadline,
-  updatePreviewHeadline,
-  updateHeadline,
-  EditableHeadlineFields,
-} from 'lib/api';
 import { useToast } from 'contexts/ToastContext';
+import {
+  CreatePreviewHeadlinePayload,
+  EditableHeadlineFields,
+  EditablePreviewHeadlineFields,
+  createPreviewHeadline,
+  updateHeadline,
+  updatePreviewHeadline,
+} from 'lib/api';
+import { ChangeEventHandler, FC, FormEventHandler, useCallback, useEffect, useState } from 'react';
 
 type PreviewFormProps = {
   initialDataForEdit?: (EditablePreviewHeadlineFields & { id: number }) | EditableHeadlineFields;
@@ -27,10 +27,25 @@ const defaultFormData: CreatePreviewHeadlinePayload = {
   possibleAnswers: [],
 };
 
+const calculateBeforeAfterBlanks = (headline: string, correctAnswer: string) => {
+  if (!headline || !correctAnswer) {
+    throw new Error('Set headline and answer first');
+  }
+
+  if (headline.indexOf(correctAnswer) === -1) {
+    throw new Error('Answer not found in headline');
+  }
+
+  const beforeBlank = headline.split(correctAnswer)[0];
+  // In case there are multiple instances of correctAnswer, re-join the rest
+  const afterBlank = headline.split(correctAnswer).slice(1).join(correctAnswer);
+  return { beforeBlank, afterBlank };
+};
+
 /**
  * Create or edit a preview headline. Note that status is not managed here. It has a default on create and isn't editable via the form.
  */
-const PreviewForm: React.FC<PreviewFormProps> = ({
+const PreviewForm: FC<PreviewFormProps> = ({
   initialDataForEdit,
   formMode,
   onSuccess,
@@ -44,6 +59,10 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
 
   // Separate state for possibleAnswers text input
   const [possibleAnswersText, setPossibleAnswersText] = useState<string>('');
+  const [useDefaultBeforeAfter, setUseDefaultBeforeAfter] = useState<boolean>(
+    calculateBeforeAfterBlanks(formData.headline, formData.correctAnswer).beforeBlank ===
+      formData.beforeBlank
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
   const toast = useToast();
@@ -76,7 +95,7 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit: FormEventHandler = async e => {
     e.preventDefault();
     setIsLoading(true);
     setError(undefined);
@@ -122,6 +141,35 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
       setIsLoading(false);
     }
   };
+
+  const onChangeDefaultBeforeAfter: ChangeEventHandler<HTMLInputElement> = useCallback(e => {
+    setUseDefaultBeforeAfter(e.target.checked);
+    setFormData(prev => {
+      const newFormData = { ...prev };
+      if (e.target.checked) {
+        delete newFormData.beforeBlank;
+        delete newFormData.afterBlank;
+      }
+      return newFormData;
+    });
+  }, []);
+
+  const onRecalculateBeforeAfter: FormEventHandler = useCallback(
+    e => {
+      e.preventDefault();
+
+      try {
+        const { beforeBlank, afterBlank } = calculateBeforeAfterBlanks(
+          formData.headline,
+          formData.correctAnswer
+        );
+        setFormData(prev => ({ ...prev, beforeBlank, afterBlank }));
+      } catch (err: any) {
+        setError(err.message);
+      }
+    },
+    [formData]
+  );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3 text-gray-700 dark:text-gray-200">
@@ -211,12 +259,66 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
           Publish Time
         </label>
         <input
-          type="datetime-local"
+          type="text"
           id="publishTime"
           value={formData.publishTime || ''}
           onChange={e => handleFieldChange('publishTime', e.target.value)}
           className={tailwindInputClass}
           required={!isEditMode}
+          pattern="\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}"
+          placeholder="YYYY-MM-DD HH:MM:SS"
+        />
+      </div>
+
+      {!useDefaultBeforeAfter && (
+        <>
+          <div>
+            <button
+              className="btn btn-secondary text-xs"
+              onClick={onRecalculateBeforeAfter}
+              type="button"
+            >
+              Recalculate Before/After
+            </button>
+          </div>
+          <div>
+            <label htmlFor="beforeBlank" className="block text-sm font-medium">
+              Before Blank
+            </label>
+            <input
+              type="text"
+              id="beforeBlank"
+              value={formData.beforeBlank || ''}
+              onChange={e => handleFieldChange('beforeBlank', e.target.value)}
+              className={tailwindInputClass}
+              disabled={useDefaultBeforeAfter}
+            />
+          </div>
+          <div>
+            <label htmlFor="afterBlank" className="block text-sm font-medium">
+              After Blank
+            </label>
+            <input
+              type="text"
+              id="afterBlank"
+              value={formData.afterBlank || ''}
+              onChange={e => handleFieldChange('afterBlank', e.target.value)}
+              className={tailwindInputClass}
+              disabled={useDefaultBeforeAfter}
+            />
+          </div>
+        </>
+      )}
+      <div>
+        <label htmlFor="useDefaultBeforeAfter" className="block text-sm font-medium">
+          Use Default Before/After
+        </label>
+        <input
+          type="checkbox"
+          id="useDefaultBeforeAfter"
+          checked={useDefaultBeforeAfter}
+          onChange={onChangeDefaultBeforeAfter}
+          className="mt-1"
         />
       </div>
       <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
