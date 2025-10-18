@@ -1,7 +1,7 @@
 import { CheckIcon } from '@heroicons/react/24/outline';
 import { getAdminKey } from 'lib/storage';
 import { timeSince } from 'lib/ui';
-import React from 'react';
+import { forwardRef } from 'react';
 import { HeadlineHistory } from 'types';
 
 interface TickerItemProps {
@@ -12,25 +12,28 @@ interface TickerItemProps {
   hasCompleted: boolean;
 }
 
-const TickerItem: React.FC<TickerItemProps> = ({
-  headline: {
-    beforeBlank,
-    afterBlank,
-    createdAt,
-    totalCorrectGuesses,
-    totalPlays,
-    firstGuessCorrectCount,
-    wrongGuesses,
-    articleUrl,
-    redditUrl,
-    headline,
-    gameNum,
+const TickerItem: React.ForwardRefRenderFunction<HTMLDivElement, TickerItemProps> = (
+  {
+    headline: {
+      beforeBlank,
+      afterBlank,
+      createdAt,
+      totalCorrectGuesses,
+      totalPlays,
+      firstGuessCorrectCount,
+      wrongGuesses,
+      articleUrl,
+      redditUrl,
+      headline,
+      gameNum,
+    },
+    revealWord,
+    isLatest,
+    isCurrent,
+    hasCompleted,
   },
-  revealWord,
-  isLatest,
-  isCurrent,
-  hasCompleted,
-}) => {
+  ref
+) => {
   const articleSite = articleUrl.split('/')[2];
 
   const percentSolved = (100 * totalCorrectGuesses) / (totalPlays || 1);
@@ -39,7 +42,7 @@ const TickerItem: React.FC<TickerItemProps> = ({
   const showTotalPlays = !!getAdminKey();
 
   return (
-    <div className="relative mb-5 p-2 rounded bg-gray-100 dark:bg-gray-700">
+    <div ref={ref} className="relative mb-5 p-2 rounded bg-gray-100 dark:bg-gray-700">
       {(isLatest || isCurrent) && (
         <span className="absolute -top-3 right-2 bg-green-500 text-white text-xs font-semibold px-2 py-0.5 rounded-md">
           {isLatest ? 'Today' : 'Viewing'}
@@ -115,4 +118,4 @@ const TickerItem: React.FC<TickerItemProps> = ({
   );
 };
 
-export default TickerItem;
+export default forwardRef(TickerItem);

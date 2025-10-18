@@ -103,6 +103,11 @@ export interface HeadlineHistory {
   wrongGuesses: { word: string; count: number }[];
 }
 
+export interface HeadlineHistoryPage {
+  headlines: HeadlineHistory[];
+  page: number;
+}
+
 export interface Suggestion {
   id: number;
   headlineId: number;

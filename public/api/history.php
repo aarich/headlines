@@ -8,6 +8,10 @@ header('Content-Type: application/json');
 $set_response_code = false;
 
 try {
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $page_size = isset($_GET['page_size']) ? (int)$_GET['page_size'] : 15;
+    $offset = ($page - 1) * $page_size;
+
     // Prepare the base query. It loads the last 15 headlines and the stats for each one
     $query = "
         SELECT 
@@ -35,8 +39,11 @@ try {
         FROM headline h
         LEFT JOIN headline_stats hs ON h.id = hs.headline_id
         ORDER BY h.id desc
-        LIMIT 15";
-    $stmt = getDbConnection()->query($query);
+        LIMIT :page_size OFFSET :offset";
+    $stmt = getDbConnection()->prepare($query);
+    $stmt->bindParam(':page_size', $page_size, PDO::PARAM_INT);
+    $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
 
     $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

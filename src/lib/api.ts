@@ -2,7 +2,7 @@ import config from 'config';
 import { getAdminKey } from 'lib/storage';
 import {
   Headline,
-  HeadlineHistory,
+  HeadlineHistoryPage,
   PreviewHeadline,
   PreviewHeadlineStatus,
   Suggestion,
@@ -169,13 +169,19 @@ export const fetchScriptExecutionLogs = async (count: number): Promise<ScriptLog
   return response.json();
 };
 
-export const fetchHistory = async (): Promise<HeadlineHistory[]> => {
-  const response = await fetch(`${config.apiUrl}/api/history`);
+export const fetchHistory = async (page = 1): Promise<HeadlineHistoryPage> => {
+  const response = await fetch(`${config.apiUrl}/api/history?page=${page}`);
   if (!response.ok) {
+    if (response.status === 404) {
+      return { page, headlines: [] };
+    }
     throw new Error('Failed to fetch history');
   }
 
-  return response.json().then(data => data.headlines);
+  return response
+    .json()
+    .then(data => data.headlines)
+    .then(headlines => ({ page, headlines }));
 };
 
 interface GameCompletedData {

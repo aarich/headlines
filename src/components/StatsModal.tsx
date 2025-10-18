@@ -1,14 +1,10 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import React, { useEffect, useMemo, useState } from 'react';
 import Modal from 'components/common/Modal';
-import { getStoredScores, getStoredStats, saveStats } from 'lib/storage';
-import { getCurrentStreak } from 'lib/scoring';
-import { HeadlineHistory } from 'types';
-import { fetchHistory } from 'lib/api';
-import { plural } from 'lib/ui';
-import TickerItem from 'components/TickerItem';
-import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useGameState, useMaybeHeadline } from 'contexts/HeadlineContext';
+import { getCurrentStreak } from 'lib/scoring';
+import { getStoredScores, getStoredStats, saveStats } from 'lib/storage';
+import { plural } from 'lib/ui';
+import { useEffect, useMemo } from 'react';
+import HistoryList from './HistoryList';
 
 interface StatsModalProps {
   isOpen: boolean;
@@ -18,25 +14,14 @@ interface StatsModalProps {
 const StatsModal: React.FC<StatsModalProps> = ({ isOpen, onClose }) => {
   const [{ completedAt }] = useGameState();
   const headline = useMaybeHeadline();
-  const scores = useMemo(() => getStoredScores(), [completedAt]);
-  const stats = useMemo(() => getStoredStats(), [completedAt]);
-  const [history, setHistory] = useState<HeadlineHistory[]>();
-  const [revealWords, setRevealWords] = useState(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const [scores, stats] = useMemo(() => [getStoredScores(), getStoredStats()], [completedAt]);
+
+  const currentStreak = headline
+    ? getCurrentStreak(Object.values(scores), headline.gameNum - 1)
+    : undefined;
 
   const totalCompleted = Object.keys(scores).length;
-
-  useEffect(() => {
-    fetchHistory()
-      .then(setHistory)
-      .catch(error => {
-        console.error('Error fetching history:', error);
-      });
-  }, []);
-
-  const currentStreak = useMemo(
-    () => (headline ? getCurrentStreak(Object.values(scores), headline.gameNum - 1) : undefined),
-    [headline, scores, completedAt]
-  );
 
   useEffect(() => {
     if (currentStreak && currentStreak > (stats.longestStreak ?? 0)) {
@@ -45,9 +30,6 @@ const StatsModal: React.FC<StatsModalProps> = ({ isOpen, onClose }) => {
   }, [currentStreak, stats.longestStreak]);
 
   const percentCompleted = (100 * totalCompleted) / (stats.totalPlays || totalCompleted);
-
-  // Hide the first item if the user hasn't completed it yet
-  const hideFirstItem = useMemo(() => !scores[`${history?.[0]?.id}`], [history, scores]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Stats" mdSize="3xl">
@@ -83,30 +65,7 @@ const StatsModal: React.FC<StatsModalProps> = ({ isOpen, onClose }) => {
                 {currentStreak !== undefined ? currentStreak : '...'}
               </span>
             </p>
-            <h3 className="text-lg font-bold mt-4 flex items-center">
-              News Ticker{' '}
-              <button className="mx-4" onClick={() => setRevealWords(!revealWords)}>
-                {revealWords ? (
-                  <EyeIcon className="w-5 h-5" />
-                ) : (
-                  <EyeSlashIcon className="w-5 h-5" />
-                )}
-              </button>
-            </h3>
-            <p className="text-sm text-gray-500 mb-3">
-              See how everyone's doing on recent headlines:
-            </p>
-
-            {history?.map((h, i) => (
-              <TickerItem
-                key={h.id}
-                headline={h}
-                revealWord={revealWords && !(i === 0 && hideFirstItem)}
-                isCurrent={headline?.id === h.id}
-                isLatest={i === 0}
-                hasCompleted={`${h.id}` in scores}
-              />
-            ))}
+            <HistoryList isOpen={isOpen} />
           </div>
         )}
       </div>

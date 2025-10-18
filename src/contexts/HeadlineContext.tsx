@@ -40,7 +40,10 @@ export const useMaybeHeadline = (): Headline | undefined => useContext(HeadlineC
 export const useHeadline = (): Headline => {
   const headline = useMaybeHeadline();
 
-  if (process.env.NODE_ENV === 'development' && process.env.USE_MOCK_HEADLINE === 'true') {
+  if (
+    process.env.NODE_ENV === 'development' &&
+    process.env.REACT_APP_USE_MOCK_HEADLINE === 'true'
+  ) {
     return MOCK_HEADLINE;
   }
 
