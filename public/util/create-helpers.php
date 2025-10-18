@@ -250,7 +250,7 @@ function checkIfHeadlineIsNeeded(bool $ignore_failure, string $command_to_log_on
   $hours_since_last_headline = $seconds_since_last_headline / 3600;
   echo "hours since last headline: $hours_since_last_headline\n";
 
-  if ($hours_since_last_headline < 23) {
+  if ($hours_since_last_headline < 10) {
     $log_message = "*** Headline is recent (" . round($hours_since_last_headline, 2) . " hours old). ***";
     echo $log_message . "\n";
 

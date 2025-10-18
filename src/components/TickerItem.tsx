@@ -1,4 +1,5 @@
 import { CheckIcon } from '@heroicons/react/24/outline';
+import { getAdminKey } from 'lib/storage';
 import { timeSince } from 'lib/ui';
 import React from 'react';
 import { HeadlineHistory } from 'types';
@@ -35,6 +36,8 @@ const TickerItem: React.FC<TickerItemProps> = ({
   const percentSolved = (100 * totalCorrectGuesses) / (totalPlays || 1);
   const percentFirstTry = (100 * firstGuessCorrectCount) / (totalPlays || 1);
   const publishTime = new Date(createdAt.replace(' ', 'T') + 'Z');
+  const showTotalPlays = !!getAdminKey();
+
   return (
     <div className="relative mb-5 p-2 rounded bg-gray-100 dark:bg-gray-700">
       {(isLatest || isCurrent) && (
@@ -89,6 +92,11 @@ const TickerItem: React.FC<TickerItemProps> = ({
           <span>
             First try: <b>{percentFirstTry.toFixed(0)}%</b>
           </span>
+          {showTotalPlays && (
+            <span>
+              Plays: <b>{totalPlays}</b>
+            </span>
+          )}
         </span>
         <span className="px-2">
           {hasCompleted ? (
