@@ -60,7 +60,8 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
   // Separate state for possibleAnswers text input
   const [possibleAnswersText, setPossibleAnswersText] = useState<string>('');
   const [useDefaultBeforeAfter, setUseDefaultBeforeAfter] = useState<boolean>(
-    calculateBeforeAfterBlanks(formData.headline, formData.correctAnswer).beforeBlank ===
+    () =>
+      calculateBeforeAfterBlanks(formData.headline, formData.correctAnswer).beforeBlank ===
       formData.beforeBlank
   );
   const [isLoading, setIsLoading] = useState(false);
