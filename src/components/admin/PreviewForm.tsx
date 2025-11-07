@@ -23,7 +23,7 @@ const defaultFormData: CreatePreviewHeadlinePayload = {
   articleUrl: '',
   redditUrl: '',
   correctAnswer: '',
-  publishTime: '',
+  publishTime: new Date().toISOString().replace('T', ' ').slice(0, 'YYYY-MM-DD HH:MM:SS'.length),
   possibleAnswers: [],
 };
 
@@ -59,11 +59,7 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
 
   // Separate state for possibleAnswers text input
   const [possibleAnswersText, setPossibleAnswersText] = useState<string>('');
-  const [useDefaultBeforeAfter, setUseDefaultBeforeAfter] = useState<boolean>(
-    () =>
-      calculateBeforeAfterBlanks(formData.headline, formData.correctAnswer).beforeBlank ===
-      formData.beforeBlank
-  );
+  const [useDefaultBeforeAfter, setUseDefaultBeforeAfter] = useState<boolean>(!isEditMode);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
   const toast = useToast();
