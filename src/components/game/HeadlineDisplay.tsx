@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import GuessDisplay from './GuessDisplay';
 import SolvedHeadlineDisplay from './SolvedHeadlineDisplay';
 import { PLACEHOLDER_VALUE } from './AnswerWheel';
-import { extractHeadlineParts } from 'lib/ui';
+import { extractHeadlineParts, getDomain } from 'lib/ui';
 import { useSettings } from 'contexts/SettingsContext';
 import { useHeadline } from 'contexts/HeadlineContext';
 
@@ -76,6 +76,9 @@ const HeadlineDisplay: React.FC<HeadlineDisplayProps> = ({ currentGuess, isGameO
           <div>{afterBlank}</div>
         </div>
       )}
+      <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+        Source: {getDomain(headline.articleUrl)}
+      </div>
     </div>
   );
 };

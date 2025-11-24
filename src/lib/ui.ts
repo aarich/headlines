@@ -353,3 +353,13 @@ export const formatGameDateForHeader = (createdAt?: string): string | null => {
   }
   return null;
 };
+
+export const getDomain = (url: string) => {
+  try {
+    const { hostname } = new URL(url);
+    return hostname.replace(/^www\./, '');
+  } catch (e) {
+    console.error('Invalid URL:', url);
+    return '';
+  }
+};
