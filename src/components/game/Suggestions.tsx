@@ -115,7 +115,7 @@ const Suggestions: React.FC = () => {
             className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 text-sm text-white bg-gray-700 dark:bg-gray-800 rounded-md shadow-lg z-10"
             role="tooltip"
           >
-            Fill in the blank with your own funny take on the headline! Top-voted "leeks" get
+            Fill in the blank with your own funny take on the headline! Top-voted leeks get
             featured.
           </div>
         )}
