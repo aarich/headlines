@@ -13,7 +13,7 @@ export interface Headline {
   redditUrl: string;
 }
 
-export type PreviewHeadlineStatus = 'selected' | 'final_selection' | 'rejected' | 'archived' | null;
+export type PreviewHeadlineStatus = 'selected' | 'rejected' | 'archived' | null;
 
 export interface PreviewHeadline {
   id: number;

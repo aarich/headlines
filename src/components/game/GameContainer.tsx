@@ -167,7 +167,7 @@ const GameContainer: React.FC = () => {
 
           <HintsAndGuesses />
 
-          <Suggestions />
+          {process.env.REACT_APP_SHOW_SUGGESTIONS && <Suggestions />}
         </div>
       </section>
     </>

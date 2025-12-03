@@ -1,10 +1,9 @@
 import {
-  ArchiveBoxXMarkIcon,
   ArchiveBoxIcon,
+  ArchiveBoxXMarkIcon,
   CheckCircleIcon,
   PaperAirplaneIcon,
   PencilIcon,
-  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import React from 'react';
 import { PreviewHeadline, PreviewHeadlineStatus } from 'types';
@@ -71,14 +70,14 @@ const PreviewListItem: React.FC<PreviewListItemProps> = ({
         <div className="flex flex-row mt-2 gap-1 justify-between">
           <button
             onClick={() => onEdit(preview)}
-            className="btn btn-ghost btn-sm text-xs text-yellow-500 hover:text-yellow-700 dark:text-yellow-400 dark:hover:text-yellow-300"
+            className="btn btn-ghost btn-sm text-xs text-gray-400 hover:text-yellow-500 dark:text-gray-500 dark:hover:text-yellow-400"
             title="Edit"
           >
             <PencilIcon className="h-5 w-5" />
           </button>
           <button
             onClick={() => onPublish(preview.id)}
-            className="btn btn-ghost btn-sm text-xs text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+            className="btn btn-ghost btn-sm text-xs text-gray-400 dark:text-gray-500 hover:text-blue-700 dark:hover:text-blue-300"
             title="Publish"
           >
             <PaperAirplaneIcon className="h-5 w-5" />
@@ -89,13 +88,6 @@ const PreviewListItem: React.FC<PreviewListItemProps> = ({
             title="Select this preview"
           >
             <CheckCircleIcon className="h-5 w-5" />
-          </button>
-          <button
-            onClick={() => onSetStatus(preview, 'final_selection')}
-            className={`btn btn-ghost btn-sm text-xs ${preview.status === 'final_selection' ? 'text-green-500 dark:text-green-400' : 'text-gray-400 dark:text-gray-500 hover:text-green-500 dark:hover:text-green-400'}`}
-            title="Final Selection"
-          >
-            <ShieldCheckIcon className="h-5 w-5" />
           </button>
           <button
             onClick={() => onSetStatus(preview, 'rejected')}

@@ -16,7 +16,7 @@ const HintsAndGuesses: React.FC = () => {
       {showClue && (
         <div className="mt-4 w-full max-w-md">
           <div className="text-sm text-gray-600 dark:text-gray-400 mb-2 italic">
-            {headline.hint}
+            Hint: {headline.hint}
           </div>
         </div>
       )}

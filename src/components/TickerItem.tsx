@@ -39,7 +39,9 @@ const TickerItem: React.ForwardRefRenderFunction<HTMLDivElement, TickerItemProps
   const percentSolved = (100 * totalCorrectGuesses) / (totalPlays || 1);
   const percentFirstTry = (100 * firstGuessCorrectCount) / (totalPlays || 1);
   const publishTime = new Date(createdAt.replace(' ', 'T') + 'Z');
-  const showTotalPlays = !!getAdminKey();
+  const isAdmin = !!getAdminKey();
+  const showWord = revealWord && (isAdmin || hasCompleted);
+  const showTopGuesses = wrongGuesses.length > 0 && (isAdmin || hasCompleted);
 
   return (
     <div ref={ref} className="relative mb-5 p-2 rounded bg-gray-100 dark:bg-gray-700">
@@ -52,7 +54,7 @@ const TickerItem: React.ForwardRefRenderFunction<HTMLDivElement, TickerItemProps
       <span className="italic text-gray-500">
         {`#${gameNum} `}
         <a className="italic underline text-blue-500" href={isLatest ? '/' : `/${gameNum}`}>
-          {revealWord ? headline : `${beforeBlank}[???]${afterBlank}`}
+          {showWord ? headline : `${beforeBlank}[???]${afterBlank}`}
         </a>
       </span>
       <div className="text-xs text-gray-500 mb-1">
@@ -73,7 +75,7 @@ const TickerItem: React.ForwardRefRenderFunction<HTMLDivElement, TickerItemProps
       </div>
 
       {/* WRONG GUESSES */}
-      {wrongGuesses.length > 0 ? (
+      {showTopGuesses ? (
         <div className="mt-1 text-xs">
           <span>
             Top wrong guesses:{' '}
@@ -95,7 +97,7 @@ const TickerItem: React.ForwardRefRenderFunction<HTMLDivElement, TickerItemProps
           <span>
             First try: <b>{percentFirstTry.toFixed(0)}%</b>
           </span>
-          {showTotalPlays && (
+          {isAdmin && (
             <span>
               Plays: <b>{totalPlays}</b>
             </span>

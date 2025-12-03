@@ -71,12 +71,6 @@ const HistoryList: React.FC<HistoryListProps> = ({ isOpen }) => {
       .sort((a, b) => b.gameNum - a.gameNum);
   }, [history]);
 
-  // Hide the first item answer if the user hasn't completed it yet
-  const hideFirstItem = useMemo(
-    () => !scores[`${flattenedHistory?.[0]?.id}`],
-    [flattenedHistory, scores]
-  );
-
   return (
     <div>
       <h3 className="text-lg font-bold mt-4 flex items-center">
@@ -92,7 +86,7 @@ const HistoryList: React.FC<HistoryListProps> = ({ isOpen }) => {
           ref={i === flattenedHistory.length - 1 ? lastHistoryElementRef : null}
           key={h.id}
           headline={h}
-          revealWord={revealWords && !(i === 0 && hideFirstItem)}
+          revealWord={revealWords}
           isCurrent={headline?.id === h.id}
           isLatest={i === 0}
           hasCompleted={`${h.id}` in scores}
