@@ -32,9 +32,7 @@ try {
   $previews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
   if (empty($previews)) {
-    $log_message = "No previews found. Exiting";
-    echo $log_message . "\n";
-    log_script_execution($command_name, 'completed_early', $log_message);
+    log_script_execution($command_name, 'completed_early', 'No previews found. Exiting');
     exit();
   }
 
@@ -44,7 +42,6 @@ try {
     echo json_decode($previews[0], JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE);
     $result = promotePreview($previews[0], true);
     $log_message = "Only one preview found. Promoted. Result: " . ($result ? json_encode($result) : "Failed");
-    echo $log_message . "\n";
     log_script_execution($command_name, $result ? 'success' : 'failed', $log_message);
     exit();
   }
@@ -58,7 +55,6 @@ try {
       echo json_encode($previewData, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE);
       $result = promotePreview($previewData, true);
       $log_message = "Found a selected preview. Promoted. Result: " . ($result ? json_encode($result) : "Failed");
-      echo $log_message . "\n";
       log_script_execution($command_name, $result ? 'success' : 'failed', $log_message);
       exit();
     }
@@ -77,9 +73,7 @@ try {
   }
 
   if ($selected_only) {
-    $log_message = "No selected previews found and --selected-only was specified. Exiting.";
-    echo $log_message . "\n";
-    log_script_execution($command_name, 'completed_early', $log_message);
+    log_script_execution($command_name, 'completed_early', 'No selected previews found and --selected-only was specified. Exiting.');
     exit();
   }
 
@@ -134,24 +128,17 @@ try {
     echo "-y was specified, so not asking for confirmation.\n";
   } else {
     if (!confirmProceed("Would you like to submit this headline?")) {
-      $log_message = "User aborted at confirmation prompt.";
-      echo $log_message . "\n";
-      log_script_execution($command_name, 'completed_early', $log_message);
+      log_script_execution($command_name, 'completed_early', 'User aborted at confirmation prompt.');
       exit;
     }
   }
 
   if ($dry_run) {
-    $log_message = "Dry run: Headline not inserted into the database.";
-    echo $log_message . "\n";
-    log_script_execution($command_name, 'success', $log_message);
+    log_script_execution($command_name, 'success', 'Dry run: Headline not inserted into the database.');
   } else {
     $result = promotePreview($matched_preview, true);
-    $log_message = "Headline " . ($result ? "inserted into the database. Result: " . json_encode($result) : "insertion failed.");
-    echo $log_message . "\n";
-    log_script_execution($command_name, $result ? 'success' : 'failed', $log_message);
+    log_script_execution($command_name, $result ? 'success' : 'failed', "Headline " . ($result ? "inserted into the database. Result: " . json_encode($result) : "insertion failed."));
   }
 } catch (Exception $e) {
-  echo "Error: " . $e->getMessage() . "\n";
   log_script_execution($command_name, 'failed', $e->getMessage());
 }

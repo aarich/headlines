@@ -48,7 +48,6 @@ try {
   foreach ($all_previews as $preview_item) {
     if ($save_to_preview && $preview_item['status'] === 'final_selection') {
       $log_message = "Found an already finalized preview: " . $preview_item['headline'];
-      echo "*** $log_message ***\n";
       log_script_execution($command_name, 'completed_early', $log_message);
       exit(0);
     }
@@ -115,18 +114,7 @@ try {
 
   // Exit if there were no posts
   if (empty($headline_titles)) {
-    $log_message = "No posts found. Exiting";
-    echo $log_message . "\n";
-    log_script_execution($command_name, 'completed_early', $log_message);
-    exit();
-  }
-
-  // Exit if we already have gone through many of the top posts
-  $num_proposed = count($already_proposed_headline_texts);
-  if ($num_proposed > 8 && count($headline_titles) < 3) {
-    $log_message = "Already proposed " . $num_proposed . " headlines with " . count($headline_titles) . " remaining. Exiting";
-    echo $log_message . "\n";
-    log_script_execution($command_name, 'completed_early', $log_message);
+    log_script_execution($command_name, 'completed_early', 'No posts found. Exiting');
     exit();
   }
 
@@ -168,19 +156,13 @@ try {
 
     if ($auto_confirm || confirmProceed("Would you like to submit this headline?")) {
       if ($dry_run) {
-        $log_message = "Dry run: Headline not inserted into the database.";
-        echo $log_message . "\n";
-        log_script_execution($command_name, 'success', $log_message);
+        log_script_execution($command_name, 'success', 'Dry run: Headline not inserted into the database.');
       } else {
         insertHeadline($headline, $before_blank, $after_blank, $hint, $article_url, $reddit_url, $correct_answer, $possible_answers, $publish_time, $explanation, $save_to_preview, null);
-        $log_message = "Headline inserted into the database.";
-        echo $log_message . "\n";
-        log_script_execution($command_name, 'success', $log_message);
+        log_script_execution($command_name, 'success', 'Headline inserted into the database.');
       }
     } else {
-      $log_message = "User aborted at confirmation prompt.";
-      echo $log_message . "\n";
-      log_script_execution($command_name, 'completed_early', $log_message);
+      log_script_execution($command_name, 'completed_early', 'User aborted at confirmation prompt.');
       exit;
     }
   } else { // Non-interactive mode - process multiple headlines
@@ -275,14 +257,10 @@ try {
     } // End foreach loop
 
     if ($dry_run) {
-      $log_message = "Dry run: {$successfully_inserted_count} headline(s) were processed and would have been submitted.";
-      echo $log_message . "\n";
-      log_script_execution($command_name, 'success', $log_message);
+      log_script_execution($command_name, 'success', "Dry run: {$successfully_inserted_count} headline(s) were processed and would have been submitted.");
     } else {
       if ($successfully_inserted_count > 0) {
-        $log_message = "Successfully inserted {$successfully_inserted_count} headline(s) into the database.";
-        echo $log_message . "\n";
-        log_script_execution($command_name, 'success', $log_message);
+        log_script_execution($command_name, 'success', "Successfully inserted {$successfully_inserted_count} headline(s) into the database.");
       } else {
         $log_message = "No headlines were inserted.";
         if (empty($final_choices_from_llm)) {
@@ -292,12 +270,10 @@ try {
         } else {
           $log_message .= " All processed candidates were skipped or encountered errors before insertion.";
         }
-        echo $log_message . "\n";
         log_script_execution($command_name, 'completed_early', $log_message);
       }
     }
   }
 } catch (Exception $e) {
-  echo "Error: " . $e->getMessage() . "\n";
   log_script_execution($command_name, 'failed', $e->getMessage());
 }

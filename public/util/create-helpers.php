@@ -312,6 +312,7 @@ function derive_before_after_and_correct_answer(string $headline, string $word_t
  * @param string $message Optional message (e.g., error message or success details).
  */
 function log_script_execution(string $command, string $status, string $message = ''): void {
+  echo $message . "\n";
   try {
     $db = getDbConnection();
     $environment = php_uname('n'); // Gets the host name

@@ -53,19 +53,32 @@ const PreviewListItem: React.FC<PreviewListItemProps> = ({
           {preview.hint}
         </p>
         <p
-          className={`text-xs ${isRejected ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400'}`}
+          className={`text-xs ${isRejected ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400'}`}
         >
-          <a href={preview.articleUrl} target="_blank" rel="noopener noreferrer">
-            {preview.articleSite} |{' '}
-            {publishTime.toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-              hour: 'numeric',
-              minute: 'numeric',
-              hour12: true,
-            })}
+          <a
+            href={preview.articleUrl}
+            target="_blank"
+            className="hover:text-blue-500 dark:hover:text-blue-400"
+          >
+            {preview.articleSite}
           </a>
+          &nbsp;|&nbsp;
+          <a
+            href={preview.redditUrl}
+            target="_blank"
+            className="hover:text-blue-500 dark:hover:text-blue-400"
+          >
+            reddit
+          </a>
+          &nbsp;|&nbsp;
+          {publishTime.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            hour12: true,
+          })}
         </p>
         <div className="flex flex-row mt-2 gap-1 justify-between">
           <button
