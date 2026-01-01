@@ -1,9 +1,9 @@
 import { GlobeAltIcon } from '@heroicons/react/24/outline';
 import { useHeadline } from 'contexts/HeadlineContext';
 import { useSettings } from 'contexts/SettingsContext';
-import { extractHeadlineParts } from 'lib/ui';
+import { extractHeadlineParts, MODAL_CLOSE_LISTENERS } from 'lib/ui';
 import { getDomainFromUrl } from 'lib/utils';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { PLACEHOLDER_VALUE } from './AnswerWheel';
 import GuessDisplay from './GuessDisplay';
 import SolvedHeadlineDisplay from './SolvedHeadlineDisplay';
@@ -23,11 +23,22 @@ const HeadlineDisplay: React.FC<HeadlineDisplayProps> = ({ currentGuess, isGameO
     headline.afterBlank
   );
 
-  useEffect(() => {
-    setShowTooltip(expertMode);
+  const showTooltipWithTimer = useCallback(() => {
+    setShowTooltip(true);
     const timer = setTimeout(() => setShowTooltip(false), 3000);
     return () => clearTimeout(timer);
-  }, [expertMode, headline.correctAnswer]);
+  }, []);
+
+  useEffect(() => {
+    return expertMode ? showTooltipWithTimer() : setShowTooltip(false);
+  }, [expertMode, headline.correctAnswer, showTooltipWithTimer]);
+
+  useEffect(() => {
+    MODAL_CLOSE_LISTENERS.add(showTooltipWithTimer);
+    return () => {
+      MODAL_CLOSE_LISTENERS.delete(showTooltipWithTimer);
+    };
+  }, [showTooltipWithTimer]);
 
   return (
     <div

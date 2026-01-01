@@ -22,7 +22,7 @@ $long_opts = [
 ];
 $cli_options = getopt($short_opts, $long_opts);
 
-$gpt_model_name = $cli_options['model'] ?? 'gemini-2.5-flash'; // gemini-2.5-flash-preview-04-17 gemini-2.5-pro-preview-03-25 gemini-2.5-pro-exp-03-25
+$gpt_model_name = $cli_options['model'] ?? 'gemini-3-flash-preview'; // gemini-2.5-flash-preview-04-17 gemini-2.5-pro-preview-03-25 gemini-2.5-pro-exp-03-25
 $ignore_patterns = [];
 if (isset($cli_options['ignore-patterns'])) {
   $ignore_patterns =  explode(',', $cli_options['ignore-patterns']);
@@ -66,6 +66,7 @@ try {
   }
 
   $posts = getTopPosts('nottheonion', $reddit_user_agent, $reddit_client_id, $reddit_client_secret);
+  echo "Found " . count($posts['data']['children']) . " posts\n";
 
   // Extract titles and URLs from the posts
   $headline_titles = [];
@@ -95,6 +96,7 @@ try {
     }
 
     if ($should_ignore) {
+      echo "Skipping (ignored): $title\n";
       continue;
     }
 

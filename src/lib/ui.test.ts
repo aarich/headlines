@@ -265,7 +265,7 @@ describe('ui.ts', () => {
       };
       const scoreWithPenalty: Score = { ...mockScore, g: 2 };
       const expectedResultText = `❌❌🧅\nScore: 84/100 🙂`;
-      expect(getResultText(MOCK_HEADLINE, gameState, false, scoreWithPenalty, MOCK_LEVELS)).toBe(
+      expect(getResultText(MOCK_HEADLINE, gameState, scoreWithPenalty, MOCK_LEVELS)).toBe(
         expectedResultText
       );
     });
@@ -275,10 +275,10 @@ describe('ui.ts', () => {
       const undefinedState: GameState = { completedAt: 1 };
       // mockScore (0 wrong, not expert) -> overall 90
       const expectedResultText = `🧅\nScore: 90/100 🤩`;
-      expect(getResultText(MOCK_HEADLINE, emptyArrayState, false, mockScore, MOCK_LEVELS)).toBe(
+      expect(getResultText(MOCK_HEADLINE, emptyArrayState, mockScore, MOCK_LEVELS)).toBe(
         expectedResultText
       );
-      expect(getResultText(MOCK_HEADLINE, undefinedState, false, mockScore, MOCK_LEVELS)).toBe(
+      expect(getResultText(MOCK_HEADLINE, undefinedState, mockScore, MOCK_LEVELS)).toBe(
         expectedResultText
       );
     });
@@ -289,7 +289,7 @@ describe('ui.ts', () => {
         completedAt: 1,
       };
       const expectedResultText = `💡💡🧅\nScore: 56/100 🤔`;
-      expect(getResultText(MOCK_HEADLINE, gameState, false, mockScore, MOCK_LEVELS)).toBe(
+      expect(getResultText(MOCK_HEADLINE, gameState, mockScore, MOCK_LEVELS)).toBe(
         expectedResultText
       );
     });
@@ -298,7 +298,7 @@ describe('ui.ts', () => {
       const gameState: GameState = { actions: [Hint.CLUE], completedAt: 1 };
       // mockScore (0 wrong, not expert), 1 clue hint. Overall = 100 - 30 - 10 = 60
       const expectedResultText = `🕵🧅\nScore: 80/100 🙂`;
-      expect(getResultText(MOCK_HEADLINE, gameState, false, mockScore, MOCK_LEVELS)).toBe(
+      expect(getResultText(MOCK_HEADLINE, gameState, mockScore, MOCK_LEVELS)).toBe(
         expectedResultText
       );
     });
@@ -309,7 +309,7 @@ describe('ui.ts', () => {
         completedAt: 1,
       };
       const expectedResultText = `💡💡🕵🧅\nScore: 56/100 🤔`;
-      expect(getResultText(MOCK_HEADLINE, gameState, true, mockExpertScore, MOCK_LEVELS)).toBe(
+      expect(getResultText(MOCK_HEADLINE, gameState, mockExpertScore, MOCK_LEVELS)).toBe(
         expectedResultText
       );
     });
@@ -320,7 +320,7 @@ describe('ui.ts', () => {
         completedAt: 1,
       };
       const expectedResultText = `💡💡🕵💡💡🧅`;
-      expect(getResultText(MOCK_HEADLINE, gameState, true, mockExpertScore, MOCK_LEVELS)).toContain(
+      expect(getResultText(MOCK_HEADLINE, gameState, mockExpertScore, MOCK_LEVELS)).toContain(
         expectedResultText
       );
     });
@@ -332,7 +332,7 @@ describe('ui.ts', () => {
       };
       const scoreWithPenalties = { ...mockExpertScore, g: 10 }; // 10 wrong, expert, 3 char, 1 clue
       const expectedResultText = `❌❌💡💡🕵💡🧅\nScore: 9/100 💩`;
-      expect(getResultText(MOCK_HEADLINE, gameState, true, scoreWithPenalties, MOCK_LEVELS)).toBe(
+      expect(getResultText(MOCK_HEADLINE, gameState, scoreWithPenalties, MOCK_LEVELS)).toBe(
         expectedResultText
       );
     });
@@ -345,7 +345,7 @@ describe('ui.ts', () => {
       const veryLowScore: Score = { ...mockExpertScore, g: 4 }; // expert, 4 wrong guesses
       // Penalties: charHints=6 -> round(6/8*100)=75. clue=30. wrong=4*5=20. Total=125. Overall=0.
       const expectedResultText = `💡💡💡💡💡💡🕵🧅\nScore: 0/100 💀`;
-      expect(getResultText(MOCK_HEADLINE, gameState, true, veryLowScore, MOCK_LEVELS)).toBe(
+      expect(getResultText(MOCK_HEADLINE, gameState, veryLowScore, MOCK_LEVELS)).toBe(
         expectedResultText
       );
     });
@@ -353,13 +353,13 @@ describe('ui.ts', () => {
     it('should include score and winner emoji if score is 100', () => {
       const gameState: GameState = { completedAt: 1 };
       const perfectScore: Score = { d: Date.now(), g: 0, e: true, n: 1 }; // Expert, 0 wrong guesses
-      const resultText = getResultText(MOCK_HEADLINE, gameState, true, perfectScore, MOCK_LEVELS);
+      const resultText = getResultText(MOCK_HEADLINE, gameState, perfectScore, MOCK_LEVELS);
       expect(resultText).toBe('🧅\nScore: 100/100 🎉');
     });
 
     it('should not include score if score object is undefined', () => {
       const gameState: GameState = { completedAt: 1 };
-      const resultText = getResultText(MOCK_HEADLINE, gameState, true, undefined, MOCK_LEVELS);
+      const resultText = getResultText(MOCK_HEADLINE, gameState, undefined, MOCK_LEVELS);
       expect(resultText).not.toContain('Score:');
       expect(resultText).toBe('🧅');
     });

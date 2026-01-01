@@ -4,18 +4,14 @@ import { useToast } from 'contexts/ToastContext';
 import { getStoredScores } from 'lib/storage';
 import { useGameState, useHeadline } from 'contexts/HeadlineContext';
 
-interface ShareButtonsProps {
-  isExpert: boolean;
-}
-
-const ShareButtons: React.FC<ShareButtonsProps> = ({ isExpert }) => {
+const ShareButtons: React.FC = () => {
   const [gameState] = useGameState();
   const headline = useHeadline();
   const hasShareAPI = 'share' in (navigator || {});
 
   const resultText = useMemo(
-    () => getResultText(headline, gameState, isExpert, getStoredScores()[`${headline.id}`]),
-    [gameState, headline, isExpert]
+    () => getResultText(headline, gameState, getStoredScores()[`${headline.id}`]),
+    [gameState, headline]
   );
   const toast = useToast();
 

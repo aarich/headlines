@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSettings } from 'contexts/SettingsContext';
+import { ALLOW_NON_EXPERT_MODE, useSettings } from 'contexts/SettingsContext';
 import { DisplayMode } from 'types';
 import Modal from 'components/common/Modal';
 import Toggle from 'components/common/Toggle';
@@ -36,12 +36,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           value={displayMode}
           onChange={handleDisplayModeChange}
         />
-        <Toggle
-          title="Expert Mode"
-          description="No multiple choice options – just your best guess"
-          checked={expertMode}
-          onChange={handleExpertModeToggle}
-        />
+        {ALLOW_NON_EXPERT_MODE && (
+          <Toggle
+            title="Expert Mode"
+            description="No multiple choice options – just your best guess"
+            checked={expertMode}
+            onChange={handleExpertModeToggle}
+          />
+        )}
         <Toggle
           title="Veg Out"
           description='"Show me the floating vegetables!"'

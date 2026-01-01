@@ -2,7 +2,7 @@ import React from 'react';
 import Modal from 'components/common/Modal';
 import { EyeIcon, LightBulbIcon } from '@heroicons/react/24/outline';
 import GuessDisplay from 'components/game/GuessDisplay';
-import { useSettings } from 'contexts/SettingsContext';
+import { ALLOW_NON_EXPERT_MODE, useSettings } from 'contexts/SettingsContext';
 import { Hint } from 'types';
 import { HeadlineProvider } from 'contexts/HeadlineContext';
 
@@ -21,8 +21,9 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
         <ul className="list-disc pl-6">
           <li>Your job? Guess the missing word from a real headline!</li>
           <li>
-            Guess by typing the word you think fits. Or, switch off Expert mode to choose from
-            pre-selected choices.
+            Guess by typing the word you think fits.
+            {ALLOW_NON_EXPERT_MODE &&
+              ' Or, switch off Expert mode to choose from pre-selected choices.'}
           </li>
           <li>
             Headlines are real, recent stories. They come from{' '}
@@ -44,7 +45,8 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
         <ul className="list-none pl-3">
           <li>
             <EyeIcon className="w-5 h-5 inline" />
-            &nbsp; Reveal the next letter of the word (expert mode only)
+            &nbsp; Reveal the next letter of the word
+            {ALLOW_NON_EXPERT_MODE && ' (expert mode only)'}
           </li>
           <li>
             <LightBulbIcon className="w-5 h-5 inline" />

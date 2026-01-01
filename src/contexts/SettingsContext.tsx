@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Settings } from 'types';
 
+export const ALLOW_NON_EXPERT_MODE = process.env.REACT_APP_ENABLE_NON_EXPERT_MODE === 'true';
+
 interface SettingsContextType {
   settings: Settings;
   updateSettings: (newSettings: Partial<Settings>) => void;
@@ -47,6 +49,9 @@ export const useSettings = () => {
   const context = useContext(SettingsContext);
   if (context === undefined) {
     throw new Error('useSettings must be used within a SettingsProvider');
+  }
+  if (!ALLOW_NON_EXPERT_MODE) {
+    context.settings.expertMode = true;
   }
   return context;
 };

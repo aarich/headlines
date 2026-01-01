@@ -198,7 +198,7 @@ const EMOJIS = {
   [Hint.CLUE]: '🕵',
 };
 
-export const getActionsText = (headline: Headline, gameState: GameState, isExpert: boolean) => {
+export const getActionsText = (gameState: GameState) => {
   let text =
     gameState.actions
       ?.map(action => (typeof action === 'string' ? '❌' : EMOJIS[action]))
@@ -226,11 +226,10 @@ const LEVEL_EMOJIS = [
 export const getResultText = (
   headline: Headline,
   gameState: GameState,
-  isExpert: boolean,
   score: Score | undefined, // Score could be undefined if something went wrong with storage
   levels = LEVEL_EMOJIS // for testing
 ) => {
-  let resultsText = getActionsText(headline, gameState, isExpert);
+  let resultsText = getActionsText(gameState);
 
   if (score) {
     const scores = calculateScore(gameState, score, headline);
@@ -353,3 +352,5 @@ export const formatGameDateForHeader = (createdAt?: string): string | null => {
   }
   return null;
 };
+
+export const MODAL_CLOSE_LISTENERS = new Set<() => void>();

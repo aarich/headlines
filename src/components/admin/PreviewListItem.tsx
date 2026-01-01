@@ -58,7 +58,7 @@ const PreviewListItem: React.FC<PreviewListItemProps> = ({
           <a
             href={preview.articleUrl}
             target="_blank"
-            className="hover:text-blue-500 dark:hover:text-blue-400"
+            className="hover:text-blue-500 dark:hover:text-blue-400" rel="noreferrer"
           >
             {preview.articleSite}
           </a>
@@ -66,7 +66,7 @@ const PreviewListItem: React.FC<PreviewListItemProps> = ({
           <a
             href={preview.redditUrl}
             target="_blank"
-            className="hover:text-blue-500 dark:hover:text-blue-400"
+            className="hover:text-blue-500 dark:hover:text-blue-400" rel="noreferrer"
           >
             reddit
           </a>

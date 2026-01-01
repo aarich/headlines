@@ -19,7 +19,7 @@ import {
 } from 'lib/storage';
 import { ToastProvider } from 'contexts/ToastContext';
 import Loading from 'components/common/Loading';
-import { fetchHeadlineBasedOnQueryParameters } from 'lib/ui';
+import { fetchHeadlineBasedOnQueryParameters, MODAL_CLOSE_LISTENERS } from 'lib/ui';
 import { HeadlineProvider } from 'contexts/HeadlineContext';
 
 function App() {
@@ -90,6 +90,11 @@ function App() {
 
   const showAdminButton = !!(getAdminKey() || window.location.search.includes('admin=true'));
 
+  const closeModal = useCallback((closerFn: (open: boolean) => void) => {
+    closerFn(false);
+    MODAL_CLOSE_LISTENERS.forEach(listener => listener());
+  }, []);
+
   return (
     <SettingsProvider>
       <ToastProvider>
@@ -117,13 +122,13 @@ function App() {
               </main>
               <footer className="mt-8 text-gray-500 dark:text-gray-400 text-center">
                 <p>New headline every day!</p>
-                <p>© 2025 Alex Rich</p>
+                <p>© 2025 - {new Date().getFullYear()} Alex Rich</p>
               </footer>
             </div>
-            <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-            <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
-            <StatsModal isOpen={isStatsOpen} onClose={() => setIsStatsOpen(false)} />
-            <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
+            <SettingsModal isOpen={isSettingsOpen} onClose={() => closeModal(setIsSettingsOpen)} />
+            <HelpModal isOpen={isHelpOpen} onClose={() => closeModal(setIsHelpOpen)} />
+            <StatsModal isOpen={isStatsOpen} onClose={() => closeModal(setIsStatsOpen)} />
+            <AdminModal isOpen={isAdminOpen} onClose={() => closeModal(setIsAdminOpen)} />
           </div>
         </HeadlineProvider>
       </ToastProvider>
