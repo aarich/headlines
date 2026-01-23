@@ -6,6 +6,7 @@ import {
   PreviewHeadline,
   PreviewHeadlineStatus,
   Suggestion,
+  UserHeadline,
 } from 'types';
 
 export interface PublishPreviewResult {
@@ -41,6 +42,11 @@ export interface UpdateHeadlineResult {
 
 export interface CreatePreviewResult {
   id: number;
+  message: string;
+}
+
+export interface CreateUserHeadlineResult {
+  id: string;
   message: string;
 }
 
@@ -331,6 +337,44 @@ export const deleteFromPreview = async (previewId?: number): Promise<DeletePrevi
       .json()
       .catch(() => ({ error: 'Failed to delete preview headline' }));
     throw new Error(errorData.error || `Failed to delete preview headline: ${response.statusText}`);
+  }
+  return response.json();
+};
+
+export type CreateUserHeadlinePayload = Omit<
+  EditableHeadlineFields,
+  'id' | 'possibleAnswers' | 'redditUrl'
+> & {
+  publishTime: string | null;
+  articleUrl: string | null;
+};
+
+export const createUserHeadline = async (
+  data: CreateUserHeadlinePayload
+): Promise<CreateUserHeadlineResult> => {
+  const response = await fetch(`${config.apiUrl}/api/user-headline`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const errorData = await response
+      .json()
+      .catch(() => ({ error: 'Failed to create user headline' }));
+    throw new Error(errorData.error || `Failed to create user headline: ${response.statusText}`);
+  }
+  return response.json();
+};
+
+export const getUserHeadline = async (id: string): Promise<UserHeadline> => {
+  const response = await fetch(`${config.apiUrl}/api/user-headline?id=${id}`);
+  if (!response.ok) {
+    const errorData = await response
+      .json()
+      .catch(() => ({ error: 'Failed to fetch user headline' }));
+    throw new Error(errorData.error || `Failed to fetch user headline: ${response.statusText}`);
   }
   return response.json();
 };

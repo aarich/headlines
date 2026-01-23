@@ -1,6 +1,6 @@
 # Deny access to all .php files in the api directory except those explicitly allowed
 
-<FilesMatch "^(?!(?:history|status|statistics|preview|headline|suggestions|logs)\.php$).*\.php$">
+<FilesMatch "^(?!(?:history|status|statistics|preview|headline|suggestions|logs|user-headline)\.php$).*\.php$">
     Require all denied
 </FilesMatch>
 
@@ -24,6 +24,11 @@ RewriteRule ^api/([^/]+)$ api/$1.php [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^([0-9]+)$ / [L,QSA]
+
+# Rewrite /custom/### to /?custom=### (where ### is a string)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^custom/([^/]+)$ /?custom=$1 [L,QSA]
 
 # Set headers responses
 <IfModule mod_headers.c>

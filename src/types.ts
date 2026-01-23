@@ -13,6 +13,19 @@ export interface Headline {
   redditUrl: string;
 }
 
+export interface UserHeadline {
+  id: string;
+  headline: string;
+  hint: string;
+  createdAt: string;
+  updatedAt: string;
+  correctAnswer: string;
+  articleUrl: string | undefined;
+  publishTime: string | undefined;
+  beforeBlank: string;
+  afterBlank: string;
+}
+
 export type PreviewHeadlineStatus = 'selected' | 'rejected' | 'archived' | null;
 
 export interface PreviewHeadline {

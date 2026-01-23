@@ -1,35 +1,38 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Headline, GameState } from 'types';
-import Header from 'components/Header';
-import GameContainer from 'components/game/GameContainer';
-import SettingsModal from 'components/SettingsModal';
-import HelpModal from 'components/HelpModal';
-import { recordGameStarted } from 'lib/api';
 import AdminModal from 'components/admin/AdminModal';
-import { SettingsProvider } from 'contexts/SettingsContext';
-import StatsModal from 'components/StatsModal';
 import AnimatedBackground from 'components/AnimatedBackground';
+import Loading from 'components/common/Loading';
+import CreateUserHeadlineModal from 'components/CreateUserHeadlineModal';
+import GameContainer from 'components/game/GameContainer';
+import Header from 'components/Header';
+import HelpModal from 'components/HelpModal';
+import SettingsModal from 'components/SettingsModal';
+import StatsModal from 'components/StatsModal';
+import { HeadlineProvider } from 'contexts/HeadlineContext';
+import { SettingsProvider } from 'contexts/SettingsContext';
+import { ToastProvider } from 'contexts/ToastContext';
+import { recordGameStarted } from 'lib/api';
 import {
+  getAdminKey,
   getStarted,
   getStoredGameState,
   getStoredScores,
   setStarted,
-  getAdminKey,
   storeGameState,
 } from 'lib/storage';
-import { ToastProvider } from 'contexts/ToastContext';
-import Loading from 'components/common/Loading';
 import { fetchHeadlineBasedOnQueryParameters, MODAL_CLOSE_LISTENERS } from 'lib/ui';
-import { HeadlineProvider } from 'contexts/HeadlineContext';
+import { isStandard } from 'lib/utils';
+import { useCallback, useEffect, useState } from 'react';
+import { GameState, Headline, UserHeadline } from 'types';
 
 function App() {
-  const [headline, setHeadline] = useState<Headline>();
+  const [headline, setHeadline] = useState<Headline | UserHeadline>();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isCreateUserHeadlineOpen, setIsCreateUserHeadlineOpen] = useState(false);
   const [gameState, setGameState] = useState<GameState>({});
 
   useEffect(() => {
@@ -58,7 +61,7 @@ function App() {
         // We already finished this game
         setGameState(gameState ?? { completedAt: new Date().getTime() });
       } else {
-        if (!startedGames.has(headline.id)) {
+        if (isStandard(headline) && !startedGames.has(headline.id)) {
           // only record started if we haven't already started this
           recordGameStarted(headline.id);
         }
@@ -68,7 +71,7 @@ function App() {
         }
       }
 
-      setStarted(headline.id);
+      isStandard(headline) && setStarted(headline.id);
     }
   }, [headline]);
 
@@ -106,6 +109,7 @@ function App() {
                 onSettings={() => setIsSettingsOpen(true)}
                 onHelp={() => setIsHelpOpen(true)}
                 onStats={() => setIsStatsOpen(true)}
+                onCreateUserHeadline={() => setIsCreateUserHeadlineOpen(true)}
                 onAdmin={() => setIsAdminOpen(true)}
                 showAdminButton={showAdminButton}
               />
@@ -129,6 +133,10 @@ function App() {
             <HelpModal isOpen={isHelpOpen} onClose={() => closeModal(setIsHelpOpen)} />
             <StatsModal isOpen={isStatsOpen} onClose={() => closeModal(setIsStatsOpen)} />
             <AdminModal isOpen={isAdminOpen} onClose={() => closeModal(setIsAdminOpen)} />
+            <CreateUserHeadlineModal
+              isOpen={isCreateUserHeadlineOpen}
+              onClose={() => closeModal(setIsCreateUserHeadlineOpen)}
+            />
           </div>
         </HeadlineProvider>
       </ToastProvider>

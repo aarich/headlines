@@ -299,7 +299,9 @@ function derive_before_after_and_correct_answer(string $headline, string $word_t
     ];
   } else {
     throw new Exception(
-      "The word '{$word_to_find}' (as a whole word) could not be found in the headline '{$headline}'."
+      $must_be_whole_word
+        ? "The word '{$word_to_find}' (as a whole word) could not be found in the headline '{$headline}'."
+        : "'{$word_to_find}' could not be found in the headline."
     );
   }
 }

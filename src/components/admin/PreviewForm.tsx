@@ -1,9 +1,11 @@
 import { useToast } from 'contexts/ToastContext';
 import {
   CreatePreviewHeadlinePayload,
+  CreateUserHeadlinePayload,
   EditableHeadlineFields,
   EditablePreviewHeadlineFields,
   createPreviewHeadline,
+  createUserHeadline,
   updateHeadline,
   updatePreviewHeadline,
 } from 'lib/api';
@@ -12,9 +14,9 @@ import { FormEventHandler, useCallback, useEffect, useState } from 'react';
 type PreviewFormProps = {
   initialDataForEdit?: (EditablePreviewHeadlineFields & { id: number }) | EditableHeadlineFields;
   formMode: 'create' | 'edit';
-  onSuccess: () => void;
+  onSuccess: (id: string | number | undefined) => void;
   onCancel: () => void;
-  editing?: 'preview' | 'headline';
+  editing?: 'preview' | 'headline' | 'user_headline';
 };
 
 const defaultFormData: CreatePreviewHeadlinePayload = {
@@ -106,6 +108,7 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
     const dataToSubmitWithParsedAnswers = { ...formData, possibleAnswers: finalPossibleAnswers };
 
     try {
+      let id: string | number | undefined = undefined;
       if (isEditMode && initialDataForEdit?.id) {
         let result;
         if (editing === 'headline') {
@@ -113,22 +116,35 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
             id: initialDataForEdit.id,
             ...dataToSubmitWithParsedAnswers,
           });
-        } else {
+        } else if (editing === 'preview') {
           result = await updatePreviewHeadline(
             initialDataForEdit.id,
             dataToSubmitWithParsedAnswers as EditablePreviewHeadlineFields
           );
+        } else {
+          throw new Error('Invalid editing target.');
         }
         toast(result.message || 'Updated!', 'success');
       } else if (formMode === 'create') {
-        const result = await createPreviewHeadline(
-          dataToSubmitWithParsedAnswers as CreatePreviewHeadlinePayload
-        );
+        let result;
+        if (editing === 'preview') {
+          result = await createPreviewHeadline(
+            dataToSubmitWithParsedAnswers as CreatePreviewHeadlinePayload
+          );
+          id = result.id;
+        } else if (editing === 'user_headline') {
+          result = await createUserHeadline(
+            dataToSubmitWithParsedAnswers as CreateUserHeadlinePayload
+          );
+          id = result.id;
+        } else {
+          throw new Error('Invalid creation target.');
+        }
         toast(result.message || 'Preview created!', 'success');
       } else {
         throw new Error('Invalid form mode or missing data.');
       }
-      onSuccess(); // Call the success callback
+      onSuccess?.(id);
     } catch (err: any) {
       const defaultMessage =
         formMode === 'create' ? 'Failed to create preview.' : 'Failed to save.';
@@ -168,6 +184,8 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
     [formData]
   );
 
+  const isUser = editing === 'user_headline';
+
   return (
     <form onSubmit={handleSubmit} className="space-y-3 text-gray-700 dark:text-gray-200">
       {error && (
@@ -186,6 +204,7 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
           onChange={e => handleFieldChange('headline', e.target.value)}
           className={tailwindInputClass}
           required
+          placeholder="Men Walk On Moon"
         />
       </div>
       <div>
@@ -199,6 +218,7 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
           onChange={e => handleFieldChange('correctAnswer', e.target.value)}
           className={tailwindInputClass}
           required
+          placeholder="Moon"
         />
       </div>
       <div>
@@ -211,6 +231,8 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
           value={formData.hint || ''}
           onChange={e => handleFieldChange('hint', e.target.value)}
           className={tailwindInputClass}
+          required
+          placeholder="There was already a man on it"
         />
       </div>
       <div>
@@ -223,34 +245,40 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
           value={formData.articleUrl}
           onChange={e => handleFieldChange('articleUrl', e.target.value)}
           className={tailwindInputClass}
-          required
+          required={!isUser}
+          placeholder="nyt.com/..."
         />
       </div>
-      <div>
-        <label htmlFor="redditUrl" className="block text-sm font-medium">
-          Reddit URL
-        </label>
-        <input
-          type="url"
-          id="redditUrl"
-          value={formData.redditUrl}
-          onChange={e => handleFieldChange('redditUrl', e.target.value)}
-          className={tailwindInputClass}
-          required
-        />
-      </div>
-      <div>
-        <label htmlFor="possibleAnswers" className="block text-sm font-medium">
-          Possible Answers (comma separated)
-        </label>
-        <input
-          id="possibleAnswers"
-          value={possibleAnswersText}
-          onChange={e => setPossibleAnswersText(e.target.value)}
-          className={tailwindInputClass}
-          required
-        />
-      </div>
+      {!isUser && (
+        <>
+          <div>
+            <label htmlFor="redditUrl" className="block text-sm font-medium">
+              Reddit URL
+            </label>
+            <input
+              type="url"
+              id="redditUrl"
+              value={formData.redditUrl}
+              onChange={e => handleFieldChange('redditUrl', e.target.value)}
+              className={tailwindInputClass}
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="possibleAnswers" className="block text-sm font-medium">
+              Possible Answers (comma separated)
+            </label>
+            <input
+              id="possibleAnswers"
+              value={possibleAnswersText}
+              onChange={e => setPossibleAnswersText(e.target.value)}
+              className={tailwindInputClass}
+              required
+            />
+          </div>
+        </>
+      )}
       <div>
         <label htmlFor="publishTime" className="block text-sm font-medium">
           Publish Time
@@ -261,7 +289,7 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
           value={formData.publishTime || ''}
           onChange={e => handleFieldChange('publishTime', e.target.value)}
           className={tailwindInputClass}
-          required={!isEditMode}
+          required={!isEditMode && editing !== 'user_headline'}
           pattern="\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}"
           placeholder="YYYY-MM-DD HH:MM:SS"
         />
@@ -330,7 +358,9 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
           className="btn btn-primary w-full sm:col-start-2"
           disabled={isLoading}
         >
-          {isEditMode ? 'Save Changes' : 'Create Preview'}
+          {isEditMode
+            ? 'Save Changes'
+            : `Create ${editing === 'user_headline' ? 'Leek' : 'Preview'}`}
         </button>
         <button
           type="button"

@@ -1,19 +1,22 @@
-import React, { useEffect, useState } from 'react';
 import {
-  QuestionMarkCircleIcon,
-  Cog6ToothIcon,
   Bars3Icon,
   ChartPieIcon,
+  Cog6ToothIcon,
+  PlusCircleIcon,
+  QuestionMarkCircleIcon,
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
-import { formatGameDateForHeader } from 'lib/ui';
 import { useMaybeHeadline } from 'contexts/HeadlineContext';
+import { formatGameDateForHeader } from 'lib/ui';
+import { isStandard } from 'lib/utils';
+import React, { useEffect, useState } from 'react';
 
 interface HeaderProps {
   onSettings: () => void;
   onHelp: () => void;
   onStats: () => void;
   onAdmin: () => void;
+  onCreateUserHeadline: () => void;
   showAdminButton: boolean;
 }
 
@@ -22,11 +25,12 @@ const Header: React.FC<HeaderProps> = ({
   onHelp,
   onStats,
   onAdmin,
+  onCreateUserHeadline,
   showAdminButton,
 }) => {
   const headline = useMaybeHeadline();
   const [menuOpen, setMenuOpen] = useState(false);
-  const gameDate = formatGameDateForHeader(headline?.createdAt);
+  const gameDate = formatGameDateForHeader(headline);
 
   // Close menu on navigation or outside click
   useEffect(() => {
@@ -51,6 +55,13 @@ const Header: React.FC<HeaderProps> = ({
             <ShieldCheckIcon className="w-6 h-6 text-gray-700 dark:text-gray-300" />
           </button>
         )}
+        <button
+          className="bg-transparent p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition"
+          onClick={onCreateUserHeadline}
+          aria-label="Create Custom Leek"
+        >
+          <PlusCircleIcon className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+        </button>
         <button
           className="bg-transparent p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition"
           onClick={onHelp}
@@ -106,6 +117,15 @@ const Header: React.FC<HeaderProps> = ({
               className="flex items-center gap-2 px-4 py-3 text-base text-gray-100 hover:bg-gray-800 transition text-left"
               onClick={() => {
                 setMenuOpen(false);
+                onCreateUserHeadline();
+              }}
+            >
+              <PlusCircleIcon className="w-5 h-5" /> Create
+            </button>
+            <button
+              className="flex items-center gap-2 px-4 py-3 text-base text-gray-100 hover:bg-gray-800 transition text-left"
+              onClick={() => {
+                setMenuOpen(false);
                 onHelp();
               }}
             >
@@ -138,8 +158,9 @@ const Header: React.FC<HeaderProps> = ({
         </h1>
         {headline && (
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            #{headline.gameNum}
-            {gameDate && ` • ${gameDate}`} • Edited by Alex Rich
+            {isStandard(headline)
+              ? `#${headline.gameNum} ${gameDate ? ` • ${gameDate}` : ''} • Edited by Alex Rich`
+              : `${gameDate} • Created by a Leeker`}
           </p>
         )}
       </div>

@@ -1,10 +1,9 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Hint } from 'types';
-import { useSettings } from 'contexts/SettingsContext';
-import HeadlineDisplay from './HeadlineDisplay';
-import AnswerWheel, { PLACEHOLDER_VALUE } from './AnswerWheel';
-import ExpertInput from './ExpertInput';
+import { EyeIcon, LightBulbIcon } from '@heroicons/react/24/outline';
 import ShareButtons from 'components/ShareButtons';
+import { useGameState, useHeadline } from 'contexts/HeadlineContext';
+import { useSettings } from 'contexts/SettingsContext';
+import { useToast } from 'contexts/ToastContext';
+import { recordGameCompleted } from 'lib/api';
 import {
   checkAnswer,
   countWrongGuesses,
@@ -14,13 +13,15 @@ import {
   isHintAvailable,
 } from 'lib/game';
 import { incrementStat, saveResult } from 'lib/storage';
-import { EyeIcon, LightBulbIcon } from '@heroicons/react/24/outline';
-import { useToast } from 'contexts/ToastContext';
-import { recordGameCompleted } from 'lib/api';
 import { toastWrongAnswer } from 'lib/ui';
+import { isStandard } from 'lib/utils';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Hint } from 'types';
+import AnswerWheel, { PLACEHOLDER_VALUE } from './AnswerWheel';
+import ExpertInput from './ExpertInput';
+import HeadlineDisplay from './HeadlineDisplay';
 import HintsAndGuesses from './HintsAndGuesses';
 import Suggestions from './Suggestions';
-import { useGameState, useHeadline } from 'contexts/HeadlineContext';
 
 const GameContainer: React.FC = () => {
   const [gameState, setGameState] = useGameState();
@@ -59,8 +60,11 @@ const GameContainer: React.FC = () => {
       if (!countWrongGuesses(gameState)) {
         incrementStat('firstGuessCorrectCount');
       }
-      saveResult(headline, new Date(), countWrongGuesses(gameState), expertMode);
-      recordGameCompleted(headline.id, getWrongGuesses(gameState));
+
+      if (isStandard(headline)) {
+        saveResult(headline, new Date(), countWrongGuesses(gameState), expertMode);
+        recordGameCompleted(headline.id, getWrongGuesses(gameState));
+      }
     } else {
       expertInputRef.current?.focus();
 
@@ -141,7 +145,10 @@ const GameContainer: React.FC = () => {
                 currentGuess={currentGuess}
               />
             ) : (
-              <AnswerWheel choices={headline.possibleAnswers} onSetGuess={setCurrentGuess} />
+              <AnswerWheel
+                choices={isStandard(headline) ? headline.possibleAnswers : []}
+                onSetGuess={setCurrentGuess}
+              />
             )}
           </div>
 

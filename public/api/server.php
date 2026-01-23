@@ -28,6 +28,8 @@ if (strpos($request_uri, '/api/headline') !== false) {
     require_once 'logs.php';
 } else if (strpos($request_uri, '/api/suggestions') !== false) {
     require_once 'suggestions.php';
+} else if (strpos($request_uri, '/api/user-headline') !== false) {
+    require_once 'user-headline.php';
 } else {
     http_response_code(404);
     echo json_encode(['error' => 'Not found']);

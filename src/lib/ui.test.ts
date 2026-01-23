@@ -9,7 +9,7 @@ import {
   extractHeadlineParts,
   formatGameDateForHeader,
 } from 'lib/ui';
-import { GameState, Headline, Hint, Score } from 'types';
+import { GameState, Headline, Hint, Score, UserHeadline } from 'types';
 
 // Mocks
 jest.mock('./api', () => ({
@@ -668,9 +668,11 @@ describe('ui.ts', () => {
   describe('formatGameDateForHeader', () => {
     const MOCKED_NOW_DATE = new Date('2025-07-11T12:00:00');
 
-    const toDateTimeString = (date: Date) => {
-      return date.toISOString().slice(0, 19).replace('T', ' ');
-    };
+    const toHeadline = (date: Date, shouldBeStandard: boolean): Headline | UserHeadline =>
+      ({
+        id: shouldBeStandard ? 1 : 'a',
+        createdAt: date.toISOString().slice(0, 19).replace('T', ' '),
+      }) as Headline | UserHeadline;
 
     beforeEach(() => {
       jest.useFakeTimers();
@@ -681,21 +683,26 @@ describe('ui.ts', () => {
       jest.useRealTimers();
     });
 
-    it("should return null for today's date", () => {
+    it("should return null for today's date for standard headline", () => {
       const today = new Date(MOCKED_NOW_DATE);
-      expect(formatGameDateForHeader(toDateTimeString(today))).toBeNull();
+      expect(formatGameDateForHeader(toHeadline(today, true))).toBeNull();
+    });
+
+    it("should return today's formatted date for user headline", () => {
+      const today = new Date(MOCKED_NOW_DATE);
+      expect(formatGameDateForHeader(toHeadline(today, false))).toBe('Jul 11, 2025');
     });
 
     it('should return formatted date for yesterday', () => {
       const yesterday = new Date(MOCKED_NOW_DATE);
       yesterday.setDate(yesterday.getDate() - 1);
-      expect(formatGameDateForHeader(toDateTimeString(yesterday))).toBe('Jul 10, 2025');
+      expect(formatGameDateForHeader(toHeadline(yesterday, true))).toBe('Jul 10, 2025');
     });
 
     it('should return null for a future date', () => {
       const tomorrow = new Date(MOCKED_NOW_DATE);
       tomorrow.setDate(tomorrow.getDate() + 1);
-      expect(formatGameDateForHeader(toDateTimeString(tomorrow))).toBeNull();
+      expect(formatGameDateForHeader(toHeadline(tomorrow, true))).toBeNull();
     });
 
     it('should return null for an undefined date', () => {
@@ -707,7 +714,7 @@ describe('ui.ts', () => {
       lastYear.setFullYear(lastYear.getFullYear() - 1);
       lastYear.setMonth(5); // June
       lastYear.setDate(15);
-      expect(formatGameDateForHeader(toDateTimeString(lastYear))).toBe('Jun 15, 2024');
+      expect(formatGameDateForHeader(toHeadline(lastYear, true))).toBe('Jun 15, 2024');
     });
   });
 });

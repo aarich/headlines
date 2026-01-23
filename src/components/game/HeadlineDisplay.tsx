@@ -89,13 +89,15 @@ const HeadlineDisplay: React.FC<HeadlineDisplayProps> = ({ currentGuess, isGameO
             </div>
             <div>{afterBlank}</div>
           </div>
-          <div
-            className="text-sm text-gray-500 dark:text-gray-400 mt-2"
-            title="Complete the game to visit the article"
-          >
-            <GlobeAltIcon className="w-5 h-5 inline-block mr-1" viewBox="0 0 24 24" />
-            {getDomainFromUrl(headline.articleUrl)}
-          </div>
+          {headline.articleUrl && (
+            <div
+              className="text-sm text-gray-500 dark:text-gray-400 mt-2"
+              title="Complete the game to visit the article"
+            >
+              <GlobeAltIcon className="w-5 h-5 inline-block mr-1" viewBox="0 0 24 24" />
+              {getDomainFromUrl(headline.articleUrl)}
+            </div>
+          )}
         </>
       )}
     </div>

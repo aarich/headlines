@@ -22,6 +22,19 @@ CREATE TABLE headline (
     FULLTEXT INDEX idx_headline (headline)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE user_headline (
+    id VARCHAR(6) PRIMARY KEY,
+    headline TEXT NOT NULL,
+    before_blank TEXT NOT NULL,
+    after_blank TEXT NOT NULL,
+    hint TEXT NOT NULL,
+    article_url TEXT NOT NULL,
+    correct_answer VARCHAR(255) NOT NULL,
+    publish_time DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
  CREATE TABLE headline_preview (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     headline TEXT NOT NULL,
@@ -415,4 +428,27 @@ function promotePreview($previewData, bool $override_created_at) {
     }
 
     return false;
+}
+
+function getUserHeadline($id) {
+    $db = getDbConnection();
+    $stmt = $db->prepare('SELECT * FROM user_headline WHERE id = ?');
+    $stmt->execute([$id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+function createUserHeadline($headline, $before_blank, $after_blank, $hint, $article_url, $correct_answer, $publish_time) {
+    $db = getDbConnection();
+
+    // generate 6 character alpha id
+    $chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    $id = "";
+    for ($i = 0; $i < 6; $i++) {
+        $id .= $chars[rand(0, strlen($chars) - 1)];
+    }
+
+    $stmt = $db->prepare('INSERT INTO user_headline (id, headline, before_blank, after_blank, hint, article_url, correct_answer, publish_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    $stmt->execute([$id, $headline, $before_blank, $after_blank, $hint, $article_url, $correct_answer, $publish_time]);
+
+    return $id;
 }

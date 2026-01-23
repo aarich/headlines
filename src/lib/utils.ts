@@ -1,3 +1,5 @@
+import { Headline, UserHeadline } from 'types';
+
 export const clamp = (val: number, min: number, max: number): number =>
   Math.max(min, Math.min(val, max));
 
@@ -12,3 +14,6 @@ export const getDomainFromUrl = (url: string): string => {
     return url;
   }
 };
+
+export const isStandard = (headline: Headline | UserHeadline): headline is Headline =>
+  typeof headline.id === 'number';

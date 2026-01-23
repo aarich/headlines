@@ -104,14 +104,14 @@ const handleGameStateSchemaChanges = (
   return newGameStates;
 };
 
-export const getStoredGameState = (id: number): GameState | undefined => {
+export const getStoredGameState = (id: number | string): GameState | undefined => {
   const gameStates = localStorage.getItem(STORAGE_KEYS.GAME_STATE);
   if (!gameStates) return undefined;
   const parsed = handleGameStateSchemaChanges(JSON.parse(gameStates));
   return parsed[`${id}`];
 };
 
-export const storeGameState = (id: number, gameState: GameState): void => {
+export const storeGameState = (id: number | string, gameState: GameState): void => {
   let allGameStates: Record<string, GameState> = {};
 
   const currentStoredGameStates = localStorage.getItem(STORAGE_KEYS.GAME_STATE);

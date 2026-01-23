@@ -3,12 +3,16 @@ import { useToast } from 'contexts/ToastContext';
 import { createSuggestion, getGameSuggestions, voteForSuggestion } from 'lib/api';
 import { formatSuggestionCasing, toastSuccessfulSuggestion } from 'lib/ui';
 import React, { useEffect, useState } from 'react';
-import { Suggestion, SUGGESTION_SKIPPED } from 'types';
+import { Headline, Suggestion, SUGGESTION_SKIPPED } from 'types';
 import { useGameState, useHeadline } from '../../contexts/HeadlineContext';
 
 const Suggestions: React.FC = () => {
   const [gameState, setGameState] = useGameState();
-  const headline = useHeadline();
+  // TODO if REACT_APP_SHOW_SUGGESTIONS is enabled this needs to be updated (remove "as Headline")
+  if (!process.env.REACT_APP_SHOW_SUGGESTIONS) {
+    throw new Error('Unsupported!');
+  }
+  const headline = useHeadline() as Headline;
   const [suggestionText, setSuggestionText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);

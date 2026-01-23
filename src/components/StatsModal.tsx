@@ -3,6 +3,7 @@ import { useGameState, useMaybeHeadline } from 'contexts/HeadlineContext';
 import { getCurrentStreak } from 'lib/scoring';
 import { getStoredScores, getStoredStats, saveStats } from 'lib/storage';
 import { plural } from 'lib/ui';
+import { isStandard } from 'lib/utils';
 import { useEffect, useMemo } from 'react';
 import HistoryList from './HistoryList';
 
@@ -17,9 +18,10 @@ const StatsModal: React.FC<StatsModalProps> = ({ isOpen, onClose }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const [scores, stats] = useMemo(() => [getStoredScores(), getStoredStats()], [completedAt]);
 
-  const currentStreak = headline
-    ? getCurrentStreak(Object.values(scores), headline.gameNum - 1)
-    : undefined;
+  const currentStreak =
+    headline && isStandard(headline)
+      ? getCurrentStreak(Object.values(scores), headline.gameNum - 1)
+      : undefined;
 
   const totalCompleted = Object.keys(scores).length;
 

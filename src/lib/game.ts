@@ -1,4 +1,4 @@
-import { GameState, Headline, Hint, Score } from 'types';
+import { GameState, Headline, Hint, Score, UserHeadline } from 'types';
 
 export const CLUE_PENALTY = 10;
 export const WRONG_GUESS_PENALTY = 3;
@@ -76,7 +76,7 @@ export const getHintPrompt = (
 export const isHintAvailable = (
   isExpert: boolean,
   gameState: GameState,
-  headline: Headline,
+  headline: Headline | UserHeadline,
   hintType: Hint
 ) => {
   switch (hintType) {
@@ -95,13 +95,17 @@ export const isHintAvailable = (
  * CLUE: CLUE_PENALTY
  * CHAR: 100/min(answer length, 6)
  */
-export const getHintPenalty = ({ correctAnswer }: Headline, hintType: Hint) =>
+export const getHintPenalty = ({ correctAnswer }: Headline | UserHeadline, hintType: Hint) =>
   hintType === Hint.CHAR ? Math.round(100 / Math.min(correctAnswer.length, 6)) : CLUE_PENALTY;
 
 /**
  * Return a score out of 100
  */
-export const calculateScore = (gameState: GameState, score: Score, headline: Headline) => {
+export const calculateScore = (
+  gameState: GameState,
+  score: Score,
+  headline: Headline | UserHeadline
+) => {
   const { e: isExpert, g: numWrongGuesses } = score;
   const hintsUsed = getHints(gameState);
   const numCharHints = hintsUsed.filter(hint => hint === Hint.CHAR).length;

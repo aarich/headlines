@@ -1,8 +1,9 @@
 import { ToastType } from 'components/Toast';
 import { DEFAULT_TOAST_DURATION, ToastFn } from 'contexts/ToastContext';
-import { GameState, Headline, Hint, Score } from 'types';
-import { fetchHeadline, GetHeadlineArgs, recordShare } from 'lib/api';
+import { fetchHeadline, GetHeadlineArgs, getUserHeadline, recordShare } from 'lib/api';
 import { calculateScore } from 'lib/game';
+import { isStandard } from 'lib/utils';
+import { GameState, Headline, Hint, Score, UserHeadline } from 'types';
 
 export const plural = (count: number, singular: string, suffix = 's'): string =>
   `${singular}${count === 1 ? '' : suffix}`;
@@ -163,9 +164,16 @@ const validateNumParameter = <T extends string>(
   return { [name]: Number(value) } as { [key in T]?: number };
 };
 
-export const fetchHeadlineBasedOnQueryParameters = async () => {
-  // First check if the url is like xxx.com/###
+export const fetchHeadlineBasedOnQueryParameters = async (): Promise<Headline | UserHeadline> => {
   const url = new URL(window.location.href);
+  // First check if the url is like xxx.com/custom/###
+  if (url.pathname.startsWith('/custom/')) {
+    const id = url.pathname.slice('/custom/'.length);
+    if (id) {
+      return await getUserHeadline(id);
+    }
+  }
+  // check if the url is xxx.com/###
   if (url.pathname.length > 1) {
     const game = Number(url.pathname.slice(1));
     if (!isNaN(game)) {
@@ -178,9 +186,14 @@ export const fetchHeadlineBasedOnQueryParameters = async () => {
 
   const hasId = urlParams.has('id');
   const hasGame = urlParams.has('game');
+  const hasCustom = urlParams.has('custom');
 
   if (hasId && hasGame) {
     throw new Error("Unsupported URL. Only one of 'id' or 'game' should be provided.");
+  }
+
+  if ((hasId || hasGame) && hasCustom) {
+    throw new Error('Unsupported URL. Cannot specify standard headline with custom headline');
   }
 
   let args: GetHeadlineArgs = {};
@@ -188,6 +201,8 @@ export const fetchHeadlineBasedOnQueryParameters = async () => {
     args = validateNumParameter(urlParams, 'id');
   } else if (hasGame) {
     args = validateNumParameter(urlParams, 'game');
+  } else if (hasCustom) {
+    return await getUserHeadline(urlParams.get('custom')!);
   }
 
   return await fetchHeadline(args);
@@ -224,7 +239,7 @@ const LEVEL_EMOJIS = [
 ];
 
 export const getResultText = (
-  headline: Headline,
+  headline: Headline | UserHeadline,
   gameState: GameState,
   score: Score | undefined, // Score could be undefined if something went wrong with storage
   levels = LEVEL_EMOJIS // for testing
@@ -245,17 +260,21 @@ export const getResultText = (
 
 export const shareScore = (
   resultsText: string,
-  headline: Headline,
+  headline: Headline | UserHeadline,
   toast: ToastFn,
   forceCopy: boolean = false
 ): void => {
   const blankedHeadline = headline.beforeBlank + '[???]' + headline.afterBlank;
-  const shareText = `Leek #${headline.gameNum} found: ${blankedHeadline}\n\n${window.location.href}\n\n${resultsText}`;
+  const details = `${blankedHeadline}\n\n${window.location.href}\n\n${resultsText}`;
+
+  const shareText = isStandard(headline)
+    ? `Leek #${headline.gameNum} found: ${details}`
+    : `Leek found: ${details}`;
 
   if (navigator.share && !forceCopy) {
     navigator
       .share({ text: shareText })
-      .then(() => recordShare(headline.id))
+      .then(() => isStandard(headline) && recordShare(headline.id))
       .catch(error => error.name !== 'AbortError' && console.error(error));
   } else {
     navigator.clipboard.writeText(shareText);
@@ -331,19 +350,21 @@ export const extractHeadlineParts = (initialBeforeBlank: string, initialAfterBla
  * @param createdAt The date string in "YYYY-MM-DD HH:MM:SS" format.
  * @returns A formatted date string (e.g., "July 10, 2025") or null.
  */
-export const formatGameDateForHeader = (createdAt?: string): string | null => {
-  if (!createdAt) {
+export const formatGameDateForHeader = (
+  headline: Headline | UserHeadline | undefined
+): string | null => {
+  if (!headline?.createdAt) {
     return null;
   }
   // Handles "YYYY-MM-DD HH:MM:SS" format, assuming it's in local time.
-  const gameDate = new Date(createdAt.replace(' ', 'T'));
+  const gameDate = new Date(headline.createdAt.replace(' ', 'T'));
 
   const today = new Date();
   // Set today to the beginning of the day in local time.
   today.setHours(0, 0, 0, 0);
 
-  // We only want to show the date if the game date is before the start of today.
-  if (gameDate.getTime() < today.getTime()) {
+  // We only want to show the date if the game date is before the start of today OR it's a user headline
+  if (!isStandard(headline) || gameDate.getTime() < today.getTime()) {
     return gameDate.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
