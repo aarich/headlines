@@ -26,7 +26,8 @@ try {
         $publish_time = $input['publishTime'] ?? null;
         $before_blank = $input['beforeBlank'] ?? null;
         $after_blank = $input['afterBlank'] ?? null;
-        if (!$before_blank || !$after_blank) {
+        // if before_blank or after_blank are not provided, try to derive them
+        if (!isset($input['beforeBlank']) || !isset($input['afterBlank'])) {
             $blankFields = derive_before_after_and_correct_answer($headline, $correct_answer, false);
             $before_blank = $blankFields['before_blank'];
             $after_blank = $blankFields['after_blank'];

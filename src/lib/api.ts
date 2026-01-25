@@ -342,8 +342,8 @@ export const deleteFromPreview = async (previewId?: number): Promise<DeletePrevi
 };
 
 export type CreateUserHeadlinePayload = Omit<
-  EditableHeadlineFields,
-  'id' | 'possibleAnswers' | 'redditUrl'
+  EditablePreviewHeadlineFields,
+  'id' | 'possibleAnswers' | 'redditUrl' | 'status'
 > & {
   publishTime: string | null;
   articleUrl: string | null;
