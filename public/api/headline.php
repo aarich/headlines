@@ -145,7 +145,9 @@ try {
             'redditUrl' => 'reddit_url',
             'correctAnswer' => 'correct_answer',
             'publishTime' => 'publish_time',
-            'possibleAnswers' => 'possible_answers'
+            'possibleAnswers' => 'possible_answers',
+            'beforeBlank' => 'before_blank',
+            'afterBlank' => 'after_blank'
         ];
 
         $setClauses = [];

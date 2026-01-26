@@ -198,7 +198,11 @@ const CreateUserHeadlineModal: React.FC<CreateUserHeadlineModalProps> = ({ isOpe
               <button className="px-4 py-2 text-gray-700 bg-gray-200 rounded" onClick={onBack}>
                 Back
               </button>
-              <button className="px-4 py-2 text-white bg-blue-600 rounded" onClick={onNext}>
+              <button
+                className="px-4 py-2 text-white bg-blue-600 rounded disabled:bg-gray-400"
+                onClick={onNext}
+                disabled={!hint.trim()}
+              >
                 Next
               </button>
             </div>
@@ -240,7 +244,7 @@ const CreateUserHeadlineModal: React.FC<CreateUserHeadlineModalProps> = ({ isOpe
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Create Custom Leek" mdSize="3xl">
-      <div className="p-6">{renderStep()}</div>
+      <div className="p-1">{renderStep()}</div>
     </Modal>
   );
 };
