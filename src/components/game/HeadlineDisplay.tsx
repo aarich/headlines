@@ -3,7 +3,7 @@ import { useHeadline } from 'contexts/HeadlineContext';
 import { useSettings } from 'contexts/SettingsContext';
 import { extractHeadlineParts, MODAL_CLOSE_LISTENERS } from 'lib/ui';
 import { getDomainFromUrl } from 'lib/utils';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 import { PLACEHOLDER_VALUE } from './AnswerWheel';
 import GuessDisplay from './GuessDisplay';
 import SolvedHeadlineDisplay from './SolvedHeadlineDisplay';
@@ -13,7 +13,7 @@ interface HeadlineDisplayProps {
   isGameOver: boolean;
 }
 
-const HeadlineDisplay: React.FC<HeadlineDisplayProps> = ({ currentGuess, isGameOver }) => {
+const HeadlineDisplay: React.FC<HeadlineDisplayProps> = memo(({ currentGuess, isGameOver }) => {
   const headline = useHeadline();
   const { expertMode } = useSettings().settings;
   const [showTooltip, setShowTooltip] = useState(false);
@@ -102,6 +102,6 @@ const HeadlineDisplay: React.FC<HeadlineDisplayProps> = ({ currentGuess, isGameO
       )}
     </div>
   );
-};
+});
 
 export default HeadlineDisplay;

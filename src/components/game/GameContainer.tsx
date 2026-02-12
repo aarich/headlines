@@ -15,7 +15,7 @@ import {
 import { incrementStat, saveResult } from 'lib/storage';
 import { toastWrongAnswer } from 'lib/ui';
 import { isStandard } from 'lib/utils';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { Hint } from 'types';
 import AnswerWheel, { PLACEHOLDER_VALUE } from './AnswerWheel';
 import ExpertInput from './ExpertInput';
@@ -27,9 +27,18 @@ const GameContainer: React.FC = () => {
   const [gameState, setGameState] = useGameState();
   const headline = useHeadline();
   const { expertMode } = useSettings().settings;
-  const [currentGuess, setCurrentGuess] = useState('');
+  const [inputValue, setInputValue] = useState('');
+  const [displayGuess, setDisplayGuess] = useState('');
+  const [, startTransition] = useTransition();
   const expertInputRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
+
+  const handleSetGuess = useCallback((val: string) => {
+    setInputValue(val);
+    startTransition(() => {
+      setDisplayGuess(val);
+    });
+  }, []);
 
   useEffect(() => {
     if (gameState.completedAt) {
@@ -50,11 +59,11 @@ const GameContainer: React.FC = () => {
   }, [gameState.completedAt, toast]);
 
   const handleGuess = useCallback(() => {
-    if (!currentGuess) return;
-    const isCorrect = checkAnswer(currentGuess, headline.correctAnswer);
+    if (!inputValue) return;
+    const isCorrect = checkAnswer(inputValue, headline.correctAnswer);
 
     if (isCorrect) {
-      setCurrentGuess(headline.correctAnswer);
+      handleSetGuess(headline.correctAnswer);
       setGameState(prev => ({ ...prev, correct: true, completedAt: Date.now() }));
       incrementStat('totalPlays');
       if (!countWrongGuesses(gameState)) {
@@ -68,7 +77,7 @@ const GameContainer: React.FC = () => {
     } else {
       expertInputRef.current?.focus();
 
-      if (getWrongGuesses(gameState).find(g => g === currentGuess)) {
+      if (getWrongGuesses(gameState).find(g => g === inputValue)) {
         toast('Already guessed!', 'warning');
         return;
       } else {
@@ -77,22 +86,29 @@ const GameContainer: React.FC = () => {
       incrementStat('totalIncorrectGuesses');
       setGameState(({ actions = [], ...rest }) => ({
         ...rest,
-        actions: [...actions, currentGuess],
+        actions: [...actions, inputValue],
       }));
       if (expertMode) {
-        setCurrentGuess('');
+        handleSetGuess('');
       }
     }
-  }, [currentGuess, gameState, headline, setGameState, expertMode, toast]);
+  }, [inputValue, gameState, headline, setGameState, expertMode, toast, handleSetGuess]);
+
+  const handleGuessRef = useRef(handleGuess);
+  handleGuessRef.current = handleGuess;
 
   useEffect(() => {
     if (!gameState.completedAt) {
-      const handleKeyPress = ({ key }: { key: string }) => key === 'Enter' && handleGuess();
+      const handleKeyPress = (e: KeyboardEvent) => {
+        if (e.key === 'Enter') {
+          handleGuessRef.current();
+        }
+      };
 
       window.addEventListener('keydown', handleKeyPress);
       return () => window.removeEventListener('keydown', handleKeyPress);
     }
-  }, [handleGuess, gameState.completedAt]);
+  }, [gameState.completedAt]);
 
   const onHintClick = useCallback(
     (hintType: Hint) => {
@@ -106,9 +122,9 @@ const GameContainer: React.FC = () => {
 
   useEffect(() => {
     if (expertMode) {
-      setCurrentGuess('');
+      handleSetGuess('');
     }
-  }, [expertMode]);
+  }, [expertMode, handleSetGuess]);
 
   const renderHintButton = (hintType: Hint) => {
     return (
@@ -135,19 +151,19 @@ const GameContainer: React.FC = () => {
   return (
     <>
       <section className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-4 sm:p-8 w-full max-w-4xl mx-auto">
-        <HeadlineDisplay currentGuess={currentGuess} isGameOver={!!gameState.completedAt} />
+        <HeadlineDisplay currentGuess={displayGuess} isGameOver={!!gameState.completedAt} />
         <div className="flex flex-col items-center w-full">
           <div className="w-full flex justify-center">
             {gameState.completedAt ? null : expertMode ? (
               <ExpertInput
                 ref={expertInputRef}
-                onSetGuess={setCurrentGuess}
-                currentGuess={currentGuess}
+                onSetGuess={handleSetGuess}
+                currentGuess={inputValue}
               />
             ) : (
               <AnswerWheel
                 choices={isStandard(headline) ? headline.possibleAnswers : []}
-                onSetGuess={setCurrentGuess}
+                onSetGuess={handleSetGuess}
               />
             )}
           </div>
@@ -163,7 +179,7 @@ const GameContainer: React.FC = () => {
               <button
                 className="justify-self-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                 onClick={handleGuess}
-                disabled={!currentGuess || currentGuess === PLACEHOLDER_VALUE}
+                disabled={!inputValue || inputValue === PLACEHOLDER_VALUE}
               >
                 Submit
               </button>

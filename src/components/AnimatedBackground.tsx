@@ -112,7 +112,8 @@ const AnimatedBackground: React.FC = () => {
       style={
         {
           animation: `cycleHue ${ANIMATION_CONFIG.colorChangeDuration}s linear infinite`,
-          ['--animated-hue-value' as string]: ANIMATION_CONFIG.baseHue, // Initial value
+          '--base-hue': ANIMATION_CONFIG.baseHue,
+          '--hue-range': ANIMATION_CONFIG.hueRange,
         } as React.CSSProperties
       }
     >
@@ -126,21 +127,26 @@ const AnimatedBackground: React.FC = () => {
               top: `${onion.y}%`,
               width: `${onion.size}px`,
               height: `${onion.size}px`,
-              animation: `
-                float ${onion.floatDuration}s ease-in-out infinite,
-                move ${onion.moveDuration}s ease-in-out infinite
-              `,
-              '--float-distance': `-${onion.floatDistance}px`,
+              animation: `move ${onion.moveDuration}s ease-in-out infinite`,
               '--move-distance': `${onion.moveDistance}px`,
               '--move-angle': `${onion.moveAngle}deg`,
               willChange: 'transform',
             } as React.CSSProperties
           }
         >
-          {/* Halo layers */}
-          {Array.from({ length: ANIMATION_CONFIG.haloLayers }).map((_, index) => (
+          {/* Float wrapper - separates vertical oscillation from the path movement */}
+          <div
+            className="w-full h-full"
+            style={
+              {
+                animation: `float ${onion.floatDuration}s ease-in-out infinite`,
+                '--float-distance': `-${onion.floatDistance}px`,
+                willChange: 'transform',
+              } as React.CSSProperties
+            }
+          >
+            {/* Consolidated Glow/Halo effect - reduced layers for performance */}
             <div
-              key={`halo-${index}`}
               className="absolute"
               style={{
                 width: `${ANIMATION_CONFIG.haloBaseSize}px`,
@@ -149,87 +155,64 @@ const AnimatedBackground: React.FC = () => {
                 top: '50%',
                 transform: 'translate(-50%, -50%)',
                 background: `radial-gradient(circle, 
-                  ${ANIMATION_CONFIG.haloColors[index]} 0%,
+                  hsla(var(--animated-hue-value), 100%, 70%, 0.5) 0%,
+                  hsla(var(--animated-hue-value), 100%, 70%, 0.2) 40%,
                   transparent 70%
                 )`,
                 animation: `pulse ${ANIMATION_CONFIG.haloPulseDuration}s ease-in-out infinite`,
-                filter: 'blur(15px)',
+                filter: 'blur(12px)',
                 zIndex: 0,
-                opacity: 0.7,
-                mixBlendMode: 'screen',
-                willChange: 'transform, opacity, filter',
+                willChange: 'transform, opacity',
               }}
             />
-          ))}
 
-          {/* Glow effect */}
-          <div
-            className="absolute"
-            style={{
-              width: `${ANIMATION_CONFIG.glowSize}px`,
-              height: `${ANIMATION_CONFIG.glowSize}px`,
-              left: '50%',
-              top: '50%',
-              transform: 'translate(-50%, -50%)',
-              background: `radial-gradient(circle, 
-                hsla(var(--animated-hue-value), 70%, ${isDarkMode ? '80%' : '60%'}, ${ANIMATION_CONFIG.glowIntensity}) 0%,
-                hsla(var(--animated-hue-value), 70%, ${isDarkMode ? '80%' : '60%'}, 0) 70%
-              )`,
-              animation: `pulse ${ANIMATION_CONFIG.pulseDuration}s ease-in-out infinite`,
-              filter: `blur(8px)`,
-              willChange: 'transform, opacity, filter',
-              zIndex: 1,
-            }}
-          />
-
-          {/* Onion image with rotation */}
-          <div
-            className="absolute z-10"
-            style={
-              {
-                width: '100%',
-                height: '100%',
-                left: '50%',
-                top: '50%',
-                transform: `translate(-50%, -50%)`,
-                animation: `rotate ${onion.rotationDuration}s linear infinite`,
-                filter: `
-                hue-rotate(calc(var(--animated-hue-value) * 1deg))
-                drop-shadow(0 0 8px rgba(255, 255, 255, 0.2))
-                ${isDarkMode ? 'brightness(1.1) invert(0.6)' : 'brightness(0.7) invert(0.15)'}
-              `,
-                ['--rotation-direction' as string]: onion.rotationDirection,
-                willChange: 'transform, filter',
-              } as React.CSSProperties
-            }
-          >
-            <img
-              src={onionSvg}
-              alt="Floating onion"
-              className="w-full h-full object-contain"
-              style={{
-                opacity: isDarkMode ? 0.6 : 0.4,
-              }}
-            />
+            {/* Onion image with its own rotation animation */}
+            <div
+              className="absolute z-10 w-full h-full"
+              style={
+                {
+                  left: '50%',
+                  top: '50%',
+                  transform: `translate(-50%, -50%)`,
+                  animation: `rotate ${onion.rotationDuration}s linear infinite`,
+                  filter: `
+                    hue-rotate(calc(var(--animated-hue-value) * 1deg))
+                    drop-shadow(0 0 4px rgba(255, 255, 255, 0.15))
+                    ${isDarkMode ? 'brightness(1.1) invert(0.6)' : 'brightness(0.7) invert(0.15)'}
+                  `,
+                  ['--rotation-direction' as string]: onion.rotationDirection,
+                  willChange: 'transform, filter',
+                } as React.CSSProperties
+              }
+            >
+              <img
+                src={onionSvg}
+                alt="Floating onion"
+                className="w-full h-full object-contain"
+                style={{
+                  opacity: isDarkMode ? 0.6 : 0.4,
+                }}
+              />
+            </div>
           </div>
         </div>
       ))}
 
       <style>
         {`
+          @property --animated-hue-value {
+            syntax: '<number>';
+            initial-value: ${ANIMATION_CONFIG.baseHue};
+            inherits: true;
+          }
+
           @keyframes float {
-            0%, 100% {
-              transform: translateY(0);
-            }
-            50% {
-              transform: translateY(var(--float-distance));
-            }
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(var(--float-distance)); }
           }
 
           @keyframes move {
-            0%, 100% {
-              transform: translate(0, 0);
-            }
+            0%, 100% { transform: translate(0, 0); }
             50% {
               transform: translate(
                 calc(cos(var(--move-angle)) * var(--move-distance)),
@@ -239,32 +222,24 @@ const AnimatedBackground: React.FC = () => {
           }
 
           @keyframes rotate {
-            from {
-              transform: translate(-50%, -50%) rotate(0deg);
-            }
-            to {
-              transform: translate(-50%, -50%) rotate(calc(360deg * var(--rotation-direction)));
-            }
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(calc(360deg * var(--rotation-direction))); }
           }
 
           @keyframes pulse {
             0%, 100% {
-              opacity: 0.7;
+              opacity: 0.6;
               transform: translate(-50%, -50%) scale(1);
             }
             50% {
-              opacity: 0.3;
-              transform: translate(-50%, -50%) scale(1.5);
+              opacity: 0.2;
+              transform: translate(-50%, -50%) scale(1.3);
             }
           }
 
           @keyframes cycleHue {
-            from {
-              --animated-hue-value: ${ANIMATION_CONFIG.baseHue};
-            }
-            to {
-              --animated-hue-value: ${ANIMATION_CONFIG.baseHue + ANIMATION_CONFIG.hueRange};
-            }
+            from { --animated-hue-value: var(--base-hue); }
+            to { --animated-hue-value: calc(var(--base-hue) + var(--hue-range)); }
           }
         `}
       </style>

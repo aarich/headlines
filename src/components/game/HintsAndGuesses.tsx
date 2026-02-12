@@ -1,9 +1,9 @@
 import { getWrongGuesses } from 'lib/game';
-import React from 'react';
+import React, { memo } from 'react';
 import { Hint } from 'types';
 import { useGameState, useHeadline } from '../../contexts/HeadlineContext';
 
-const HintsAndGuesses: React.FC = () => {
+const HintsAndGuesses: React.FC = memo(() => {
   const [gameState] = useGameState();
   const headline = useHeadline();
   const wrongGuesses = getWrongGuesses(gameState);
@@ -41,6 +41,6 @@ const HintsAndGuesses: React.FC = () => {
       )}
     </>
   );
-};
+});
 
 export default HintsAndGuesses;

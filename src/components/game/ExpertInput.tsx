@@ -1,12 +1,12 @@
-import { forwardRef } from 'react';
+import { forwardRef, memo } from 'react';
 
 interface ExpertInputProps {
   onSetGuess: (guess: string) => void;
   currentGuess: string;
 }
 
-const ExpertInput = forwardRef<HTMLInputElement, ExpertInputProps>(
-  ({ onSetGuess, currentGuess }, ref) => {
+const ExpertInput = memo(
+  forwardRef<HTMLInputElement, ExpertInputProps>(({ onSetGuess, currentGuess }, ref) => {
     return (
       <input
         ref={ref}
@@ -21,7 +21,7 @@ const ExpertInput = forwardRef<HTMLInputElement, ExpertInputProps>(
             bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-center"
       />
     );
-  }
+  })
 );
 
 ExpertInput.displayName = 'ExpertInput';
