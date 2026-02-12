@@ -1,3 +1,4 @@
+import { ALLOW_NON_EXPERT_MODE } from 'contexts/SettingsContext';
 import { useToast } from 'contexts/ToastContext';
 import {
   CreatePreviewHeadlinePayload,
@@ -239,18 +240,20 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
           required
         />
       </div>
-      <div>
-        <label htmlFor="possibleAnswers" className="block text-sm font-medium">
-          Possible Answers (comma separated)
-        </label>
-        <input
-          id="possibleAnswers"
-          value={possibleAnswersText}
-          onChange={e => setPossibleAnswersText(e.target.value)}
-          className={tailwindInputClass}
-          required
-        />
-      </div>
+      {ALLOW_NON_EXPERT_MODE && (
+        <div>
+          <label htmlFor="possibleAnswers" className="block text-sm font-medium">
+            Possible Answers (comma separated)
+          </label>
+          <input
+            id="possibleAnswers"
+            value={possibleAnswersText}
+            onChange={e => setPossibleAnswersText(e.target.value)}
+            className={tailwindInputClass}
+            required
+          />
+        </div>
+      )}
       <div>
         <label htmlFor="publishTime" className="block text-sm font-medium">
           Publish Time

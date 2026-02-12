@@ -61,13 +61,13 @@ try {
 
     $headline = $previewData['headline'];
     $word_to_remove = $previewData['correct_answer'];
-    $replacements = json_decode($previewData['possible_answers'], true);
+    $replacements = [];
     $hint = $previewData['hint'];
 
     $previews_simplified[] = [
       'headline' => $headline,
       'word_to_remove' => $word_to_remove,
-      'replacements' => $replacements['answers'],
+      'replacements' => $replacements,
       'hint' => $hint
     ];
   }
@@ -103,7 +103,7 @@ try {
     // Extract data from the LLM response
     $headline = $final_choice_data['headline'];
     $correct_answer = $final_choice_data['word_to_remove'];
-    $possible_answers = ['answers' => $final_choice_data['replacements']];
+    $possible_answers = ['answers' => []];
     $hint = $final_choice_data['hint'];
 
     // Match with original preview data and extract additional info. There could be multiple for the same headline, but we will overwrite the generated values anyway.

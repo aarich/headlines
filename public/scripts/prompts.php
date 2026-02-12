@@ -15,12 +15,6 @@ $core_rules = "
         - Should be the 'shocking' or 'key' part of the headline.
     </rule>
     <rule>The Blank: Removing the word must create suspense. Avoid blanks where the answer is obvious contextually.</rule>
-    <rule>Alternatives:
-        - Must be single words.
-        - Must be grammatically correct replacements.
-        - Must NOT be literally impossible (e.g., 'unicorn' is bad if owning it is impossible, but 'heels' is good if it's just unlikely).
-        - Should be equally absurd/funny as the real answer.
-    </rule>
 </rules>
 ";
 
@@ -30,25 +24,11 @@ $few_shot_examples = "
         <headline>Newly selected pope revealed to own a restaurant</headline>
         <word_to_remove>restaurant</word_to_remove>
         <reasoning>Removing 'restaurant' creates a fun blank. 'Newly selected pope revealed to own a [blank]' invites funny guesses.</reasoning>
-        <replacements>
-            <item>Lamborghini</item>
-            <item>thong</item>
-            <item>slave</item>
-            <item>brothel</item>
-            <item>toddler</item>
-        </replacements>
     </example>
     <example>
         <headline>Man eats 85 sugar cubes</headline>
         <word_to_remove>sugar</word_to_remove>
         <reasoning>'Sugar' is the key noun. Removing '85' would be a bad choice as numbers are impossible to guess.</reasoning>
-        <replacements>
-            <item>ice</item>
-            <item>rubik's</item>
-            <item>lego</item>
-            <item>stock</item>
-            <item>poison</item>
-        </replacements>
     </example>
     <anti_pattern>
         <headline>Alchemist Turns Lead Into Gold</headline>
@@ -88,8 +68,7 @@ $json_str
 <instructions>
 1. Select $candidates_to_provide headlines from the input data.
 2. For each, apply the <rules> to choose a 'word_to_remove'.
-3. Generate at least 5 funny, single-word 'replacements'.
-4. Provide an 'explanation' for your choice.
+3. Provide an 'explanation' for your choice.
 </instructions>
 ";
 }
@@ -114,8 +93,7 @@ function getInitialGenerationConfig(int $candidates_to_provide) {
                         "required" => [
                             "headline",
                             "word_to_remove",
-                            "explanation",
-                            "replacements"
+                            "explanation"
                         ],
                         "properties" => [
                             "headline" => [
@@ -126,13 +104,6 @@ function getInitialGenerationConfig(int $candidates_to_provide) {
                             ],
                             "explanation" => [
                                 "type" => "string"
-                            ],
-                            "replacements" => [
-                                "type" => "array",
-                                "minItems" => 5,
-                                "items" => [
-                                    "type" => "string"
-                                ]
                             ]
                         ]
                     ]
@@ -166,9 +137,7 @@ $initial_candidates_str
 
 <instructions>
 1. Select the top $num_final_results option(s) that best fit the <rules>.
-2. Ensure the 'replacements' are funny and grammatically sound.
-3. Write a 'hint' for the missing word.
-    - Constraint: The hint must NOT be a pun.
+2. Write a 'hint' for the missing word.
     - Constraint: The hint should be creative, esoteric, or simple, but NOT give the answer away immediately.
 </instructions>
 ";
@@ -188,17 +157,12 @@ function getFinalGenerationConfig($min_items, $include_explanation = true) {
                         "required" => [
                             "headline",
                             "word_to_remove",
-                            "replacements",
                             "hint"
                         ],
                         "properties" => [
                             "headline" => ["type" => "string"],
                             "word_to_remove" => ["type" => "string"],
-                            "hint" => ["type" => "string"],
-                            "replacements" => [
-                                "type" => "array",
-                                "items" => ["type" => "string"]
-                            ]
+                            "hint" => ["type" => "string"]
                         ]
                     ]
                 ]
@@ -234,8 +198,7 @@ $previewsStr
 
 <instructions>
 1. Select the best option.
-2. Refine the list of 'replacements' to ensure maximum humor and variety.
-3. Create a 'hint' (esoteric, no puns) for the answer.
+2. Create a 'hint' (esoteric, no puns) for the answer.
 </instructions>
 ";
 }

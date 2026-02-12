@@ -202,7 +202,7 @@ try {
       try {
         $headline_text = $choice_item['headline'];
         $word_to_remove = $choice_item['word_to_remove'];
-        $possible_answers = $choice_item['replacements'];
+        $possible_answers = [];
         $hint = $choice_item['hint'];
         $explanation = $choice_item['explanation'] ?? 'N/A';
 

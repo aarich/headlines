@@ -5,6 +5,7 @@ import {
   PaperAirplaneIcon,
   PencilIcon,
 } from '@heroicons/react/24/outline';
+import { ALLOW_NON_EXPERT_MODE } from 'contexts/SettingsContext';
 import React from 'react';
 import { PreviewHeadline, PreviewHeadlineStatus } from 'types';
 
@@ -38,13 +39,15 @@ const PreviewListItem: React.FC<PreviewListItemProps> = ({
             ? preview.headline
             : `${preview.beforeBlank || ''}[???]${preview.afterBlank || ''}`}
         </p>
-        <p
-          className={`text-xs ${
-            isRejected ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400'
-          }`}
-        >
-          {preview.choices.join(', ')}
-        </p>
+        {ALLOW_NON_EXPERT_MODE && (
+          <p
+            className={`text-xs ${
+              isRejected ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400'
+            }`}
+          >
+            {preview.choices.join(', ')}
+          </p>
+        )}
         <p
           className={`text-xs italic ${
             isRejected ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-600'
@@ -58,7 +61,8 @@ const PreviewListItem: React.FC<PreviewListItemProps> = ({
           <a
             href={preview.articleUrl}
             target="_blank"
-            className="hover:text-blue-500 dark:hover:text-blue-400" rel="noreferrer"
+            className="hover:text-blue-500 dark:hover:text-blue-400"
+            rel="noreferrer"
           >
             {preview.articleSite}
           </a>
@@ -66,7 +70,8 @@ const PreviewListItem: React.FC<PreviewListItemProps> = ({
           <a
             href={preview.redditUrl}
             target="_blank"
-            className="hover:text-blue-500 dark:hover:text-blue-400" rel="noreferrer"
+            className="hover:text-blue-500 dark:hover:text-blue-400"
+            rel="noreferrer"
           >
             reddit
           </a>
