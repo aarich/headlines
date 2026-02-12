@@ -6,7 +6,7 @@ $DEFAULT_CANDIDATE_COUNT = 6;
 // Separating explicit rules from examples for better adherence
 $core_rules = "
 <rules>
-    <rule>Content Safety: Headlines must be SFW, friendly, positive, apolitical, and nonviolent.</rule>
+    <rule>Content Safety: Headlines must be SFW, friendly, positive, **apolitical**, and nonviolent.</rule>
     <rule>Tone: Irreverent, absurd, or funny. It should make you laugh, then think.</rule>
     <rule>Word Selection:
         - Must be a single, relatively known word.
@@ -145,7 +145,7 @@ function getInitialGenerationConfig(int $candidates_to_provide) {
 function getFinalPrompt(int $num_final_results, string $initial_candidates_str) {
     global $core_rules;
     global $few_shot_examples;
-    
+
     return  "
 <role>
 You are the final editor for the 'Fill-in-the-Blank' headline game. You are selecting the absolute best content for the final production build.
@@ -216,7 +216,7 @@ function getFinalGenerationConfig($min_items, $include_explanation = true) {
 
 function getChooseFromPreviewsPrompt($previewsStr) {
     global $core_rules;
-    
+
     return  "
 <role>
 You are a game curator selecting the single best headline to feature in a 'Fill-in-the-Blank' game.
@@ -239,4 +239,3 @@ $previewsStr
 </instructions>
 ";
 }
-

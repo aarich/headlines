@@ -80,7 +80,7 @@ function convert_smart_quotes($string) {
 // }
 
 function getTopPosts($subreddit, $user_agent, $client_id, $client_secret) {
-  $ch = curl_init("https://oauth.reddit.com/r/{$subreddit}/top.json?limit=50&t=week");
+  $ch = curl_init("https://oauth.reddit.com/r/{$subreddit}/top.json?limit=50&t=day");
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($ch, CURLOPT_HTTPHEADER, [
     'User-Agent: ' . $user_agent

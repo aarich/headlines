@@ -91,6 +91,11 @@ function App() {
     [headline]
   );
 
+  useEffect(() => {
+    document.body.style.height = '100vh';
+    document.documentElement.style.height = '100vh';
+  }, []);
+
   const showAdminButton = !!(getAdminKey() || window.location.search.includes('admin=true'));
 
   const closeModal = useCallback((closerFn: (open: boolean) => void) => {
