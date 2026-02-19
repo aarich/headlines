@@ -4,6 +4,7 @@ import {
   EyeIcon,
   EyeSlashIcon,
   PencilIcon,
+  PlayIcon,
   PencilSquareIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
@@ -15,6 +16,7 @@ import {
   EditableHeadlineFields,
   EditablePreviewHeadlineFields,
   deleteScriptExecutionLogs,
+  generatePreviews,
 } from 'lib/api';
 import { getAdminKey, storeAdminKey } from 'lib/storage';
 import React, { useEffect, useState } from 'react';
@@ -96,6 +98,15 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleGeneratePreviews = async () => {
+    try {
+      const result = await generatePreviews();
+      toast(result.message || 'Preview creation initiated', 'success');
+    } catch (err: any) {
+      toast(err.message || 'Failed to initiate preview generation.', 'error');
+    }
+  };
+
   const actions: { Icon: React.ForwardRefExoticComponent<any>; onClick: () => void }[] = [];
 
   switch (currentView) {
@@ -110,6 +121,10 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
         {
           Icon: revealWords ? EyeIcon : EyeSlashIcon,
           onClick: () => setRevealWords(!revealWords),
+        },
+        {
+          Icon: PlayIcon,
+          onClick: handleGeneratePreviews,
         },
         {
           Icon: PencilSquareIcon,

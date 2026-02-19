@@ -54,6 +54,10 @@ export interface DeletePreviewsResult {
   message: string;
 }
 
+export interface GeneratePreviewsResult {
+  message: string;
+}
+
 export type GetHeadlineArgs = { id?: number; game?: number };
 
 export interface ScriptLogEntry {
@@ -389,6 +393,22 @@ export const getUserHeadline = async (id: string): Promise<UserHeadline> => {
       .json()
       .catch(() => ({ error: 'Failed to fetch user headline' }));
     throw new Error(errorData.error || `Failed to fetch user headline: ${response.statusText}`);
+  }
+  return response.json();
+};
+
+export const generatePreviews = async (): Promise<GeneratePreviewsResult> => {
+  const response = await fetch(`${config.apiUrl}/api/generate-previews`, {
+    method: 'POST',
+    headers: getAdminHeaders(),
+  });
+  if (!response.ok) {
+    const errorData = await response
+      .json()
+      .catch(() => ({ error: 'Failed to initiate preview generation' }));
+    throw new Error(
+      errorData.error || `Failed to initiate preview generation: ${response.statusText}`
+    );
   }
   return response.json();
 };

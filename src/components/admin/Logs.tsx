@@ -20,12 +20,15 @@ const Logs = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
-  const loadLogs = useCallback(async () => {
-    setIsLoading(true);
+  const loadLogs = useCallback(async (showLoading: boolean) => {
+    if (showLoading) setIsLoading(true);
     setError(undefined);
     try {
       const data = await fetchScriptExecutionLogs(30);
-      setLogs(data.logs);
+      setLogs(old => {
+        if (old.length === data.logs.length) return old;
+        return data.logs;
+      });
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to load script logs.';
       setError(errorMessage);
@@ -35,7 +38,11 @@ const Logs = () => {
   }, []);
 
   useEffect(() => {
-    loadLogs();
+    loadLogs(true);
+    const interval = setInterval(() => {
+      loadLogs(false);
+    }, 10000);
+    return () => clearInterval(interval);
   }, [loadLogs]);
 
   return (
