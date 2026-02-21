@@ -27,7 +27,7 @@ echo "Deploying to $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH..."
 # -v: verbose
 # -z: compress data during transfer
 # --delete: delete extraneous files from destination dirs
-rsync -avz --delete build/ "$DEPLOY_USER@$DEPLOY_HOST:${DEPLOY_PATH}/"
+rsync -avz --delete build/ "$DEPLOY_USER@$DEPLOY_HOST:${DEPLOY_PATH}/" --exclude /images
 
 echo "Deployment successful!"
 

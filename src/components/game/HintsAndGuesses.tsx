@@ -11,12 +11,21 @@ const HintsAndGuesses: React.FC = memo(() => {
   const isCompleted = !!gameState.completedAt;
   const showClue =
     isCompleted || (gameState.actions?.find(a => a === Hint.CLUE) && !gameState.completedAt);
+  const hintHasEmoji = /\p{Emoji}/u.test(headline.hint);
   return (
     <>
       {showClue && (
         <div className="mt-4 w-full max-w-md">
-          <div className="text-sm text-gray-600 dark:text-gray-400 mb-2 italic">
-            Hint: {headline.hint}
+          <div
+            className={`text-sm text-gray-600 dark:text-gray-400 mb-2 ${hintHasEmoji ? 'text-2xl' : 'italic'}`}
+          >
+            {headline.hint.startsWith('/images/') ? (
+              <div className="flex justify-center">
+                <img src={headline.hint} alt="hint" className="w-auto h-auto" />
+              </div>
+            ) : (
+              `Hint: ${headline.hint}`
+            )}
           </div>
         </div>
       )}

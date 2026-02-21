@@ -72,7 +72,7 @@ try {
   $headline_titles = [];
   $headlines_full = [];
   foreach ($posts['data']['children'] as $post) {
-    $title = convert_smart_quotes($post['data']['title']);
+    $title = convert_smart_quotes(html_entity_decode($post['data']['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 
     // Ignore this one if it matches an already proposed headline
     if (!$interactive && in_array($title, $already_proposed_headline_texts, true)) {
@@ -200,11 +200,11 @@ try {
     foreach ($final_choices_from_llm as $index => $choice_item) {
       echo "\nProcessing LLM candidate headline " . ($index + 1) . "/" . count($final_choices_from_llm) . "...\n";
       try {
-        $headline_text = $choice_item['headline'];
-        $word_to_remove = $choice_item['word_to_remove'];
+        $headline_text = html_entity_decode($choice_item['headline'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $word_to_remove = html_entity_decode($choice_item['word_to_remove'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $possible_answers = [];
-        $hint = $choice_item['hint'];
-        $explanation = $choice_item['explanation'] ?? 'N/A';
+        $hint = html_entity_decode($choice_item['hint'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $explanation = html_entity_decode($choice_item['explanation'] ?? 'N/A', ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
         $selected_headline_data = findMostSimilarHeadline($headline_text, $headlines_full);
         if ($selected_headline_data === null) {

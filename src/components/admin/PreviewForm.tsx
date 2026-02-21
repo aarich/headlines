@@ -204,7 +204,7 @@ const PreviewForm: React.FC<PreviewFormProps> = ({
       </div>
       <div>
         <label htmlFor="hint" className="block text-sm font-medium">
-          Hint
+          Hint {/^https?:\/\/.*\.(jpg|jpeg|png|gif)$/i.test(formData.hint) ? ' 🖼️' : ''}
         </label>
         <input
           type="text"

@@ -71,6 +71,20 @@ function validateAndProcessPreviewInput(array $input, array $allowedFields, bool
         }
     }
     $processedData['status_for_logic'] = $statusValue; // Keep original status for logic if needed
+
+    // if the hint is a url to an image/gif, fetch the contents and store it in the images directory
+    if (preg_match('/^https?:\/\/.*\.(jpg|jpeg|png|gif)$/i', $processedData['hint'])) {
+        $hintUrl = $processedData['hint'];
+        $hintContents = file_get_contents($hintUrl);
+        if ($hintContents === false) {
+            throw new Exception("Failed to fetch hint image from URL: $hintUrl");
+        }
+        $hintFilename = md5($hintUrl) . '.' . pathinfo($hintUrl, PATHINFO_EXTENSION);
+        $hintPath = __DIR__ . '/../images/' . $hintFilename;
+        file_put_contents($hintPath, $hintContents);
+        $processedData['hint'] = "/images/$hintFilename";
+    }
+
     return $processedData;
 }
 

@@ -53,7 +53,11 @@ const PreviewListItem: React.FC<PreviewListItemProps> = ({
             isRejected ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-600'
           }`}
         >
-          {preview.hint}
+          {preview.hint.startsWith('/images/') ? (
+            <img src={preview.hint} alt="hint" className="h-12 w-12" />
+          ) : (
+            preview.hint
+          )}
         </p>
         <p
           className={`text-xs ${isRejected ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400'}`}
