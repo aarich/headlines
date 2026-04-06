@@ -125,27 +125,54 @@ function invokeGooglePrompt($prompt, $generationConfig, $gemini_api_key, $model_
     'generationConfig' => $generationConfig
   ]);
 
-  $ch = curl_init($url);
-  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-  curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-  curl_setopt($ch, CURLOPT_POST, true);
-  curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+  $max_retries = 3;
+  $retry_count = 0;
+  $response = false;
 
-  $response = curl_exec($ch);
+  while ($retry_count <= $max_retries) {
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
 
-  // Check for cURL errors
-  if (curl_errno($ch)) {
-    throw new Exception('Curl error: ' . curl_error($ch));
-  }
+    $response = curl_exec($ch);
 
-  // Get HTTP status code
-  $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-  if ($httpCode !== 200) {
+    // Check for cURL errors
+    if (curl_errno($ch)) {
+      $error_msg = curl_error($ch);
+      curl_close($ch);
+      throw new Exception('Curl error: ' . $error_msg);
+    }
+
+    // Get HTTP status code
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode === 200) {
+      break;
+    }
+
+    $is_503 = false;
+    if ($httpCode === 503) {
+      $is_503 = true;
+    } else {
+      $decoded_response = json_decode($response, true);
+      if (json_last_error() === JSON_ERROR_NONE && isset($decoded_response['error']['code']) && $decoded_response['error']['code'] == 503) {
+        $is_503 = true;
+      }
+    }
+
+    if ($is_503 && $retry_count < $max_retries) {
+      $retry_count++;
+      echo "Google API returned 503 error. Retrying ($retry_count/$max_retries) in 2 seconds...\n";
+      sleep(2);
+      continue;
+    }
+
     $responseText = extract_text_from_html($response);
     throw new Exception('HTTP error: ' . $httpCode . ' Response: ' . $responseText);
   }
-
-  curl_close($ch);
 
   $data = json_decode($response, true);
 

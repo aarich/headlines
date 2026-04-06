@@ -16,7 +16,7 @@ $long_opts = [
 ];
 $cli_options = getopt($short_opts, $long_opts);
 
-$gpt_model_name = $cli_options['model'] ?? 'gemini-2.5-pro-preview-03-25'; // gemini-2.5-flash-preview-04-17 gemini-2.5-pro-preview-03-25 gemini-2.5-pro-exp-03-25
+$gpt_model_name = $cli_options['model'] ?? 'gemini-3-flash-preview';  
 $dry_run = isset($cli_options['dry-run']);
 $auto_confirm = isset($cli_options['y']);
 $selected_only = isset($cli_options['selected-only']);
