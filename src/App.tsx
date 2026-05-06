@@ -98,6 +98,16 @@ function App() {
 
   const showAdminButton = !!(getAdminKey() || window.location.search.includes('admin=true'));
 
+  // Only show the dormant banner after May 6 2026 and when playing the default random game,
+  // not when the user has navigated to a specific game via URL params or path.
+  const isDormant = new Date() > new Date('2026-05-06T23:59:59');
+  const isSpecificGame = (() => {
+    const url = new URL(window.location.href);
+    if (url.pathname.startsWith('/custom/') || url.pathname.length > 1) return true;
+    const params = new URLSearchParams(url.search);
+    return params.has('id') || params.has('game') || params.has('custom');
+  })();
+
   const closeModal = useCallback((closerFn: (open: boolean) => void) => {
     closerFn(false);
     MODAL_CLOSE_LISTENERS.forEach(listener => listener());
@@ -119,6 +129,25 @@ function App() {
                 showAdminButton={showAdminButton}
               />
               <main className="w-full flex flex-col items-center flex-1">
+                {isDormant && !isSpecificGame && (
+                  <div className="w-full max-w-2xl mx-auto mt-2 mb-4 px-4">
+                    <div className="bg-amber-50 dark:bg-amber-950 border border-amber-300 dark:border-amber-700 rounded-xl px-5 py-4 text-center shadow-sm">
+                      <p className="text-amber-800 dark:text-amber-200 font-semibold text-base mb-1">
+                        Find the Leek is no longer updated 😔
+                      </p>
+                      <p className="text-amber-700 dark:text-amber-300 text-sm mb-3">
+                        You're playing a randomly selected past game. Browse the archive to pick any
+                        headline.
+                      </p>
+                      <button
+                        onClick={() => setIsStatsOpen(true)}
+                        className="inline-flex items-center gap-1.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
+                      >
+                        Browse past games
+                      </button>
+                    </div>
+                  </div>
+                )}
                 {isLoading ? (
                   <Loading />
                 ) : error ? (
@@ -130,7 +159,6 @@ function App() {
                 ) : null}
               </main>
               <footer className="mt-8 text-gray-500 dark:text-gray-400 text-center">
-                <p>New headline every day!</p>
                 <p>© 2025 - {new Date().getFullYear()} Alex Rich</p>
               </footer>
             </div>

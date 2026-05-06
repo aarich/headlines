@@ -205,6 +205,16 @@ export const fetchHeadlineBasedOnQueryParameters = async (): Promise<Headline | 
     return await getUserHeadline(urlParams.get('custom')!);
   }
 
+  // If no specific game was requested and we're in dormant mode (after May 6 2026),
+  // fetch the latest headline to learn the max game number, then pick a random one.
+  const isDormant = new Date() > new Date('2026-05-06T23:59:59');
+  if (isDormant && !hasId && !hasGame && !hasCustom) {
+    const latest = await fetchHeadline({});
+    const maxGame = latest.gameNum;
+    const randomGame = Math.floor(Math.random() * maxGame) + 1;
+    return await fetchHeadline({ game: randomGame });
+  }
+
   return await fetchHeadline(args);
 };
 
@@ -265,7 +275,10 @@ export const shareScore = (
   forceCopy: boolean = false
 ): void => {
   const blankedHeadline = headline.beforeBlank + '[???]' + headline.afterBlank;
-  const details = `${blankedHeadline}\n\n${window.location.href}\n\n${resultsText}`;
+  const url = isStandard(headline)
+    ? `https://${window.location.host}/${headline.gameNum}`
+    : window.location.href;
+  const details = `${blankedHeadline}\n\n${url}\n\n${resultsText}`;
 
   const shareText = isStandard(headline)
     ? `Leek #${headline.gameNum} found: ${details}`

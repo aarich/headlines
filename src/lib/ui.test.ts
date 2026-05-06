@@ -34,7 +34,7 @@ beforeAll(() => {
   });
 
   Object.defineProperty(window, 'location', {
-    value: { search: '', href: 'http://localhost/' },
+    value: { search: '', host: 'localhost', href: 'http://localhost/' },
     writable: true,
   });
 
@@ -69,7 +69,7 @@ beforeEach(() => {
   jest.useRealTimers();
 
   Object.defineProperty(window, 'location', {
-    value: { search: '', href: 'http://localhost/' },
+    value: { search: '', host: 'localhost', href: 'http://localhost/' },
     writable: true,
   });
 
@@ -371,7 +371,7 @@ describe('ui.ts', () => {
     beforeEach(() => {
       mockGetStoredScores.mockReturnValue({}); // Default no stored score
       Object.defineProperty(window, 'location', {
-        value: { search: '', href: 'http://localhost/' },
+        value: { search: '', href: 'http://localhost/', host: 'localhost' },
         writable: true,
       });
       mockToast.mockClear();
@@ -384,7 +384,7 @@ describe('ui.ts', () => {
 
     it('should call recordShare on successful navigator.share', async () => {
       const mockResultsText = 'Custom Results Text';
-      const expectedShareText = `Leek #${MOCK_HEADLINE.gameNum} found: Mock [???] Here\n\nhttp://localhost/\n\n${mockResultsText}`;
+      const expectedShareText = `Leek #${MOCK_HEADLINE.gameNum} found: Mock [???] Here\n\nhttps://localhost/${MOCK_HEADLINE.gameNum}\n\n${mockResultsText}`;
       shareScore(mockResultsText, MOCK_HEADLINE, mockToast, false); // forceCopy should be false
       await Promise.resolve(); // Ensure promise chain in shareScore resolves
       expect(navigator.share).toHaveBeenCalledWith({ text: expectedShareText });
@@ -394,7 +394,7 @@ describe('ui.ts', () => {
     it('should use clipboard.writeText if navigator.share is not available', () => {
       Object.defineProperty(navigator, 'share', { value: undefined, writable: true }); // Simulate no share API
       const mockResultsText = 'Custom Results Text For Clipboard';
-      const expectedShareText = `Leek #${MOCK_HEADLINE.gameNum} found: Mock [???] Here\n\nhttp://localhost/\n\n${mockResultsText}`;
+      const expectedShareText = `Leek #${MOCK_HEADLINE.gameNum} found: Mock [???] Here\n\nhttps://localhost/${MOCK_HEADLINE.gameNum}\n\n${mockResultsText}`;
       shareScore(mockResultsText, MOCK_HEADLINE, mockToast, false); // forceCopy should be false to test fallback
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expectedShareText);
       expect(mockToast).toHaveBeenCalledWith('Score copied to clipboard!', 'success');
@@ -406,7 +406,7 @@ describe('ui.ts', () => {
 
     it('should use clipboard.writeText if forceCopy is true', () => {
       const mockResultsText = 'Custom Results Text For Forced Clipboard';
-      const expectedShareText = `Leek #${MOCK_HEADLINE.gameNum} found: Mock [???] Here\n\nhttp://localhost/\n\n${mockResultsText}`;
+      const expectedShareText = `Leek #${MOCK_HEADLINE.gameNum} found: Mock [???] Here\n\nhttps://localhost/${MOCK_HEADLINE.gameNum}\n\n${mockResultsText}`;
       shareScore(mockResultsText, MOCK_HEADLINE, mockToast, true);
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expectedShareText);
       expect(mockToast).toHaveBeenCalledWith('Score copied to clipboard!', 'success');

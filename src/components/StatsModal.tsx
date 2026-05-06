@@ -36,16 +36,7 @@ const StatsModal: React.FC<StatsModalProps> = ({ isOpen, onClose }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Stats" mdSize="3xl">
       <div className="space-y-4 text-gray-700 dark:text-gray-200">
-        {Object.keys(scores).length === 0 ? (
-          <>
-            <p>Play a game and your stats will show up here!</p>
-            <div className="flex justify-center">
-              <button className="text-blue-500 px-4 py-2 rounded-md" onClick={onClose}>
-                Get on it
-              </button>
-            </div>
-          </>
-        ) : (
+        {Object.keys(scores).length > 0 && (
           <div>
             <p>
               You've tackled <span className="font-bold">{totalCompleted}</span>{' '}
@@ -67,9 +58,9 @@ const StatsModal: React.FC<StatsModalProps> = ({ isOpen, onClose }) => {
                 {currentStreak !== undefined ? currentStreak : '...'}
               </span>
             </p>
-            <HistoryList isOpen={isOpen} />
           </div>
         )}
+        <HistoryList isOpen={isOpen} />
       </div>
     </Modal>
   );
